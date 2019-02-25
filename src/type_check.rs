@@ -7,12 +7,6 @@ use crate::syntax::*;
 /// By doing this we get `lookupG` in Mini-TT for free.
 type Gamma<Name> = BTreeMap<Name, Value<Name>>;
 
-/// `genV` in Mini-TT.
-pub fn generate_value<Name: NameTrait>(id: u32) -> Value<Name> {
-    use crate::syntax::GenericNeutral as Neutral;
-    Value::Neutral(Neutral::Generated(id))
-}
-
 /// `upG` in Mini-TT.
 /// Gamma |- p : t = u => Gamma’
 ///
