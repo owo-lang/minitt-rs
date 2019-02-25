@@ -1,17 +1,19 @@
+use std::collections::BTreeMap;
+use std::hash::Hash;
+
+pub trait NameTrait: Eq + Ord + PartialOrd + Hash + Clone {}
+
+/// `Exp` in Mini-TT.
 /// Expression language, [`Name`] is type for identifiers
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub enum Expression<Name>
-where
-    Name: Eq,
-    Name: Clone,
-{
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+pub enum Expression<Name: NameTrait> {
     Unit,
     One,
     Type,
     Void,
     Var(Name),
     Sum(Branch<Name>),
-    Fun(Branch<Name>),
+    Function(Branch<Name>),
     Pi(Pattern<Name>, Box<Expression<Name>>, Box<Expression<Name>>),
     Sigma(Pattern<Name>, Box<Expression<Name>>, Box<Expression<Name>>),
     Lambda(Pattern<Name>, Box<Expression<Name>>),
@@ -23,15 +25,11 @@ where
     Declaration(Box<Declaration<Name>>, Box<Expression<Name>>),
 }
 
-type Branch<Name> = Vec<(Name, Box<Expression<Name>>)>;
+type Branch<Name> = BTreeMap<Name, Box<Expression<Name>>>;
 
 /// `Val` in Mini-TT, value term. [`Name`] is type for identifiers
-#[derive(Debug)]
-pub enum Value<Name>
-where
-    Name: Eq,
-    Name: Clone,
-{
+#[derive(Debug, Clone)]
+pub enum Value<Name: NameTrait> {
     Lambda(Closure<Name>),
     Unit,
     One,
@@ -40,69 +38,50 @@ where
     Sigma(Box<Value<Name>>, Closure<Name>),
     Pair(Box<Value<Name>>, Box<Value<Name>>),
     Constructor(Name, Box<Value<Name>>),
-    Function(Box<SClosure<Name>>),
-    Sum(Box<SClosure<Name>>),
+    Function(SClosure<Name>),
+    Sum(SClosure<Name>),
     Neutral(Neutral<Name>),
 }
 
 /// `Neut` in Mini-TT, neutral value
-#[derive(Debug)]
-pub enum Neutral<Name>
-where
-    Name: Eq,
-    Name: Clone,
-{
+#[derive(Debug, Clone)]
+pub enum Neutral<Name: NameTrait> {
     Generated(u32),
     Application(Box<Neutral<Name>>, Box<Value<Name>>),
     First(Box<Neutral<Name>>),
     Second(Box<Neutral<Name>>),
-    NeutralFunction(Box<SClosure<Name>>, Box<Neutral<Name>>),
+    Function(Box<SClosure<Name>>, Box<Neutral<Name>>),
 }
 
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub enum Pattern<Name>
-where
-    Name: Eq,
-    Name: Clone,
-{
+/// `Pattern` in Mini-TT.
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+pub enum Pattern<Name: NameTrait> {
     Pair(Box<Pattern<Name>>, Box<Pattern<Name>>),
     Unit,
     Var(Name),
 }
 
-#[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
-pub enum Declaration<Name>
-where
-    Name: Eq,
-    Name: Clone,
-{
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+pub enum Declaration<Name: NameTrait> {
     Simple(Pattern<Name>, Expression<Name>, Expression<Name>),
     Recursive(Pattern<Name>, Expression<Name>, Expression<Name>),
 }
 
 /// `Rho` in Mini-TT
 // TODO: replace with Vec<enum {Dec, Var}>
-#[derive(Debug)]
-pub enum Telescope<Name>
-where
-    Name: Eq,
-    Name: Clone,
-{
+#[derive(Debug, Clone)]
+pub enum Telescope<Name: NameTrait> {
     Nil,
     UpDec(Box<Telescope<Name>>, Declaration<Name>),
     UpVar(Box<Telescope<Name>>, Pattern<Name>, Value<Name>),
 }
 
 /// `Clos` in Mini-TT, [`Name`] is type for identifiers
-#[derive(Debug)]
-pub enum Closure<Name>
-where
-    Name: Eq,
-    Name: Clone,
-{
+#[derive(Debug, Clone)]
+pub enum Closure<Name: NameTrait> {
     Choice(Pattern<Name>, Expression<Name>, Box<Telescope<Name>>),
     Function(Box<Closure<Name>>, Name),
 }
 
 /// `SClos` in Mini-TT
-type SClosure<Name> = (Branch<Name>, Telescope<Name>);
+type SClosure<Name> = (Box<Branch<Name>>, Box<Telescope<Name>>);
