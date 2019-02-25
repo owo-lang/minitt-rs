@@ -1,10 +1,10 @@
 [package]
 name = "minitt"
-version = "0.0.2"
+version = "0.0.4"
 authors = ["ice1000 <ice1000kotlin@foxmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
-description = "Work-In-Progress implementation in Rust for Mini-TT, a dependently-typed lambda calculus model"
+description = "Mini-TT, a dependently-typed lambda calculus, implementated in Rust"
 readme = "README.md"
 categories = ["development-tools"]
 
