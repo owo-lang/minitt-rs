@@ -1,10 +1,11 @@
 use std::collections::BTreeMap;
 use std::hash::Hash;
 
+/// Virtual trait, created to simplify trait bounds for identifiers.
 pub trait NameTrait: Eq + Ord + PartialOrd + Hash + Clone {}
 
 /// `Exp` in Mini-TT.
-/// Expression language, [`Name`] is type for identifiers
+/// Expression language for Mini-TT.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Expression<Name: NameTrait> {
     Unit,
@@ -25,9 +26,10 @@ pub enum Expression<Name: NameTrait> {
     Declaration(Box<Declaration<Name>>, Box<Expression<Name>>),
 }
 
+/// Pattern matching branch.
 type Branch<Name> = BTreeMap<Name, Box<Expression<Name>>>;
 
-/// `Val` in Mini-TT, value term. [`Name`] is type for identifiers
+/// `Val` in Mini-TT, value term.
 #[derive(Debug, Clone)]
 pub enum Value<Name: NameTrait> {
     Lambda(Closure<Name>),
@@ -43,7 +45,7 @@ pub enum Value<Name: NameTrait> {
     Neutral(Neutral<Name>),
 }
 
-/// `Neut` in Mini-TT, neutral value
+/// `Neut` in Mini-TT, neutral value.
 #[derive(Debug, Clone)]
 pub enum Neutral<Name: NameTrait> {
     Generated(u32),
@@ -61,13 +63,14 @@ pub enum Pattern<Name: NameTrait> {
     Var(Name),
 }
 
+/// `Decl` in Mini-TT.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Declaration<Name: NameTrait> {
     Simple(Pattern<Name>, Expression<Name>, Expression<Name>),
     Recursive(Pattern<Name>, Expression<Name>, Expression<Name>),
 }
 
-/// `Rho` in Mini-TT
+/// `Rho` in Mini-TT.
 // TODO: replace with Vec<enum {Dec, Var}>
 #[derive(Debug, Clone)]
 pub enum Telescope<Name: NameTrait> {
@@ -76,12 +79,12 @@ pub enum Telescope<Name: NameTrait> {
     UpVar(Box<Telescope<Name>>, Pattern<Name>, Value<Name>),
 }
 
-/// `Clos` in Mini-TT, [`Name`] is type for identifiers
+/// `Clos` in Mini-TT.
 #[derive(Debug, Clone)]
 pub enum Closure<Name: NameTrait> {
     Choice(Pattern<Name>, Expression<Name>, Box<Telescope<Name>>),
     Function(Box<Closure<Name>>, Name),
 }
 
-/// `SClos` in Mini-TT
+/// `SClos` in Mini-TT.
 type SClosure<Name> = (Box<Branch<Name>>, Box<Telescope<Name>>);

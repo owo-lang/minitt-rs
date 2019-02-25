@@ -1,3 +1,5 @@
+/// Reduction: eval and eval's friends.<br/>
+/// Functions are basically put into `impl` blocks, their docs are not inside this module.
 pub mod reduce;
-/// Term, Expression, Context
+/// Syntax: Term, Expression, Context.
 pub mod syntax;
