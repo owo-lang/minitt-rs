@@ -102,7 +102,7 @@ impl<Name: DebuggableNameTrait> Value<Name> {
             Value::Function((case_tree, context)) => match argument {
                 Value::Constructor(name, body) => case_tree
                     .get(&name)
-                    .expect(format!("Cannot find constructor {:?}.", name).as_str())
+                    .unwrap_or_else(|| panic!("Cannot find constructor {:?}.", name))
                     .clone()
                     .eval(&context)
                     .apply(*body),

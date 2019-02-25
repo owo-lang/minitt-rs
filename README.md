@@ -1,5 +1,9 @@
 # minitt-rs
 
+![Crates.io](https://img.shields.io/crates/d/minitt.svg)
+![Crates.io](https://img.shields.io/crates/v/minitt.svg)
+![Crates.io](https://img.shields.io/crates/l/minitt.svg)
+[![docs.rs](https://docs.rs/minitt/badge.svg)](https://docs.rs/minitt)
 [![Build status](https://ci.appveyor.com/api/projects/status/0pnq07tqo5skyjeo/branch/master?svg=true)](https://ci.appveyor.com/project/ice1000/minitt-rs/branch/master)
 [![CircleCI](https://circleci.com/gh/owo-lang/minitt-rs/tree/master.svg?style=svg)](https://circleci.com/gh/owo-lang/minitt-rs/tree/master)
 

@@ -27,7 +27,7 @@ pub enum Expression<Name: NameTrait> {
 }
 
 /// Pattern matching branch.
-type Branch<Name> = BTreeMap<Name, Box<Expression<Name>>>;
+pub type Branch<Name> = BTreeMap<Name, Box<Expression<Name>>>;
 
 /// `Val` in Mini-TT, value term.
 #[derive(Debug, Clone)]
@@ -87,4 +87,4 @@ pub enum Closure<Name: NameTrait> {
 }
 
 /// `SClos` in Mini-TT.
-type SClosure<Name> = (Box<Branch<Name>>, Box<Telescope<Name>>);
+pub type SClosure<Name> = (Box<Branch<Name>>, Box<Telescope<Name>>);

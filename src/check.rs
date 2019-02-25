@@ -27,16 +27,14 @@ pub fn update_gamma<'a, Name: DebuggableNameTrait>(
         Pattern::Pair(pattern_first, pattern_second) => match type_val {
             Value::Sigma(first, second) => {
                 let val_first = val.clone().first();
-                update_gamma(gamma, pattern_first, *first, val_first.clone())
-                    // Gamma is updated now.
-                    .and_then(|gamma| {
-                        update_gamma(
-                            gamma,
-                            pattern_second,
-                            second.instantiate(val_first),
-                            val.second(),
-                        )
-                    })
+                update_gamma(gamma, pattern_first, *first, val_first.clone())?;
+                // Gamma is updated here -- since it's passed as a mutable reference.
+                update_gamma(
+                    gamma,
+                    pattern_second,
+                    second.instantiate(val_first),
+                    val.second(),
+                )
             }
             _ => Err(format!("Cannot update Gamma by: {:?}", pattern)),
         },

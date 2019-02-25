@@ -4,7 +4,6 @@ version = "0.0.2"
 authors = ["ice1000 <ice1000kotlin@foxmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
-license-file = "LICENSE"
 description = "Work-In-Progress implementation in Rust for Mini-TT, a dependently-typed lambda calculus model"
 readme = "README.md"
 categories = ["development-tools"]
