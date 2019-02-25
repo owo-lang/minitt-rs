@@ -25,14 +25,13 @@ where
 
 type Branch<Name> = Vec<(Name, Box<Expression<Name>>)>;
 
-/// Value term, [`Name`] is type for identifiers
+/// `Val` in Mini-TT, value term. [`Name`] is type for identifiers
 #[derive(Debug)]
 pub enum Value<Name>
 where
     Name: Eq,
     Name: Clone,
 {
-    // TODO: fun, sum, neut
     Lambda(Closure<Name>),
     Unit,
     One,
@@ -41,6 +40,23 @@ where
     Sigma(Box<Value<Name>>, Closure<Name>),
     Pair(Box<Value<Name>>, Box<Value<Name>>),
     Constructor(Name, Box<Value<Name>>),
+    Function(Box<SClosure<Name>>),
+    Sum(Box<SClosure<Name>>),
+    Neutral(Neutral<Name>),
+}
+
+/// `Neut` in Mini-TT, neutral value
+#[derive(Debug)]
+pub enum Neutral<Name>
+where
+    Name: Eq,
+    Name: Clone,
+{
+    Generated(u32),
+    Application(Box<Neutral<Name>>, Box<Value<Name>>),
+    First(Box<Neutral<Name>>),
+    Second(Box<Neutral<Name>>),
+    NeutralFunction(Box<SClosure<Name>>, Box<Neutral<Name>>),
 }
 
 #[derive(Debug, Ord, PartialOrd, Eq, PartialEq)]
@@ -64,6 +80,8 @@ where
     Recursive(Pattern<Name>, Expression<Name>, Expression<Name>),
 }
 
+/// `Rho` in Mini-TT
+// TODO: replace with Vec<enum {Dec, Var}>
 #[derive(Debug)]
 pub enum Telescope<Name>
 where
@@ -75,7 +93,7 @@ where
     UpVar(Box<Telescope<Name>>, Pattern<Name>, Value<Name>),
 }
 
-/// Closure, [`Name`] is type for identifiers
+/// `Clos` in Mini-TT, [`Name`] is type for identifiers
 #[derive(Debug)]
 pub enum Closure<Name>
 where
@@ -86,7 +104,5 @@ where
     Function(Box<Closure<Name>>, Name),
 }
 
-/// Simple term types
-pub type SimpleTerm = Value<String>;
-/// Term types for testing
-pub type TestTerm = Value<u32>;
+/// `SClos` in Mini-TT
+type SClosure<Name> = (Branch<Name>, Telescope<Name>);
