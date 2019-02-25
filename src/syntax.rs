@@ -70,7 +70,7 @@ pub enum Declaration<Name: NameTrait> {
     Recursive(Pattern<Name>, Expression<Name>, Expression<Name>),
 }
 
-/// `Rho` in Mini-TT.
+/// `Rho` in Mini-TT, dependent context.
 // TODO: replace with Vec<enum {Dec, Var}>
 #[derive(Debug, Clone)]
 pub enum Telescope<Name: NameTrait> {

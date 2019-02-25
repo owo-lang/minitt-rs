@@ -3,6 +3,45 @@ use std::fmt::Debug;
 
 pub trait NameTraitAndDebug: NameTrait + Debug {}
 
+/// `inPat` in Mini-TT.
+pub fn in_pattern<Name: NameTraitAndDebug>(name: Name, pattern: &Pattern<Name>) -> bool {
+    match pattern {
+        Pattern::Var(pattern_name) => pattern_name == &name,
+        Pattern::Pair(first, second) => in_pattern(name.clone(), first) || in_pattern(name, second),
+        Pattern::Unit => false,
+    }
+}
+
+/// `patProj` in Mini-TT.
+pub fn pattern_projection<Name: NameTraitAndDebug>(
+    pattern: &Pattern<Name>,
+    name: Name,
+    val: Value<Name>,
+) -> Value<Name> {
+    match pattern {
+        Pattern::Pair(first, second) => {
+            if in_pattern(name.clone(), first) {
+                pattern_projection(first, name, val.first())
+            } else if in_pattern(name.clone(), second) {
+                pattern_projection(second, name, val.second())
+            } else {
+                panic!(format!("Cannot project with {:?}", name))
+            }
+        }
+        Pattern::Var(pattern_name) => {
+            if pattern_name == &name {
+                val
+            } else {
+                panic!(format!(
+                    "Expected projection: {:?}, found: {:?}",
+                    pattern_name, name
+                ))
+            }
+        }
+        Pattern::Unit => panic!("Cannot project unit pattern"),
+    }
+}
+
 impl<Name: NameTraitAndDebug> Closure<Name> {
     /// `*` in Mini-TT.
     /// Instantiate a closure.
@@ -20,7 +59,7 @@ impl<Name: NameTraitAndDebug> Closure<Name> {
 
 impl<Name: NameTraitAndDebug> Value<Name> {
     /// `vfst` in Mini-TT. Run `.1` on a Pair.
-    pub fn value_first(self) -> Value<Name> {
+    pub fn first(self) -> Value<Name> {
         match self {
             Value::Pair(first, _) => *first,
             Value::Neutral(neutral) => Value::Neutral(Neutral::First(Box::new(neutral))),
@@ -29,7 +68,7 @@ impl<Name: NameTraitAndDebug> Value<Name> {
     }
 
     /// `vsnd` in Mini-TT. Run `.2` on a Pair.
-    pub fn value_second(self) -> Value<Name> {
+    pub fn second(self) -> Value<Name> {
         match self {
             Value::Pair(_, second) => *second,
             Value::Neutral(neutral) => Value::Neutral(Neutral::Second(Box::new(neutral))),
@@ -89,8 +128,8 @@ impl<Name: NameTraitAndDebug> Expression<Name> {
             Expression::Lambda(pattern, body) => {
                 Value::Lambda(Closure::Choice(pattern, *body, Box::new(context.clone())))
             }
-            Expression::First(pair) => pair.eval(context).value_first(),
-            Expression::Second(pair) => pair.eval(context).value_second(),
+            Expression::First(pair) => pair.eval(context).first(),
+            Expression::Second(pair) => pair.eval(context).second(),
             Expression::Application(function, argument) => {
                 function.eval(context).apply(argument.eval(context))
             }
