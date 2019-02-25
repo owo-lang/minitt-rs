@@ -9,6 +9,7 @@ type Gamma<Name> = BTreeMap<Name, Value<Name>>;
 
 /// `genV` in Mini-TT.
 pub fn generate_value<Name: NameTrait>(id: u32) -> Value<Name> {
+    use crate::syntax::GenericNeutral as Neutral;
     Value::Neutral(Neutral::Generated(id))
 }
 

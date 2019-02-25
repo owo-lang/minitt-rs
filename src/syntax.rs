@@ -40,20 +40,26 @@ pub enum Value<Name: NameTrait> {
     Sigma(Box<Value<Name>>, Closure<Name>),
     Pair(Box<Value<Name>>, Box<Value<Name>>),
     Constructor(Name, Box<Value<Name>>),
-    Function(SClosure<Name>),
-    Sum(SClosure<Name>),
+    Function(DeepClosure<Name>),
+    Sum(DeepClosure<Name>),
     Neutral(Neutral<Name>),
 }
 
-/// `Neut` in Mini-TT, neutral value.
+/// Generic definition for two kinds of neutral terms
 #[derive(Debug, Clone)]
-pub enum Neutral<Name: NameTrait> {
+pub enum GenericNeutral<Name: NameTrait, Value> {
     Generated(u32),
-    Application(Box<Neutral<Name>>, Box<Value<Name>>),
-    First(Box<Neutral<Name>>),
-    Second(Box<Neutral<Name>>),
-    Function(Box<SClosure<Name>>, Box<Neutral<Name>>),
+    Application(Box<GenericNeutral<Name, Value>>, Box<Value>),
+    First(Box<GenericNeutral<Name, Value>>),
+    Second(Box<GenericNeutral<Name, Value>>),
+    Function(
+        Box<GenericDeepClosure<Name, Value>>,
+        Box<GenericNeutral<Name, Value>>,
+    ),
 }
+
+/// `Neut` in Mini-TT, neutral value.
+pub type Neutral<Name> = GenericNeutral<Name, Value<Name>>;
 
 /// `Pattern` in Mini-TT.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
@@ -70,14 +76,17 @@ pub enum Declaration<Name: NameTrait> {
     Recursive(Pattern<Name>, Expression<Name>, Expression<Name>),
 }
 
-/// `Rho` in Mini-TT, dependent context.
+/// Generic definition for two kinds of telescopes
 // TODO: replace with Vec<enum {Dec, Var}>
 #[derive(Debug, Clone)]
-pub enum Telescope<Name: NameTrait> {
+pub enum GenericTelescope<Name: NameTrait, Value> {
     Nil,
-    UpDec(Box<Telescope<Name>>, Declaration<Name>),
-    UpVar(Box<Telescope<Name>>, Pattern<Name>, Value<Name>),
+    UpDec(Box<GenericTelescope<Name, Value>>, Declaration<Name>),
+    UpVar(Box<GenericTelescope<Name, Value>>, Pattern<Name>, Value),
 }
+
+/// `Rho` in Mini-TT, dependent context.
+pub type Telescope<Name> = GenericTelescope<Name, Value<Name>>;
 
 /// `Clos` in Mini-TT.
 #[derive(Debug, Clone)]
@@ -86,5 +95,10 @@ pub enum Closure<Name: NameTrait> {
     Function(Box<Closure<Name>>, Name),
 }
 
+/// Generic definition for two kinds of deep closures
+pub type GenericDeepClosure<Name, Value> = (Box<Branch<Name>>, Box<GenericTelescope<Name, Value>>);
+
 /// `SClos` in Mini-TT.
-pub type SClosure<Name> = (Box<Branch<Name>>, Box<Telescope<Name>>);
+/// A closure that comes with a pattern, like the data type (sum) definition (all the constructors
+/// are pattern-like) or the function definition (it's built on top of a pattern tree)
+pub type DeepClosure<Name> = GenericDeepClosure<Name, Value<Name>>;

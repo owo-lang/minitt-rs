@@ -40,6 +40,7 @@ impl<Name: DebuggableNameTrait> Pattern<Name> {
 impl<Name: DebuggableNameTrait> Telescope<Name> {
     /// `getRho` in Mini-TT.
     pub fn resolve(&self, name: &Name) -> Value<Name> {
+        use crate::syntax::GenericTelescope as Telescope;
         match self {
             Telescope::Nil => panic!("Unresolved reference: {:?}", name),
             Telescope::UpDec(context, Declaration::Simple(pattern, _, expression))
@@ -65,6 +66,7 @@ impl<Name: DebuggableNameTrait> Closure<Name> {
     /// `*` in Mini-TT.
     /// Instantiate a closure.
     pub fn instantiate(self, val: Value<Name>) -> Value<Name> {
+        use crate::syntax::GenericTelescope as Telescope;
         match self {
             Closure::Choice(pattern, expression, context) => {
                 expression.eval(&Telescope::UpVar(context, pattern, val))
@@ -79,6 +81,7 @@ impl<Name: DebuggableNameTrait> Closure<Name> {
 impl<Name: DebuggableNameTrait> Value<Name> {
     /// `vfst` in Mini-TT. Run `.1` on a Pair.
     pub fn first(self) -> Value<Name> {
+        use crate::syntax::GenericNeutral as Neutral;
         match self {
             Value::Pair(first, _) => *first,
             Value::Neutral(neutral) => Value::Neutral(Neutral::First(Box::new(neutral))),
@@ -88,6 +91,7 @@ impl<Name: DebuggableNameTrait> Value<Name> {
 
     /// `vsnd` in Mini-TT. Run `.2` on a Pair.
     pub fn second(self) -> Value<Name> {
+        use crate::syntax::GenericNeutral as Neutral;
         match self {
             Value::Pair(_, second) => *second,
             Value::Neutral(neutral) => Value::Neutral(Neutral::Second(Box::new(neutral))),
@@ -97,6 +101,7 @@ impl<Name: DebuggableNameTrait> Value<Name> {
 
     /// `app` in Mini-TT.
     pub fn apply(self, argument: Value<Name>) -> Value<Name> {
+        use crate::syntax::GenericNeutral as Neutral;
         match self {
             Value::Lambda(closure) => closure.instantiate(argument),
             Value::Function((case_tree, context)) => match argument {
@@ -125,6 +130,7 @@ impl<Name: DebuggableNameTrait> Expression<Name> {
     /// Evaluate an [`Expression`] to a [`Value`] under a [`Telescope`].
     /// Will panic if not well-typed.
     pub fn eval(self, context: &Telescope<Name>) -> Value<Name> {
+        use crate::syntax::GenericTelescope as Telescope;
         match self {
             Expression::Unit => Value::Unit,
             Expression::One => Value::One,

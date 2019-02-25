@@ -1,7 +1,34 @@
 use crate::syntax::*;
 
-/// `NRho` in Mini-TT. Actually it's not needed.
-pub type NeutralTelescope<Name> = Telescope<Name>;
+/// `NRho` in Mini-TT.
+pub type NormalTelescope<Name> = GenericTelescope<Name, NormalExpression<Name>>;
 
-/// `NSClos` in Mini-TT. Actually it's not needed as well.
-pub type NeutralSClosure<Name> = SClosure<Name>;
+/// `NSClos` in Mini-TT.
+pub type NormalDeepClosure<Name> = GenericDeepClosure<Name, NormalExpression<Name>>;
+
+/// `NNeut` in Mini-TT.
+pub type NormalNeutral<Name> = GenericNeutral<Name, NormalExpression<Name>>;
+
+/// `NExp` in Mini-TT, normal form.
+#[derive(Debug, Clone)]
+pub enum NormalExpression<Name: NameTrait> {
+    Lambda(u32, Box<NormalExpression<Name>>),
+    Pair(Box<NormalExpression<Name>>, Box<NormalExpression<Name>>),
+    Unit,
+    One,
+    Type,
+    Pi(
+        Box<NormalExpression<Name>>,
+        u32,
+        Box<NormalExpression<Name>>,
+    ),
+    Sigma(
+        Box<NormalExpression<Name>>,
+        u32,
+        Box<NormalExpression<Name>>,
+    ),
+    Constructor(Name, Box<NormalExpression<Name>>),
+    Function(NormalDeepClosure<Name>),
+    Sum(NormalDeepClosure<Name>),
+    Neutral(NormalNeutral<Name>),
+}
