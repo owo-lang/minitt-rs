@@ -1,5 +1,8 @@
 # minitt-rs
 
+[![Build status](https://ci.appveyor.com/api/projects/status/0pnq07tqo5skyjeo/branch/master?svg=true)](https://ci.appveyor.com/project/ice1000/minitt-rs/branch/master)
+[![CircleCI](https://circleci.com/gh/owo-lang/minitt-rs/tree/master.svg?style=svg)](https://circleci.com/gh/owo-lang/minitt-rs/tree/master)
+
 Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
 It can be used as a core language for complicated dependently-typed programming
 languages, or used for testing the correctness of translation algorithms.

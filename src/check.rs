@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
-use crate::syntax::*;
 use crate::reduce::*;
+use crate::syntax::*;
 
 /// `Gamma` in Mini-TT.
 /// By doing this we get `lookupG` in Mini-TT for free.
@@ -29,12 +29,14 @@ pub fn update_gamma<'a, Name: DebuggableNameTrait>(
                 let val_first = val.clone().first();
                 update_gamma(gamma, pattern_first, *first, val_first.clone())
                     // Gamma is updated now.
-                    .and_then(|gamma| update_gamma(
-                        gamma,
-                        pattern_second,
-                        second.instantiate(val_first),
-                        val.second(),
-                    ))
+                    .and_then(|gamma| {
+                        update_gamma(
+                            gamma,
+                            pattern_second,
+                            second.instantiate(val_first),
+                            val.second(),
+                        )
+                    })
             }
             _ => Err(format!("Cannot update Gamma by: {:?}", pattern)),
         },
