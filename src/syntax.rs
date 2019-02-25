@@ -53,7 +53,7 @@ pub enum GenericNeutral<Name: NameTrait, Value> {
     First(Box<GenericNeutral<Name, Value>>),
     Second(Box<GenericNeutral<Name, Value>>),
     Function(
-        Box<GenericDeepClosure<Name, Value>>,
+        GenericDeepClosure<Name, Value>,
         Box<GenericNeutral<Name, Value>>,
     ),
 }

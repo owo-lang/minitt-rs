@@ -40,18 +40,18 @@ impl<Name: DebuggableNameTrait> Pattern<Name> {
 impl<Name: DebuggableNameTrait> Telescope<Name> {
     /// `getRho` in Mini-TT.
     pub fn resolve(&self, name: &Name) -> Value<Name> {
-        use crate::syntax::GenericTelescope as Telescope;
+        use crate::syntax::GenericTelescope::*;
         match self {
-            Telescope::Nil => panic!("Unresolved reference: {:?}", name),
-            Telescope::UpDec(context, Declaration::Simple(pattern, _, expression))
-            | Telescope::UpDec(context, Declaration::Recursive(pattern, _, expression)) => {
+            Nil => panic!("Unresolved reference: {:?}", name),
+            UpDec(context, Declaration::Simple(pattern, _, expression))
+            | UpDec(context, Declaration::Recursive(pattern, _, expression)) => {
                 if pattern.contains(name) {
                     pattern.project(name, expression.clone().eval(context))
                 } else {
                     context.resolve(name)
                 }
             }
-            Telescope::UpVar(context, pattern, val) => {
+            UpVar(context, pattern, val) => {
                 if pattern.contains(name) {
                     pattern.project(name, val.clone())
                 } else {
@@ -111,10 +111,9 @@ impl<Name: DebuggableNameTrait> Value<Name> {
                     .clone()
                     .eval(&context)
                     .apply(*body),
-                Value::Neutral(neutral) => Value::Neutral(Neutral::Function(
-                    Box::new((case_tree, context)),
-                    Box::new(neutral),
-                )),
+                Value::Neutral(neutral) => {
+                    Value::Neutral(Neutral::Function((case_tree, context), Box::new(neutral)))
+                }
                 e => panic!("Cannot apply a: {:?}", e),
             },
             Value::Neutral(neutral) => {
