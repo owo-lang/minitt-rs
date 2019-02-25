@@ -1,1 +1,3 @@
-pub mod term;
+pub mod reduce;
+/// Term, Expression, Context
+pub mod syntax;
