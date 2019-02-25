@@ -61,7 +61,7 @@ pub enum GenericNeutral<Name: NameTrait, Value> {
 /// `Neut` in Mini-TT, neutral value.
 pub type Neutral<Name> = GenericNeutral<Name, Value<Name>>;
 
-/// `Pattern` in Mini-TT.
+/// `Patt` in Mini-TT.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Pattern<Name: NameTrait> {
     Pair(Box<Pattern<Name>>, Box<Pattern<Name>>),
