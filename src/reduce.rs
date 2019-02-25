@@ -1,48 +1,67 @@
 use crate::syntax::*;
 use std::fmt::Debug;
 
-pub trait NameTraitAndDebug: NameTrait + Debug {}
+pub trait DebuggableNameTrait: NameTrait + Debug {}
 
-/// `inPat` in Mini-TT.
-pub fn in_pattern<Name: NameTraitAndDebug>(name: Name, pattern: &Pattern<Name>) -> bool {
-    match pattern {
-        Pattern::Var(pattern_name) => pattern_name == &name,
-        Pattern::Pair(first, second) => in_pattern(name.clone(), first) || in_pattern(name, second),
-        Pattern::Unit => false,
+impl<Name: DebuggableNameTrait> Pattern<Name> {
+    /// `inPat` in Mini-TT.
+    pub fn contains(&self, name: &Name) -> bool {
+        match self {
+            Pattern::Var(pattern_name) => pattern_name == name,
+            Pattern::Pair(first, second) => first.contains(name) || second.contains(name),
+            Pattern::Unit => false,
+        }
+    }
+
+    /// `patProj` in Mini-TT.
+    pub fn project(&self, name: &Name, val: Value<Name>) -> Value<Name> {
+        match self {
+            Pattern::Pair(first, second) => {
+                if first.contains(name) {
+                    first.project(name, val.first())
+                } else if second.contains(name) {
+                    second.project(name, val.second())
+                } else {
+                    panic!("Cannot project with {:?}", name)
+                }
+            }
+            Pattern::Var(pattern_name) => {
+                if pattern_name == name {
+                    val
+                } else {
+                    panic!("Expected projection: {:?}, found: {:?}", pattern_name, name)
+                }
+            }
+            Pattern::Unit => panic!("Cannot project unit pattern"),
+        }
     }
 }
 
-/// `patProj` in Mini-TT.
-pub fn pattern_projection<Name: NameTraitAndDebug>(
-    pattern: &Pattern<Name>,
-    name: Name,
-    val: Value<Name>,
-) -> Value<Name> {
-    match pattern {
-        Pattern::Pair(first, second) => {
-            if in_pattern(name.clone(), first) {
-                pattern_projection(first, name, val.first())
-            } else if in_pattern(name.clone(), second) {
-                pattern_projection(second, name, val.second())
-            } else {
-                panic!(format!("Cannot project with {:?}", name))
+impl<Name: DebuggableNameTrait> Telescope<Name> {
+    /// `getRho` in Mini-TT.
+    pub fn resolve(&self, name: &Name) -> Value<Name> {
+        match self {
+            Telescope::Nil => panic!("Unresolved reference: {:?}", name),
+            Telescope::UpDec(context, Declaration::Simple(pattern, _, expression))
+            | Telescope::UpDec(context, Declaration::Recursive(pattern, _, expression)) => {
+                if pattern.contains(name) {
+                    pattern.project(name, expression.clone().eval(context))
+                } else {
+                    context.resolve(name)
+                }
+            }
+            Telescope::UpVar(context, pattern, val) => {
+                if pattern.contains(name) {
+                    pattern.project(name, val.clone())
+                } else {
+                    context.resolve(name)
+                }
             }
         }
-        Pattern::Var(pattern_name) => {
-            if pattern_name == &name {
-                val
-            } else {
-                panic!(format!(
-                    "Expected projection: {:?}, found: {:?}",
-                    pattern_name, name
-                ))
-            }
-        }
-        Pattern::Unit => panic!("Cannot project unit pattern"),
     }
 }
 
-impl<Name: NameTraitAndDebug> Closure<Name> {
+impl<Name: DebuggableNameTrait> Closure<Name> {
     /// `*` in Mini-TT.
     /// Instantiate a closure.
     pub fn instantiate(self, val: Value<Name>) -> Value<Name> {
@@ -57,7 +76,7 @@ impl<Name: NameTraitAndDebug> Closure<Name> {
     }
 }
 
-impl<Name: NameTraitAndDebug> Value<Name> {
+impl<Name: DebuggableNameTrait> Value<Name> {
     /// `vfst` in Mini-TT. Run `.1` on a Pair.
     pub fn first(self) -> Value<Name> {
         match self {
@@ -72,7 +91,7 @@ impl<Name: NameTraitAndDebug> Value<Name> {
         match self {
             Value::Pair(_, second) => *second,
             Value::Neutral(neutral) => Value::Neutral(Neutral::Second(Box::new(neutral))),
-            e => panic!(format!("Cannot second: {:?}", e)),
+            e => panic!("Cannot second: {:?}", e),
         }
     }
 
@@ -91,17 +110,17 @@ impl<Name: NameTraitAndDebug> Value<Name> {
                     Box::new((case_tree, context)),
                     Box::new(neutral),
                 )),
-                e => panic!(format!("Cannot apply a: {:?}", e)),
+                e => panic!("Cannot apply a: {:?}", e),
             },
             Value::Neutral(neutral) => {
                 Value::Neutral(Neutral::Application(Box::new(neutral), Box::new(argument)))
             }
-            e => panic!(format!("Cannot apply on: {:?}", e)),
+            e => panic!("Cannot apply on: {:?}", e),
         }
     }
 }
 
-impl<Name: NameTraitAndDebug> Expression<Name> {
+impl<Name: DebuggableNameTrait> Expression<Name> {
     /// `eval` in Mini-TT.
     /// Evaluate an [`Expression`] to a [`Value`] under a [`Telescope`].
     /// Will panic if not well-typed.
@@ -110,7 +129,7 @@ impl<Name: NameTraitAndDebug> Expression<Name> {
             Expression::Unit => Value::Unit,
             Expression::One => Value::One,
             Expression::Type => Value::Type,
-            Expression::Var(_) => unimplemented!(),
+            Expression::Var(name) => context.resolve(&name),
             Expression::Sum(constructors) => {
                 Value::Sum((Box::new(constructors), Box::new(context.clone())))
             }
@@ -143,7 +162,7 @@ impl<Name: NameTraitAndDebug> Expression<Name> {
             Expression::Declaration(declaration, rest) => {
                 rest.eval(&Telescope::UpDec(Box::new(context.clone()), *declaration))
             }
-            e => panic!(format!("Cannot eval: {:?}", e)),
+            e => panic!("Cannot eval: {:?}", e),
         }
     }
 }
