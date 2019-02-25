@@ -63,8 +63,8 @@ impl<Name: DebuggableNameTrait> Telescope<Name> {
 }
 
 impl<Name: DebuggableNameTrait> Closure<Name> {
-    /// `*` in Mini-TT.
-    /// Instantiate a closure.
+    /// `*` in Mini-TT.<br/>
+    /// Instantiate a closure with `val`.
     pub fn instantiate(self, val: Value<Name>) -> Value<Name> {
         use crate::syntax::GenericTelescope as Telescope;
         match self {
@@ -79,7 +79,8 @@ impl<Name: DebuggableNameTrait> Closure<Name> {
 }
 
 impl<Name: DebuggableNameTrait> Value<Name> {
-    /// `vfst` in Mini-TT. Run `.1` on a Pair.
+    /// `vfst` in Mini-TT.<br/>
+    /// Run `.1` on a Pair.
     pub fn first(self) -> Value<Name> {
         use crate::syntax::GenericNeutral as Neutral;
         match self {
@@ -89,7 +90,8 @@ impl<Name: DebuggableNameTrait> Value<Name> {
         }
     }
 
-    /// `vsnd` in Mini-TT. Run `.2` on a Pair.
+    /// `vsnd` in Mini-TT.<br/>
+    /// Run `.2` on a Pair.
     pub fn second(self) -> Value<Name> {
         use crate::syntax::GenericNeutral as Neutral;
         match self {
@@ -125,9 +127,9 @@ impl<Name: DebuggableNameTrait> Value<Name> {
 }
 
 impl<Name: DebuggableNameTrait> Expression<Name> {
-    /// `eval` in Mini-TT.
-    /// Evaluate an [`Expression`] to a [`Value`] under a [`Telescope`].
-    /// Will panic if not well-typed.
+    /// `eval` in Mini-TT.<br/>
+    /// Evaluate an [`Expression`] to a [`Value`] under a [`Telescope`],
+    /// panic if not well-typed.
     pub fn eval(self, context: &Telescope<Name>) -> Value<Name> {
         use crate::syntax::GenericTelescope as Telescope;
         match self {

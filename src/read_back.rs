@@ -8,7 +8,11 @@ pub fn generate_value<Name: NameTrait>(id: u32) -> Value<Name> {
     Value::Neutral(Neutral::Generated(id))
 }
 
-trait ReadBack {
+/// Since all of `Value`, `Neutral` and `Telescope` have a read back function,
+/// I extracted this common interface for them.
+pub trait ReadBack {
+    /// Corresponding normal form type for the read-backable structures.<br/>
+    /// This is needed because Rust does not support Higher-Kinded Types :(
     type NormalForm;
 
     /// Interface for `rbV`, `rbN` and `rbRho` in Mini-TT.

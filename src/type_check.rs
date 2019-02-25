@@ -3,13 +3,12 @@ use std::collections::BTreeMap;
 use crate::reduce::*;
 use crate::syntax::*;
 
-/// `Gamma` in Mini-TT.
+/// `Gamma` in Mini-TT.<br/>
 /// By doing this we get `lookupG` in Mini-TT for free.
-type Gamma<Name> = BTreeMap<Name, Value<Name>>;
+pub type Gamma<Name> = BTreeMap<Name, Value<Name>>;
 
-/// `upG` in Mini-TT.
-/// Gamma |- p : t = u => Gamma’
-///
+/// `upG` in Mini-TT.<br/>
+/// `Gamma |- p : t = u => Gamma’`<br/><br/>
 /// However, since Rust is an imperative language, we use mutable reference instead of making it
 /// monadic.
 pub fn update_gamma<'a, Name: DebuggableNameTrait>(

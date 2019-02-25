@@ -1,15 +1,15 @@
 use crate::syntax::*;
 
-/// `NRho` in Mini-TT.
+/// `NRho` in Mini-TT, normal form telescopes (contexts).
 pub type NormalTelescope<Name> = GenericTelescope<Name, NormalExpression<Name>>;
 
-/// `NSClos` in Mini-TT.
+/// `NSClos` in Mini-TT, normal form closures.
 pub type NormalDeepClosure<Name> = GenericDeepClosure<Name, NormalExpression<Name>>;
 
-/// `NNeut` in Mini-TT.
+/// `NNeut` in Mini-TT, normal form neutral values.
 pub type NormalNeutral<Name> = GenericNeutral<Name, NormalExpression<Name>>;
 
-/// `NExp` in Mini-TT, normal form.
+/// `NExp` in Mini-TT, normal form expressions.
 #[derive(Debug, Clone)]
 pub enum NormalExpression<Name: NameTrait> {
     Lambda(u32, Box<NormalExpression<Name>>),

@@ -76,7 +76,8 @@ pub enum Declaration<Name: NameTrait> {
     Recursive(Pattern<Name>, Expression<Name>, Expression<Name>),
 }
 
-/// Generic definition for two kinds of telescopes
+/// Generic definition for two kinds of telescopes.<br/>
+/// `Value` can be specialized with `Value<Name>` or `NormalExpression<Name>`.
 // TODO: replace with Vec<enum {Dec, Var}>
 #[derive(Debug, Clone)]
 pub enum GenericTelescope<Name: NameTrait, Value> {
@@ -98,7 +99,7 @@ pub enum Closure<Name: NameTrait> {
 /// Generic definition for two kinds of deep closures
 pub type GenericDeepClosure<Name, Value> = (Box<Branch<Name>>, Box<GenericTelescope<Name, Value>>);
 
-/// `SClos` in Mini-TT.
+/// `SClos` in Mini-TT.<br/>
 /// A closure that comes with a pattern, like the data type (sum) definition (all the constructors
 /// are pattern-like) or the function definition (it's built on top of a pattern tree)
 pub type DeepClosure<Name> = GenericDeepClosure<Name, Value<Name>>;
