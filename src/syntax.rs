@@ -76,6 +76,16 @@ pub enum Declaration<Name: NameTrait> {
     Recursive(Pattern<Name>, Expression<Name>, Expression<Name>),
 }
 
+impl<Name: NameTrait> Declaration<Name> {
+    pub fn pattern(&self) -> &Pattern<Name> {
+        use Declaration::*;
+        match self {
+            Simple(pattern, _, _) => pattern,
+            Recursive(pattern, _, _) => pattern,
+        }
+    }
+}
+
 /// Generic definition for two kinds of telescopes.<br/>
 /// `Value` can be specialized with `Value<Name>` or `NormalExpression<Name>`.
 ///
@@ -92,6 +102,16 @@ pub type TelescopeRaw<Name> = GenericTelescope<Name, Value<Name>>;
 
 /// `Rho` in Mini-TT, dependent context.
 pub type Telescope<Name> = Rc<TelescopeRaw<Name>>;
+
+impl<Name: NameTrait, Value: Clone> GenericTelescope<Name, Value> {
+    pub fn up_var_rc(me: Rc<Self>, pattern: Pattern<Name>, value: Value) -> Rc<Self> {
+        Rc::new(GenericTelescope::UpVar(me, pattern, value))
+    }
+
+    pub fn up_dec_rc(me: Rc<Self>, declaration: Declaration<Name>) -> Rc<Self> {
+        Rc::new(GenericTelescope::UpDec(me, declaration))
+    }
+}
 
 /// `Clos` in Mini-TT.
 #[derive(Debug, Clone)]

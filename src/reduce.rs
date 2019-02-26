@@ -102,6 +102,20 @@ impl<Name: DebuggableNameTrait> Value<Name> {
         }
     }
 
+    /// Combination of `vsnd` and `vfst` in Mini-TT.<br/>
+    /// Run `.2` on a Pair.
+    pub fn destruct(self) -> (Value<Name>, Value<Name>) {
+        use crate::syntax::GenericNeutral as Neutral;
+        match self {
+            Value::Pair(first, second) => (*first, *second),
+            Value::Neutral(neutral) => (
+                Value::Neutral(Neutral::First(Box::new(neutral.clone()))),
+                Value::Neutral(Neutral::Second(Box::new(neutral))),
+            ),
+            e => panic!("Cannot destruct: {:?}", e),
+        }
+    }
+
     /// `app` in Mini-TT.
     pub fn apply(self, argument: Value<Name>) -> Value<Name> {
         use crate::syntax::GenericNeutral as Neutral;

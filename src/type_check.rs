@@ -29,10 +29,10 @@ pub fn update_gamma<'a, Name: DebuggableNameTrait>(
     match pattern {
         Pattern::Pair(pattern_first, pattern_second) => match type_val {
             Value::Sigma(first, second) => {
-                let val_first = val.clone().first();
+                let (val_first, val_second) = val.destruct();
                 let gamma = update_gamma(gamma, pattern_first, *first, val_first.clone())?;
                 let second = second.instantiate(val_first);
-                update_gamma(gamma, pattern_second, second, val.second())
+                update_gamma(gamma, pattern_second, second, val_second)
             }
             _ => Err(format!("Cannot update Gamma by: {:?}", pattern)),
         },
@@ -56,13 +56,63 @@ pub fn check_infer<'a, Name: DebuggableNameTrait>(
 }
 
 /// `checkD` in Mini-TT.<br/>
-pub fn check_declaration<'a, Name: DebuggableNameTrait>(
+pub fn check_declaration<Name: DebuggableNameTrait>(
     index: u32,
     context: Telescope<Name>,
-    gamma: Gamma<'a, Name>,
+    gamma: Gamma<Name>,
     declaration: Declaration<Name>,
-) -> TCM<Gamma<'a, Name>> {
-    unimplemented!()
+) -> TCM<Gamma<Name>> {
+    match declaration {
+        Declaration::Simple(pattern, signature, body) => {
+            check_type(
+                index,
+                context.clone(),
+                Cow::Borrowed(&gamma),
+                signature.clone(),
+            )?;
+            let signature = signature.eval(context.clone());
+            check(
+                index,
+                context.clone(),
+                Cow::Borrowed(&gamma),
+                body.clone(),
+                signature.clone(),
+            )?;
+            update_gamma(gamma, &pattern, signature, body.eval(context))
+        }
+        Declaration::Recursive(pattern, signature, body) => {
+            check_type(
+                index,
+                context.clone(),
+                Cow::Borrowed(&gamma),
+                signature.clone(),
+            )?;
+            let signature_plain = signature.clone();
+            let signature = signature.eval(context.clone());
+            let generated = generate_value(index);
+            let fake_gamma = update_gamma(
+                Cow::Borrowed(&gamma),
+                &pattern,
+                signature.clone(),
+                generated.clone(),
+            )?;
+            check(
+                index + 1,
+                GenericTelescope::up_var_rc(context.clone(), pattern.clone(), generated),
+                Cow::Borrowed(&fake_gamma),
+                body.clone(),
+                signature.clone(),
+            )?;
+            let declaration =
+                Declaration::Recursive(pattern.clone(), signature_plain, body.clone());
+            update_gamma(
+                gamma,
+                &pattern,
+                signature,
+                body.eval(GenericTelescope::up_dec_rc(context, declaration)),
+            )
+        }
+    }
 }
 
 /// `checkT` in Mini-TT.<br/>
@@ -75,9 +125,14 @@ pub fn check_type<Name: DebuggableNameTrait>(
     use crate::syntax::Expression::*;
     match expression {
         Pi(pattern, first, second) | Sigma(pattern, first, second) => {
-            check_type(index, context.clone(), gamma.clone(), *first.clone())?;
+            check_type(
+                index,
+                context.clone(),
+                Cow::Borrowed(&gamma),
+                *first.clone(),
+            )?;
             let gamma = update_gamma(
-                gamma,
+                Cow::Borrowed(&gamma),
                 &pattern,
                 first.eval(context.clone()),
                 generate_value(index),
