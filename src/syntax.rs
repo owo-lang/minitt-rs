@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 use std::hash::Hash;
+use std::rc::Rc;
 
 /// Virtual trait, created to simplify trait bounds for identifiers.
 pub trait NameTrait: Eq + Ord + PartialOrd + Hash + Clone {}
@@ -49,7 +50,7 @@ pub enum Value<Name: NameTrait> {
 ///
 /// Implementing `Eq` because of `NormalExpression`
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum GenericNeutral<Name: NameTrait, Value> {
+pub enum GenericNeutral<Name: NameTrait, Value: Clone> {
     Generated(u32),
     Application(Box<Self>, Box<Value>),
     First(Box<Self>),
@@ -81,14 +82,16 @@ pub enum Declaration<Name: NameTrait> {
 /// Implementing `Eq` because of `NormalExpression`
 // TODO: replace with Vec<enum {Dec, Var}>
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum GenericTelescope<Name: NameTrait, Value> {
+pub enum GenericTelescope<Name: NameTrait, Value: Clone> {
     Nil,
-    UpDec(Box<Self>, Declaration<Name>),
-    UpVar(Box<Self>, Pattern<Name>, Value),
+    UpDec(Rc<Self>, Declaration<Name>),
+    UpVar(Rc<Self>, Pattern<Name>, Value),
 }
 
+pub type TelescopeRaw<Name> = GenericTelescope<Name, Value<Name>>;
+
 /// `Rho` in Mini-TT, dependent context.
-pub type Telescope<Name> = GenericTelescope<Name, Value<Name>>;
+pub type Telescope<Name> = Rc<TelescopeRaw<Name>>;
 
 /// `Clos` in Mini-TT.
 #[derive(Debug, Clone)]
@@ -98,7 +101,8 @@ pub enum Closure<Name: NameTrait> {
 }
 
 /// Generic definition for two kinds of deep closures
-pub type GenericDeepClosure<Name, Value> = (Box<Branch<Name>>, Box<GenericTelescope<Name, Value>>);
+pub type GenericDeepClosure<Name, Value> =
+    (Box<Branch<Name>>, Box<Rc<GenericTelescope<Name, Value>>>);
 
 /// `SClos` in Mini-TT.<br/>
 /// A closure that comes with a pattern, like the data type (sum) definition (all the constructors

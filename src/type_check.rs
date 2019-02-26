@@ -4,6 +4,7 @@ use crate::read_back::generate_value;
 use crate::reduce::*;
 use crate::syntax::*;
 use std::borrow::Cow;
+use std::rc::Rc;
 
 pub type GammaRaw<Name> = BTreeMap<Name, Value<Name>>;
 
@@ -74,11 +75,20 @@ pub fn check_type<Name: DebuggableNameTrait>(
     use crate::syntax::Expression::*;
     match expression {
         Pi(pattern, first, second) | Sigma(pattern, first, second) => {
-            check_type(index, context, Cow::Borrowed(&gamma), *first.clone())?;
-            let gamma = update_gamma(gamma, &pattern, first.eval(context), generate_value(index))?;
+            check_type(index, context.clone(), gamma.clone(), *first.clone())?;
+            let gamma = update_gamma(
+                gamma,
+                &pattern,
+                first.eval(context.clone()),
+                generate_value(index),
+            )?;
             check_type(
                 index + 1,
-                &mut GenericTelescope::UpVar(Box::new(*context.clone()), pattern, generate_value(index)),
+                Rc::new(GenericTelescope::UpVar(
+                    context,
+                    pattern,
+                    generate_value(index),
+                )),
                 gamma,
                 *second,
             )

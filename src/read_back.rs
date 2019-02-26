@@ -2,6 +2,7 @@ use crate::normal::*;
 use crate::reduce::*;
 use crate::syntax::*;
 use std::fmt::Debug;
+use std::rc::Rc;
 
 /// `genV` in Mini-TT.
 pub fn generate_value<Name: NameTrait>(id: u32) -> Value<Name> {
@@ -91,20 +92,23 @@ impl<Name: DebuggableNameTrait> ReadBack for Value<Name> {
     }
 }
 
-impl<Name: DebuggableNameTrait> ReadBack for Telescope<Name> {
+impl<Name: DebuggableNameTrait> ReadBack for &TelescopeRaw<Name> {
     type NormalForm = NormalTelescope<Name>;
 
+    //noinspection RsBorrowChecker
     /// `rbRho` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm {
         use crate::syntax::GenericTelescope::*;
         match self {
-            Nil => Nil,
-            UpDec(context, declaration) => UpDec(Box::new(context.read_back(index)), declaration),
-            UpVar(context, pattern, val) => UpVar(
-                Box::new(context.read_back(index)),
-                pattern,
-                val.read_back(index),
-            ),
+            Nil => Rc::new(Nil),
+            UpDec(context, declaration) => {
+                Rc::new(UpDec(context.read_back(index), declaration.clone()))
+            }
+            UpVar(context, pattern, val) => Rc::new(UpVar(
+                context.read_back(index),
+                pattern.clone(),
+                val.clone().read_back(index),
+            )),
         }
     }
 }

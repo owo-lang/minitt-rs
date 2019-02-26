@@ -1,5 +1,6 @@
 use crate::syntax::*;
 use std::fmt::Debug;
+use std::rc::Rc;
 
 pub trait DebuggableNameTrait: NameTrait + Debug {}
 
@@ -14,7 +15,7 @@ impl<Name: DebuggableNameTrait> Pattern<Name> {
     }
 
     /// `patProj` in Mini-TT.
-    pub fn project(&self, name: &Name, val: Value<Name>) -> Value<Name> {
+    pub fn project<'a>(&self, name: &Name, val: Value<Name>) -> Value<Name> {
         match self {
             Pattern::Pair(first, second) => {
                 if first.contains(name) {
@@ -37,7 +38,7 @@ impl<Name: DebuggableNameTrait> Pattern<Name> {
     }
 }
 
-impl<Name: DebuggableNameTrait> Telescope<Name> {
+impl<Name: DebuggableNameTrait> TelescopeRaw<Name> {
     /// `getRho` in Mini-TT.
     pub fn resolve(&self, name: &Name) -> Value<Name> {
         use crate::syntax::GenericTelescope::*;
@@ -46,7 +47,7 @@ impl<Name: DebuggableNameTrait> Telescope<Name> {
             UpDec(context, Declaration::Simple(pattern, _, expression))
             | UpDec(context, Declaration::Recursive(pattern, _, expression)) => {
                 if pattern.contains(name) {
-                    pattern.project(name, expression.clone().eval(context))
+                    pattern.project(name, expression.clone().eval(context.clone()))
                 } else {
                     context.resolve(name)
                 }
@@ -65,14 +66,14 @@ impl<Name: DebuggableNameTrait> Telescope<Name> {
 impl<Name: DebuggableNameTrait> Closure<Name> {
     /// `*` in Mini-TT.<br/>
     /// Instantiate a closure with `val`.
-    pub fn instantiate(self, val: Value<Name>) -> Value<Name> {
+    pub fn instantiate(self, value: Value<Name>) -> Value<Name> {
         use crate::syntax::GenericTelescope as Telescope;
         match self {
             Closure::Choice(pattern, expression, context) => {
-                expression.eval(&Telescope::UpVar(context, pattern, val))
+                expression.eval(Rc::new(Telescope::UpVar(*context, pattern, value)))
             }
             Closure::Function(closure, name) => {
-                closure.instantiate(Value::Constructor(name, Box::new(val)))
+                closure.instantiate(Value::Constructor(name, Box::new(value)))
             }
         }
     }
@@ -86,7 +87,7 @@ impl<Name: DebuggableNameTrait> Value<Name> {
         match self {
             Value::Pair(first, _) => *first,
             Value::Neutral(neutral) => Value::Neutral(Neutral::First(Box::new(neutral))),
-            e => panic!(format!("Cannot first: {:?}", e)),
+            e => panic!("Cannot first: {:?}", e),
         }
     }
 
@@ -111,7 +112,7 @@ impl<Name: DebuggableNameTrait> Value<Name> {
                     .get(&name)
                     .unwrap_or_else(|| panic!("Cannot find constructor {:?}.", name))
                     .clone()
-                    .eval(&context)
+                    .eval(*context)
                     .apply(*body),
                 Value::Neutral(neutral) => {
                     Value::Neutral(Neutral::Function((case_tree, context), Box::new(neutral)))
@@ -130,7 +131,7 @@ impl<Name: DebuggableNameTrait> Expression<Name> {
     /// `eval` in Mini-TT.<br/>
     /// Evaluate an [`Expression`] to a [`Value`] under a [`Telescope`],
     /// panic if not well-typed.
-    pub fn eval(self, context: &Telescope<Name>) -> Value<Name> {
+    pub fn eval<'a>(self, context: Telescope<Name>) -> Value<Name> {
         use crate::syntax::GenericTelescope as Telescope;
         match self {
             Expression::Unit => Value::Unit,
@@ -138,36 +139,36 @@ impl<Name: DebuggableNameTrait> Expression<Name> {
             Expression::Type => Value::Type,
             Expression::Var(name) => context.resolve(&name),
             Expression::Sum(constructors) => {
-                Value::Sum((Box::new(constructors), Box::new(context.clone())))
+                Value::Sum((Box::new(constructors), Box::new(context)))
             }
             Expression::Function(case_tree) => {
-                Value::Function((Box::new(case_tree), Box::new(context.clone())))
+                Value::Function((Box::new(case_tree), Box::new(context)))
             }
             Expression::Pi(pattern, first, second) => Value::Pi(
-                Box::new(first.eval(context)),
-                Closure::Choice(pattern, *second, Box::new(context.clone())),
+                Box::new(first.eval(context.clone())),
+                Closure::Choice(pattern, *second, Box::new(context)),
             ),
             Expression::Sigma(pattern, first, second) => Value::Sigma(
-                Box::new(first.eval(context)),
-                Closure::Choice(pattern, *second, Box::new(context.clone())),
+                Box::new(first.eval(context.clone())),
+                Closure::Choice(pattern, *second, Box::new(context)),
             ),
             Expression::Lambda(pattern, body) => {
-                Value::Lambda(Closure::Choice(pattern, *body, Box::new(context.clone())))
+                Value::Lambda(Closure::Choice(pattern, *body, Box::new(context)))
             }
             Expression::First(pair) => pair.eval(context).first(),
             Expression::Second(pair) => pair.eval(context).second(),
             Expression::Application(function, argument) => {
-                function.eval(context).apply(argument.eval(context))
+                function.eval(context.clone()).apply(argument.eval(context))
             }
             Expression::Pair(first, second) => Value::Pair(
-                Box::new(first.eval(context)),
+                Box::new(first.eval(context.clone())),
                 Box::new(second.eval(context)),
             ),
             Expression::Constructor(name, body) => {
                 Value::Constructor(name, Box::new(body.eval(context)))
             }
             Expression::Declaration(declaration, rest) => {
-                rest.eval(&Telescope::UpDec(Box::new(context.clone()), *declaration))
+                rest.eval(Rc::new(Telescope::UpDec(context, *declaration)))
             }
             e => panic!("Cannot eval: {:?}", e),
         }

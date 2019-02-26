@@ -1,7 +1,9 @@
+use std::rc::Rc;
+
 use crate::syntax::*;
 
 /// `NRho` in Mini-TT, normal form telescopes (contexts).
-pub type NormalTelescope<Name> = GenericTelescope<Name, NormalExpression<Name>>;
+pub type NormalTelescope<Name> = Rc<GenericTelescope<Name, NormalExpression<Name>>>;
 
 /// `NSClos` in Mini-TT, normal form closures.
 pub type NormalDeepClosure<Name> = GenericDeepClosure<Name, NormalExpression<Name>>;
