@@ -9,7 +9,7 @@ pub type NormalDeepClosure<Name> = GenericDeepClosure<Name, NormalExpression<Nam
 /// `NNeut` in Mini-TT, normal form neutral values.
 pub type NormalNeutral<Name> = GenericNeutral<Name, NormalExpression<Name>>;
 
-/// `NExp` in Mini-TT, normal form expressions.
+/// `NExp` in Mini-TT, normal form expressions.<br/>
 /// Deriving `Eq` so we can do comparison.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum NormalExpression<Name: NameTrait> {
