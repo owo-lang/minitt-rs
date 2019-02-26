@@ -4,7 +4,6 @@ use crate::read_back::generate_value;
 use crate::reduce::*;
 use crate::syntax::*;
 use std::borrow::Cow;
-use std::rc::Rc;
 
 pub type GammaRaw<Name> = BTreeMap<Name, Value<Name>>;
 
@@ -46,13 +45,43 @@ pub fn update_gamma<'a, Name: DebuggableNameTrait>(
 }
 
 /// `checkI` in Mini-TT.<br/>
-pub fn check_infer<'a, Name: DebuggableNameTrait>(
+/// Type inference rule. More inferences are added here (maybe it's useful?)
+pub fn check_infer<Name: DebuggableNameTrait>(
     index: u32,
     context: Telescope<Name>,
-    gamma: Gamma<'a, Name>,
+    gamma: Gamma<Name>,
     expression: Expression<Name>,
 ) -> TCM<Value<Name>> {
-    unimplemented!()
+    match expression {
+        Expression::Unit => Ok(Value::One),
+        Expression::One => Ok(Value::Type),
+        Expression::Type => Ok(Value::Type),
+        Expression::Void => Ok(Value::Type),
+        Expression::Var(name) => gamma
+            .get(&name)
+            .map(|value| value.clone())
+            .ok_or(format!("Unresolved reference {:?}", name).to_string()),
+        Expression::First(pair) => match check_infer(index, context, gamma, *pair)? {
+            Value::Sigma(first, _) => Ok(*first),
+            e => Err(format!("Expected Sigma, got: {:?}", e).to_string()),
+        },
+        Expression::Second(pair) => {
+            match check_infer(index, context.clone(), gamma, *pair.clone())? {
+                Value::Sigma(_, second) => Ok(second.instantiate(pair.eval(context).first())),
+                e => Err(format!("Expected Sigma, got: {:?}", e).to_string()),
+            }
+        }
+        Expression::Application(function, argument) => {
+            match check_infer(index, context.clone(), Cow::Borrowed(&gamma), *function)? {
+                Value::Pi(input, output) => {
+                    check(index, context.clone(), gamma, *argument.clone(), *input)?;
+                    Ok(output.instantiate(argument.eval(context)))
+                }
+                e => Err(format!("Expected Pi, got: {:?}", e).to_string()),
+            }
+        }
+        e => Err(format!("Cannot infer type of: {:?}", e)),
+    }
 }
 
 /// `checkD` in Mini-TT.<br/>
@@ -62,8 +91,9 @@ pub fn check_declaration<Name: DebuggableNameTrait>(
     gamma: Gamma<Name>,
     declaration: Declaration<Name>,
 ) -> TCM<Gamma<Name>> {
+    use crate::syntax::Declaration::*;
     match declaration {
-        Declaration::Simple(pattern, signature, body) => {
+        Simple(pattern, signature, body) => {
             check_type(
                 index,
                 context.clone(),
@@ -80,7 +110,7 @@ pub fn check_declaration<Name: DebuggableNameTrait>(
             )?;
             update_gamma(gamma, &pattern, signature, body.eval(context))
         }
-        Declaration::Recursive(pattern, signature, body) => {
+        Recursive(pattern, signature, body) => {
             check_type(
                 index,
                 context.clone(),
@@ -99,18 +129,13 @@ pub fn check_declaration<Name: DebuggableNameTrait>(
             check(
                 index + 1,
                 GenericTelescope::up_var_rc(context.clone(), pattern.clone(), generated),
-                Cow::Borrowed(&fake_gamma),
+                fake_gamma,
                 body.clone(),
                 signature.clone(),
             )?;
-            let declaration =
-                Declaration::Recursive(pattern.clone(), signature_plain, body.clone());
-            update_gamma(
-                gamma,
-                &pattern,
-                signature,
-                body.eval(GenericTelescope::up_dec_rc(context, declaration)),
-            )
+            let declaration = Recursive(pattern.clone(), signature_plain, body.clone());
+            let body = body.eval(GenericTelescope::up_dec_rc(context, declaration));
+            update_gamma(gamma, &pattern, signature, body)
         }
     }
 }
@@ -139,11 +164,7 @@ pub fn check_type<Name: DebuggableNameTrait>(
             )?;
             check_type(
                 index + 1,
-                Rc::new(GenericTelescope::UpVar(
-                    context,
-                    pattern,
-                    generate_value(index),
-                )),
+                GenericTelescope::up_var_rc(context, pattern, generate_value(index)),
                 gamma,
                 *second,
             )

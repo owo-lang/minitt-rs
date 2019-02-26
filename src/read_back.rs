@@ -56,11 +56,11 @@ impl<Name: DebuggableNameTrait> ReadBack for Value<Name> {
             Value::Unit => NormalExpression::Unit,
             Value::One => NormalExpression::One,
             Value::Type => NormalExpression::Type,
-            Value::Pi(first, second) => NormalExpression::Pi(
-                Box::new(first.read_back(index)),
+            Value::Pi(input, output) => NormalExpression::Pi(
+                Box::new(input.read_back(index)),
                 index,
                 Box::new(
-                    second
+                    output
                         .instantiate(generate_value(index))
                         .read_back(index + 1),
                 ),
