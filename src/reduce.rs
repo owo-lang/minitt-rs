@@ -69,10 +69,10 @@ impl<Name: DebuggableNameTrait> Closure<Name> {
     pub fn instantiate(self, value: Value<Name>) -> Value<Name> {
         use crate::syntax::GenericTelescope as Telescope;
         match self {
-            Closure::Choice(pattern, expression, context) => {
+            Closure::Function(pattern, expression, context) => {
                 expression.eval(Rc::new(Telescope::UpVar(*context, pattern, value)))
             }
-            Closure::Function(closure, name) => {
+            Closure::Choice(closure, name) => {
                 closure.instantiate(Value::Constructor(name, Box::new(value)))
             }
         }
@@ -160,14 +160,14 @@ impl<Name: DebuggableNameTrait> Expression<Name> {
             }
             Expression::Pi(pattern, first, second) => Value::Pi(
                 Box::new(first.eval(context.clone())),
-                Closure::Choice(pattern, *second, Box::new(context)),
+                Closure::Function(pattern, *second, Box::new(context)),
             ),
             Expression::Sigma(pattern, first, second) => Value::Sigma(
                 Box::new(first.eval(context.clone())),
-                Closure::Choice(pattern, *second, Box::new(context)),
+                Closure::Function(pattern, *second, Box::new(context)),
             ),
             Expression::Lambda(pattern, body) => {
-                Value::Lambda(Closure::Choice(pattern, *body, Box::new(context)))
+                Value::Lambda(Closure::Function(pattern, *body, Box::new(context)))
             }
             Expression::First(pair) => pair.eval(context).first(),
             Expression::Second(pair) => pair.eval(context).second(),

@@ -90,7 +90,7 @@ impl<Name: NameTrait> Declaration<Name> {
 /// `Value` can be specialized with `Value<Name>` or `NormalExpression<Name>`.
 ///
 /// Implementing `Eq` because of `NormalExpression`
-// TODO: replace with Vec<enum {Dec, Var}>
+// TODO: replace with Vec<enum {Dec, Var}> maybe?
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum GenericTelescope<Name: NameTrait, Value: Clone> {
     Nil,
@@ -103,21 +103,32 @@ pub type TelescopeRaw<Name> = GenericTelescope<Name, Value<Name>>;
 /// `Rho` in Mini-TT, dependent context.
 pub type Telescope<Name> = Rc<TelescopeRaw<Name>>;
 
-impl<Name: NameTrait, Value: Clone> GenericTelescope<Name, Value> {
-    pub fn up_var_rc(me: Rc<Self>, pattern: Pattern<Name>, value: Value) -> Rc<Self> {
-        Rc::new(GenericTelescope::UpVar(me, pattern, value))
-    }
+/// Just for simplifying constructing an `Rc`.
+pub fn up_var_rc<Name: NameTrait, Value: Clone>(
+    me: Rc<GenericTelescope<Name, Value>>,
+    pattern: Pattern<Name>,
+    value: Value,
+) -> Rc<GenericTelescope<Name, Value>> {
+    Rc::new(GenericTelescope::UpVar(me, pattern, value))
+}
 
-    pub fn up_dec_rc(me: Rc<Self>, declaration: Declaration<Name>) -> Rc<Self> {
-        Rc::new(GenericTelescope::UpDec(me, declaration))
-    }
+/// Just for simplifying constructing an `Rc`.
+pub fn up_dec_rc<Name: NameTrait, Value: Clone>(
+    me: Rc<GenericTelescope<Name, Value>>,
+    declaration: Declaration<Name>,
+) -> Rc<GenericTelescope<Name, Value>> {
+    Rc::new(GenericTelescope::UpDec(me, declaration))
 }
 
 /// `Clos` in Mini-TT.
 #[derive(Debug, Clone)]
 pub enum Closure<Name: NameTrait> {
-    Choice(Pattern<Name>, Expression<Name>, Box<Telescope<Name>>),
-    Function(Box<Closure<Name>>, Name),
+    /// `cl` in Mini-TT.<br/>
+    /// `cl` probably stands for "Closure"
+    Function(Pattern<Name>, Expression<Name>, Box<Telescope<Name>>),
+    /// `clCmp` in Mini-TT.
+    /// `clCmp` probably stands for "Closure that does a comparison"
+    Choice(Box<Closure<Name>>, Name),
 }
 
 /// Generic definition for two kinds of deep closures
