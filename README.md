@@ -24,9 +24,11 @@ don't get confused when they read the paper while reading this implementation.
 
 [Mini-TT Paper](http://www.cse.chalmers.se/~bengt/papers/GKminiTT.pdf)
 
-### Plan
+## Features
 
-+ Initial version: just `clone`, `clone`, `clone` and simulate the Haskell implementation
-+ Update: use mutable `Vec`/`BTreeMap` for telescopes instead of functional immutable lists to improve efficiency
-+ Update: replace the use of `Clone`/`Box` to the use of `Rc`
-+ Update: add a parser, enabled with `feature`
++ [X] Everything that the Haskell implementation has
+  + [ ] Use `Vec` for declaration list instead of functional immutable list
+  + [ ] Use `Vec` for telescope instead of functional immutable list
+  + [X] Use `BTreeMap` for branch/case tree so we become flexible on case order
++ [ ] Parser as a cargo feature
++ [ ] AST pretty-printer as a cargo feature
