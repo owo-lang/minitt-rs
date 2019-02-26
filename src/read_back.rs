@@ -1,6 +1,7 @@
 use crate::normal::*;
 use crate::reduce::*;
 use crate::syntax::*;
+use std::fmt::Debug;
 
 /// `genV` in Mini-TT.
 pub fn generate_value<Name: NameTrait>(id: u32) -> Value<Name> {
@@ -10,13 +11,31 @@ pub fn generate_value<Name: NameTrait>(id: u32) -> Value<Name> {
 
 /// Since all of `Value`, `Neutral` and `Telescope` have a read back function,
 /// I extracted this common interface for them.
-pub trait ReadBack {
+///
+/// Implementing `Sized` to make the compiler happy.
+pub trait ReadBack: Sized {
     /// Corresponding normal form type for the read-backable structures.<br/>
     /// This is needed because Rust does not support Higher-Kinded Types :(
-    type NormalForm;
+    type NormalForm: Eq + Debug;
 
     /// Interface for `rbV`, `rbN` and `rbRho` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm;
+
+    /// `eqNf` in Mini-TT.
+    /// Whether two structures are equivalent up to normal form.
+    fn eq_normal(self, index: u32, other: Self) -> Result<(), String> {
+        let self_read_back = self.read_back(index);
+        let other_read_back = other.read_back(index);
+        if self_read_back == other_read_back {
+            Ok(())
+        } else {
+            Err(format!(
+                "TypeCheck: {:?} is not equal to {:?} up to normal form",
+                self_read_back, other_read_back
+            )
+            .to_string())
+        }
+    }
 }
 
 impl<Name: DebuggableNameTrait> ReadBack for Value<Name> {

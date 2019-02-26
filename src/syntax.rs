@@ -46,7 +46,8 @@ pub enum Value<Name: NameTrait> {
 }
 
 /// Generic definition for two kinds of neutral terms
-#[derive(Debug, Clone)]
+/// Implementing `Eq` because of `NormalExpression`
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum GenericNeutral<Name: NameTrait, Value> {
     Generated(u32),
     Application(Box<GenericNeutral<Name, Value>>, Box<Value>),
@@ -78,8 +79,9 @@ pub enum Declaration<Name: NameTrait> {
 
 /// Generic definition for two kinds of telescopes.<br/>
 /// `Value` can be specialized with `Value<Name>` or `NormalExpression<Name>`.
+/// Implementing `Eq` because of `NormalExpression`
 // TODO: replace with Vec<enum {Dec, Var}>
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum GenericTelescope<Name: NameTrait, Value> {
     Nil,
     UpDec(Box<GenericTelescope<Name, Value>>, Declaration<Name>),

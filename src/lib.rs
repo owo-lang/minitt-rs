@@ -26,11 +26,11 @@ pub mod normal;
 /// Converting terms to normal forms with de-bruijn indices so
 /// we do not need to deal with alpha conversions.
 ///
-/// Functions in this module are put into `impl` blocks, their docs can be found in:
+/// Functions in this module are put into `impl for` blocks, their docs can be found in:
 ///
-/// + [Methods of `Value`](../syntax/enum.Value.html#methods)
-/// + [Methods of `Telescope`](../syntax/enum.Telescope.html#methods)
-/// + [Methods of `Closure`](../syntax/enum.Closure.html#methods)
+/// + [`ReadBack` of `Value`](../syntax/enum.Value.html#impl-ReadBack)
+/// + [`ReadBack` of `Telescope`](../syntax/enum.Telescope.html#impl-ReadBack)
+/// + [`ReadBack` of `Closure`](../syntax/enum.Closure.html#impl-ReadBack)
 ///
 /// Depends on modules `syntax` and `normal`.
 pub mod read_back;
