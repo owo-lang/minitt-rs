@@ -1,12 +1,10 @@
-use crate::syntax::*;
-use std::fmt::Debug;
 use std::rc::Rc;
 
-pub trait DebuggableNameTrait: NameTrait + Debug {}
+use crate::syntax::*;
 
-impl<Name: DebuggableNameTrait> Pattern<Name> {
+impl Pattern {
     /// `inPat` in Mini-TT.
-    pub fn contains(&self, name: &Name) -> bool {
+    pub fn contains(&self, name: &String) -> bool {
         match self {
             Pattern::Var(pattern_name) => pattern_name == name,
             Pattern::Pair(first, second) => first.contains(name) || second.contains(name),
@@ -15,7 +13,7 @@ impl<Name: DebuggableNameTrait> Pattern<Name> {
     }
 
     /// `patProj` in Mini-TT.
-    pub fn project<'a>(&self, name: &Name, val: Value<Name>) -> Value<Name> {
+    pub fn project(&self, name: &String, val: Value) -> Value {
         match self {
             Pattern::Pair(first, second) => {
                 if first.contains(name) {
@@ -23,14 +21,14 @@ impl<Name: DebuggableNameTrait> Pattern<Name> {
                 } else if second.contains(name) {
                     second.project(name, val.second())
                 } else {
-                    panic!("Cannot project with {:?}", name)
+                    panic!("Cannot project with `{}`", name)
                 }
             }
             Pattern::Var(pattern_name) => {
                 if pattern_name == name {
                     val
                 } else {
-                    panic!("Expected projection: {:?}, found: {:?}", pattern_name, name)
+                    panic!("Expected projection: `{}`, found: `{}`", pattern_name, name)
                 }
             }
             Pattern::Unit => panic!("Cannot project unit pattern"),
@@ -38,12 +36,12 @@ impl<Name: DebuggableNameTrait> Pattern<Name> {
     }
 }
 
-impl<Name: DebuggableNameTrait> TelescopeRaw<Name> {
+impl TelescopeRaw {
     /// `getRho` in Mini-TT.
-    pub fn resolve(&self, name: &Name) -> Value<Name> {
+    pub fn resolve(&self, name: &String) -> Value {
         use crate::syntax::GenericTelescope::*;
         match self {
-            Nil => panic!("Unresolved reference: {:?}", name),
+            Nil => panic!("Unresolved reference: `{}`", name),
             UpDec(context, Declaration::Simple(pattern, _, expression))
             | UpDec(context, Declaration::Recursive(pattern, _, expression)) => {
                 if pattern.contains(name) {
@@ -63,10 +61,10 @@ impl<Name: DebuggableNameTrait> TelescopeRaw<Name> {
     }
 }
 
-impl<Name: DebuggableNameTrait> Closure<Name> {
+impl Closure {
     /// `*` in Mini-TT.<br/>
     /// Instantiate a closure with `val`.
-    pub fn instantiate(self, value: Value<Name>) -> Value<Name> {
+    pub fn instantiate(self, value: Value) -> Value {
         use crate::syntax::GenericTelescope as Telescope;
         match self {
             Closure::Function(pattern, expression, context) => {
@@ -79,10 +77,10 @@ impl<Name: DebuggableNameTrait> Closure<Name> {
     }
 }
 
-impl<Name: DebuggableNameTrait> Value<Name> {
+impl Value {
     /// `vfst` in Mini-TT.<br/>
     /// Run `.1` on a Pair.
-    pub fn first(self) -> Value<Name> {
+    pub fn first(self) -> Value {
         use crate::syntax::GenericNeutral as Neutral;
         match self {
             Value::Pair(first, _) => *first,
@@ -93,7 +91,7 @@ impl<Name: DebuggableNameTrait> Value<Name> {
 
     /// `vsnd` in Mini-TT.<br/>
     /// Run `.2` on a Pair.
-    pub fn second(self) -> Value<Name> {
+    pub fn second(self) -> Value {
         use crate::syntax::GenericNeutral as Neutral;
         match self {
             Value::Pair(_, second) => *second,
@@ -104,7 +102,7 @@ impl<Name: DebuggableNameTrait> Value<Name> {
 
     /// Combination of `vsnd` and `vfst` in Mini-TT.<br/>
     /// Run `.2` on a Pair.
-    pub fn destruct(self) -> (Value<Name>, Value<Name>) {
+    pub fn destruct(self) -> (Value, Value) {
         use crate::syntax::GenericNeutral as Neutral;
         match self {
             Value::Pair(first, second) => (*first, *second),
@@ -117,14 +115,14 @@ impl<Name: DebuggableNameTrait> Value<Name> {
     }
 
     /// `app` in Mini-TT.
-    pub fn apply(self, argument: Value<Name>) -> Value<Name> {
+    pub fn apply(self, argument: Value) -> Value {
         use crate::syntax::GenericNeutral as Neutral;
         match self {
             Value::Lambda(closure) => closure.instantiate(argument),
             Value::Function((case_tree, context)) => match argument {
                 Value::Constructor(name, body) => case_tree
                     .get(&name)
-                    .unwrap_or_else(|| panic!("Cannot find constructor {:?}.", name))
+                    .unwrap_or_else(|| panic!("Cannot find constructor `{}`.", name))
                     .clone()
                     .eval(*context)
                     .apply(*body),
@@ -141,11 +139,11 @@ impl<Name: DebuggableNameTrait> Value<Name> {
     }
 }
 
-impl<Name: DebuggableNameTrait> Expression<Name> {
+impl Expression {
     /// `eval` in Mini-TT.<br/>
     /// Evaluate an [`Expression`] to a [`Value`] under a [`Telescope`],
     /// panic if not well-typed.
-    pub fn eval<'a>(self, context: Telescope<Name>) -> Value<Name> {
+    pub fn eval(self, context: Telescope) -> Value {
         use crate::syntax::GenericTelescope as Telescope;
         match self {
             Expression::Unit => Value::Unit,

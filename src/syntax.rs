@@ -1,83 +1,79 @@
 use std::collections::BTreeMap;
-use std::hash::Hash;
 use std::rc::Rc;
-
-/// Virtual trait, created to simplify trait bounds for identifiers.
-pub trait NameTrait: Eq + Ord + PartialOrd + Hash + Clone {}
 
 /// `Exp` in Mini-TT.
 /// Expression language for Mini-TT.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub enum Expression<Name: NameTrait> {
+pub enum Expression {
     Unit,
     One,
     Type,
     Void,
-    Var(Name),
-    Sum(Branch<Name>),
-    Function(Branch<Name>),
-    Pi(Pattern<Name>, Box<Expression<Name>>, Box<Expression<Name>>),
-    Sigma(Pattern<Name>, Box<Expression<Name>>, Box<Expression<Name>>),
-    Lambda(Pattern<Name>, Box<Expression<Name>>),
-    First(Box<Expression<Name>>),
-    Second(Box<Expression<Name>>),
-    Application(Box<Expression<Name>>, Box<Expression<Name>>),
-    Pair(Box<Expression<Name>>, Box<Expression<Name>>),
-    Constructor(Name, Box<Expression<Name>>),
-    Declaration(Box<Declaration<Name>>, Box<Expression<Name>>),
+    Var(String),
+    Sum(Branch),
+    Function(Branch),
+    Pi(Pattern, Box<Self>, Box<Self>),
+    Sigma(Pattern, Box<Self>, Box<Self>),
+    Lambda(Pattern, Box<Self>),
+    First(Box<Self>),
+    Second(Box<Self>),
+    Application(Box<Self>, Box<Self>),
+    Pair(Box<Self>, Box<Self>),
+    Constructor(String, Box<Self>),
+    Declaration(Box<Declaration>, Box<Self>),
 }
 
 /// Pattern matching branch.
-pub type Branch<Name> = BTreeMap<Name, Box<Expression<Name>>>;
+pub type Branch = BTreeMap<String, Box<Expression>>;
 
 /// `Val` in Mini-TT, value term.
 #[derive(Debug, Clone)]
-pub enum Value<Name: NameTrait> {
-    Lambda(Closure<Name>),
+pub enum Value {
+    Lambda(Closure),
     Unit,
     One,
     Type,
-    Pi(Box<Value<Name>>, Closure<Name>),
-    Sigma(Box<Value<Name>>, Closure<Name>),
-    Pair(Box<Value<Name>>, Box<Value<Name>>),
-    Constructor(Name, Box<Value<Name>>),
-    Function(DeepClosure<Name>),
-    Sum(DeepClosure<Name>),
-    Neutral(Neutral<Name>),
+    Pi(Box<Self>, Closure),
+    Sigma(Box<Self>, Closure),
+    Pair(Box<Self>, Box<Self>),
+    Constructor(String, Box<Self>),
+    Function(DeepClosure),
+    Sum(DeepClosure),
+    Neutral(Neutral),
 }
 
 /// Generic definition for two kinds of neutral terms.
 ///
 /// Implementing `Eq` because of `NormalExpression`
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum GenericNeutral<Name: NameTrait, Value: Clone> {
+pub enum GenericNeutral<Value: Clone> {
     Generated(u32),
     Application(Box<Self>, Box<Value>),
     First(Box<Self>),
     Second(Box<Self>),
-    Function(GenericDeepClosure<Name, Value>, Box<Self>),
+    Function(GenericDeepClosure<Value>, Box<Self>),
 }
 
 /// `Neut` in Mini-TT, neutral value.
-pub type Neutral<Name> = GenericNeutral<Name, Value<Name>>;
+pub type Neutral = GenericNeutral<Value>;
 
 /// `Patt` in Mini-TT.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub enum Pattern<Name: NameTrait> {
-    Pair(Box<Pattern<Name>>, Box<Pattern<Name>>),
+pub enum Pattern {
+    Pair(Box<Pattern>, Box<Pattern>),
     Unit,
-    Var(Name),
+    Var(String),
 }
 
 /// `Decl` in Mini-TT.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub enum Declaration<Name: NameTrait> {
-    Simple(Pattern<Name>, Expression<Name>, Expression<Name>),
-    Recursive(Pattern<Name>, Expression<Name>, Expression<Name>),
+pub enum Declaration {
+    Simple(Pattern, Expression, Expression),
+    Recursive(Pattern, Expression, Expression),
 }
 
-impl<Name: NameTrait> Declaration<Name> {
-    pub fn pattern(&self) -> &Pattern<Name> {
+impl Declaration {
+    pub fn pattern(&self) -> &Pattern {
         use Declaration::*;
         match self {
             Simple(pattern, _, _) => pattern,
@@ -87,55 +83,58 @@ impl<Name: NameTrait> Declaration<Name> {
 }
 
 /// Generic definition for two kinds of telescopes.<br/>
-/// `Value` can be specialized with `Value<Name>` or `NormalExpression<Name>`.
+/// `Value` can be specialized with `Value` or `NormalExpression`.
 ///
 /// Implementing `Eq` because of `NormalExpression`
 // TODO: replace with Vec<enum {Dec, Var}> maybe?
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum GenericTelescope<Name: NameTrait, Value: Clone> {
+pub enum GenericTelescope<Value: Clone> {
     Nil,
-    UpDec(Rc<Self>, Declaration<Name>),
-    UpVar(Rc<Self>, Pattern<Name>, Value),
+    UpDec(Rc<Self>, Declaration),
+    UpVar(Rc<Self>, Pattern, Value),
 }
 
-pub type TelescopeRaw<Name> = GenericTelescope<Name, Value<Name>>;
+pub type TelescopeRaw = GenericTelescope<Value>;
 
 /// `Rho` in Mini-TT, dependent context.
-pub type Telescope<Name> = Rc<TelescopeRaw<Name>>;
+pub type Telescope = Rc<TelescopeRaw>;
 
 /// Just for simplifying constructing an `Rc`.
-pub fn up_var_rc<Name: NameTrait, Value: Clone>(
-    me: Rc<GenericTelescope<Name, Value>>,
-    pattern: Pattern<Name>,
+pub fn up_var_rc<Value: Clone>(
+    me: Rc<GenericTelescope<Value>>,
+    pattern: Pattern,
     value: Value,
-) -> Rc<GenericTelescope<Name, Value>> {
+) -> Rc<GenericTelescope<Value>> {
     Rc::new(GenericTelescope::UpVar(me, pattern, value))
 }
 
 /// Just for simplifying constructing an `Rc`.
-pub fn up_dec_rc<Name: NameTrait, Value: Clone>(
-    me: Rc<GenericTelescope<Name, Value>>,
-    declaration: Declaration<Name>,
-) -> Rc<GenericTelescope<Name, Value>> {
+pub fn up_dec_rc<Value: Clone>(
+    me: Rc<GenericTelescope<Value>>,
+    declaration: Declaration,
+) -> Rc<GenericTelescope<Value>> {
     Rc::new(GenericTelescope::UpDec(me, declaration))
+}
+
+pub fn nil_rc<Value: Clone>() -> Rc<GenericTelescope<Value>> {
+    Rc::new(GenericTelescope::Nil)
 }
 
 /// `Clos` in Mini-TT.
 #[derive(Debug, Clone)]
-pub enum Closure<Name: NameTrait> {
+pub enum Closure {
     /// `cl` in Mini-TT.<br/>
     /// `cl` probably stands for "Closure"
-    Function(Pattern<Name>, Expression<Name>, Box<Telescope<Name>>),
+    Function(Pattern, Expression, Box<Telescope>),
     /// `clCmp` in Mini-TT.
     /// `clCmp` probably stands for "Closure that does a comparison"
-    Choice(Box<Closure<Name>>, Name),
+    Choice(Box<Self>, String),
 }
 
 /// Generic definition for two kinds of deep closures
-pub type GenericDeepClosure<Name, Value> =
-    (Box<Branch<Name>>, Box<Rc<GenericTelescope<Name, Value>>>);
+pub type GenericDeepClosure<Value> = (Box<Branch>, Box<Rc<GenericTelescope<Value>>>);
 
 /// `SClos` in Mini-TT.<br/>
 /// A closure that comes with a pattern, like the data type (sum) definition (all the constructors
 /// are pattern-like) or the function definition (it's built on top of a pattern tree)
-pub type DeepClosure<Name> = GenericDeepClosure<Name, Value<Name>>;
+pub type DeepClosure = GenericDeepClosure<Value>;

@@ -11,4 +11,4 @@ categories = ["development-tools"]
 [badges]
 appveyor = { repository = "ice1000/minitt-rs", service = "github" }
 circle-ci = { repository = "ice1000/minitt-rs", branch = "master" }
-maintenance = { status = "experimental" }
+maintenance = { status = "passively-maintained" }

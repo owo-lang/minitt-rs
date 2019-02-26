@@ -1,11 +1,10 @@
 use crate::normal::*;
-use crate::reduce::*;
 use crate::syntax::*;
 use std::fmt::Debug;
 use std::rc::Rc;
 
 /// `genV` in Mini-TT.
-pub fn generate_value<Name: NameTrait>(id: u32) -> Value<Name> {
+pub fn generate_value(id: u32) -> Value {
     use crate::syntax::GenericNeutral as Neutral;
     Value::Neutral(Neutral::Generated(id))
 }
@@ -39,8 +38,8 @@ pub trait ReadBack: Sized {
     }
 }
 
-impl<Name: DebuggableNameTrait> ReadBack for Value<Name> {
-    type NormalForm = NormalExpression<Name>;
+impl ReadBack for Value {
+    type NormalForm = NormalExpression;
 
     /// `rbV` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm {
@@ -92,8 +91,8 @@ impl<Name: DebuggableNameTrait> ReadBack for Value<Name> {
     }
 }
 
-impl<Name: DebuggableNameTrait> ReadBack for &TelescopeRaw<Name> {
-    type NormalForm = NormalTelescope<Name>;
+impl ReadBack for &TelescopeRaw {
+    type NormalForm = NormalTelescope;
 
     //noinspection RsBorrowChecker
     /// `rbRho` in Mini-TT.
@@ -113,8 +112,8 @@ impl<Name: DebuggableNameTrait> ReadBack for &TelescopeRaw<Name> {
     }
 }
 
-impl<Name: DebuggableNameTrait> ReadBack for Neutral<Name> {
-    type NormalForm = NormalNeutral<Name>;
+impl ReadBack for Neutral {
+    type NormalForm = NormalNeutral;
 
     /// `rbN` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm {

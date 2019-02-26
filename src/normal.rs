@@ -3,35 +3,27 @@ use std::rc::Rc;
 use crate::syntax::*;
 
 /// `NRho` in Mini-TT, normal form telescopes (contexts).
-pub type NormalTelescope<Name> = Rc<GenericTelescope<Name, NormalExpression<Name>>>;
+pub type NormalTelescope = Rc<GenericTelescope<NormalExpression>>;
 
 /// `NSClos` in Mini-TT, normal form closures.
-pub type NormalDeepClosure<Name> = GenericDeepClosure<Name, NormalExpression<Name>>;
+pub type NormalDeepClosure = GenericDeepClosure<NormalExpression>;
 
 /// `NNeut` in Mini-TT, normal form neutral values.
-pub type NormalNeutral<Name> = GenericNeutral<Name, NormalExpression<Name>>;
+pub type NormalNeutral = GenericNeutral<NormalExpression>;
 
 /// `NExp` in Mini-TT, normal form expressions.<br/>
 /// Deriving `Eq` so we can do comparison.
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum NormalExpression<Name: NameTrait> {
-    Lambda(u32, Box<NormalExpression<Name>>),
-    Pair(Box<NormalExpression<Name>>, Box<NormalExpression<Name>>),
+pub enum NormalExpression {
+    Lambda(u32, Box<Self>),
+    Pair(Box<Self>, Box<Self>),
     Unit,
     One,
     Type,
-    Pi(
-        Box<NormalExpression<Name>>,
-        u32,
-        Box<NormalExpression<Name>>,
-    ),
-    Sigma(
-        Box<NormalExpression<Name>>,
-        u32,
-        Box<NormalExpression<Name>>,
-    ),
-    Constructor(Name, Box<NormalExpression<Name>>),
-    Function(NormalDeepClosure<Name>),
-    Sum(NormalDeepClosure<Name>),
-    Neutral(NormalNeutral<Name>),
+    Pi(Box<Self>, u32, Box<Self>),
+    Sigma(Box<Self>, u32, Box<Self>),
+    Constructor(String, Box<Self>),
+    Function(NormalDeepClosure),
+    Sum(NormalDeepClosure),
+    Neutral(NormalNeutral),
 }

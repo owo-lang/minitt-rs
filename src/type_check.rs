@@ -1,15 +1,14 @@
 use std::collections::BTreeMap;
 
 use crate::read_back::*;
-use crate::reduce::*;
 use crate::syntax::*;
 use std::borrow::Cow;
 
-pub type GammaRaw<Name> = BTreeMap<Name, Value<Name>>;
+pub type GammaRaw = BTreeMap<String, Value>;
 
 /// `Gamma` in Mini-TT.<br/>
 /// By doing this we get `lookupG` in Mini-TT for free.
-pub type Gamma<'a, Name> = Cow<'a, GammaRaw<Name>>;
+pub type Gamma<'a> = Cow<'a, GammaRaw>;
 
 /// `G` in Mini-TT.<br/>
 /// Type-Checking Monad.
@@ -19,12 +18,12 @@ pub type TCM<T> = Result<T, String>;
 /// `Gamma |- p : t = u => Gamma’`<br/><br/>
 /// However, since Rust is an imperative language, we use mutable reference instead of making it
 /// monadic.
-pub fn update_gamma<'a, Name: DebuggableNameTrait>(
-    gamma: Gamma<'a, Name>,
-    pattern: &Pattern<Name>,
-    type_val: Value<Name>,
-    val: Value<Name>,
-) -> TCM<Gamma<'a, Name>> {
+pub fn update_gamma<'a>(
+    gamma: Gamma<'a>,
+    pattern: &Pattern,
+    type_val: Value,
+    val: Value,
+) -> TCM<Gamma<'a>> {
     match pattern {
         Pattern::Pair(pattern_first, pattern_second) => match type_val {
             Value::Sigma(first, second) => {
@@ -46,20 +45,20 @@ pub fn update_gamma<'a, Name: DebuggableNameTrait>(
 
 /// `checkI` in Mini-TT.<br/>
 /// Type inference rule. More inferences are added here (maybe it's useful?).
-pub fn check_infer<Name: DebuggableNameTrait>(
+pub fn check_infer(
     index: u32,
-    context: Telescope<Name>,
-    gamma: Gamma<Name>,
-    expression: Expression<Name>,
-) -> TCM<Value<Name>> {
+    context: Telescope,
+    gamma: Gamma,
+    expression: Expression,
+) -> TCM<Value> {
     use crate::syntax::Expression::*;
     match expression {
         Unit => Ok(Value::One),
         Type | Void | One => Ok(Value::Type),
         Var(name) => gamma
             .get(&name)
-            .map(|value| value.clone())
-            .ok_or(format!("Unresolved reference {:?}", name).to_string()),
+            .cloned()
+            .ok_or_else(|| format!("Unresolved reference `{}`", name).to_string()),
         First(pair) => match check_infer(index, context, gamma, *pair)? {
             Value::Sigma(first, _) => Ok(*first),
             e => Err(format!("Expected Sigma, got: {:?}", e).to_string()),
@@ -83,12 +82,12 @@ pub fn check_infer<Name: DebuggableNameTrait>(
 
 /// `checkD` in Mini-TT.<br/>
 /// Check if a declaration is well-typed and update the context.
-pub fn check_declaration<Name: DebuggableNameTrait>(
+pub fn check_declaration(
     index: u32,
-    context: Telescope<Name>,
-    gamma: Gamma<Name>,
-    declaration: Declaration<Name>,
-) -> TCM<Gamma<Name>> {
+    context: Telescope,
+    gamma: Gamma,
+    declaration: Declaration,
+) -> TCM<Gamma> {
     use crate::syntax::Declaration::*;
     match declaration {
         Simple(pattern, signature, body) => {
@@ -140,12 +139,7 @@ pub fn check_declaration<Name: DebuggableNameTrait>(
 
 /// `checkT` in Mini-TT.<br/>
 /// Check if an expression is a well-typed type expression.
-pub fn check_type<Name: DebuggableNameTrait>(
-    index: u32,
-    context: Telescope<Name>,
-    gamma: Gamma<Name>,
-    expression: Expression<Name>,
-) -> TCM<()> {
+pub fn check_type(index: u32, context: Telescope, gamma: Gamma, expression: Expression) -> TCM<()> {
     use crate::syntax::Expression::*;
     match expression {
         Sum(constructors) => check_sum_type(index, context, gamma, constructors),
@@ -158,17 +152,19 @@ pub fn check_type<Name: DebuggableNameTrait>(
 }
 
 /// `check` in Mini-TT.<br/>
-pub fn check<Name: DebuggableNameTrait>(
+pub fn check(
     index: u32,
-    context: Telescope<Name>,
-    gamma: Gamma<Name>,
-    expression: Expression<Name>,
-    value: Value<Name>,
+    context: Telescope,
+    gamma: Gamma,
+    expression: Expression,
+    value: Value,
 ) -> TCM<()> {
     use crate::syntax::Expression as E;
     use crate::syntax::Value as V;
     match (expression, value) {
-        (E::Unit, V::One) | (E::Type, V::Type) | (E::One, V::Type) | (E::Void, V::Type) => Ok(()),
+        (E::Unit, V::One) | (E::Type, V::Type) | (E::One, V::Type) => Ok(()),
+        // There's nothing left to check.
+        (E::Void, _) => Ok(()),
         (E::Lambda(pattern, body), V::Pi(signature, closure)) => {
             let generated = generate_value(index);
             let gamma = update_gamma(gamma, &pattern, *signature, generated.clone())?;
@@ -199,7 +195,7 @@ pub fn check<Name: DebuggableNameTrait>(
         (E::Constructor(name, body), V::Sum((constructors, telescope))) => {
             let constructor = *constructors
                 .get(&name)
-                .ok_or(format!("Invalid constructor: {:?}", name).to_string())?
+                .ok_or_else(|| format!("Invalid constructor: `{}`", name).to_string())?
                 .clone();
             check(index, context, gamma, *body, constructor.eval(*telescope))
         }
@@ -217,8 +213,7 @@ pub fn check<Name: DebuggableNameTrait>(
                 for (name, clause) in sum_branches.into_iter() {
                     let constructor = *branches
                         .remove(&name)
-                        .ok_or(format!("Missing clause for {:?}", name).to_string())?
-                        .clone();
+                        .ok_or_else(|| format!("Missing clause for `{}`", name).to_string())?;
                     check(
                         index,
                         context.clone(),
@@ -246,26 +241,26 @@ pub fn check<Name: DebuggableNameTrait>(
 }
 
 /// To reuse code that checks if a sum type is well-typed between `check_type` and `check`
-fn check_sum_type<Name: DebuggableNameTrait>(
-    index: u32,
-    context: Telescope<Name>,
-    gamma: Gamma<Name>,
-    constructors: Branch<Name>,
-) -> TCM<()> {
-    for constructor in constructors.values().into_iter().cloned() {
+fn check_sum_type(index: u32, context: Telescope, gamma: Gamma, constructors: Branch) -> TCM<()> {
+    for constructor in constructors.values().cloned() {
         check_type(index, context.clone(), Cow::Borrowed(&gamma), *constructor)?;
     }
     Ok(())
 }
 
+/// `checkMain` in Mini-TT.
+pub fn check_main(expression: Expression) -> TCM<()> {
+    check(0, nil_rc(), Default::default(), expression, Value::One)
+}
+
 /// To reuse code that checks if a sigma or a pi type is well-typed between `check_type` and `check`
-fn check_telescoped<Name: DebuggableNameTrait>(
+fn check_telescoped(
     index: u32,
-    context: Telescope<Name>,
-    gamma: Gamma<Name>,
-    pattern: Pattern<Name>,
-    first: Expression<Name>,
-    second: Expression<Name>,
+    context: Telescope,
+    gamma: Gamma,
+    pattern: Pattern,
+    first: Expression,
+    second: Expression,
 ) -> TCM<()> {
     check_type(index, context.clone(), Cow::Borrowed(&gamma), first.clone())?;
     let generated = generate_value(index);
@@ -281,4 +276,32 @@ fn check_telescoped<Name: DebuggableNameTrait>(
         gamma,
         second,
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::syntax::Declaration;
+    use crate::syntax::Expression;
+    use crate::syntax::Pattern;
+    use crate::type_check::check_main;
+
+    #[test]
+    fn simple_check() {
+        check_main(Expression::Declaration(
+            Box::new(Declaration::Simple(
+                Pattern::Unit,
+                Expression::Type,
+                Expression::One,
+            )),
+            Box::new(Expression::Void),
+        )).unwrap();
+        check_main(Expression::Declaration(
+            Box::new(Declaration::Simple(
+                Pattern::Unit,
+                Expression::Type,
+                Expression::Unit,
+            )),
+            Box::new(Expression::Void),
+        )).unwrap_err();
+    }
 }
