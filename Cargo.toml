@@ -12,3 +12,7 @@ categories = ["development-tools"]
 appveyor = { repository = "ice1000/minitt-rs", service = "github" }
 circle-ci = { repository = "ice1000/minitt-rs", branch = "master" }
 maintenance = { status = "passively-maintained" }
+
+[features]
+default = ["pretty"]
+pretty = []

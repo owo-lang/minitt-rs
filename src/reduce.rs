@@ -85,7 +85,7 @@ impl Value {
         match self {
             Value::Pair(first, _) => *first,
             Value::Neutral(neutral) => Value::Neutral(Neutral::First(Box::new(neutral))),
-            e => panic!("Cannot first: {:?}", e),
+            e => panic!("Cannot first: {}", e),
         }
     }
 
@@ -96,7 +96,7 @@ impl Value {
         match self {
             Value::Pair(_, second) => *second,
             Value::Neutral(neutral) => Value::Neutral(Neutral::Second(Box::new(neutral))),
-            e => panic!("Cannot second: {:?}", e),
+            e => panic!("Cannot second: {}", e),
         }
     }
 
@@ -110,7 +110,7 @@ impl Value {
                 Value::Neutral(Neutral::First(Box::new(neutral.clone()))),
                 Value::Neutral(Neutral::Second(Box::new(neutral))),
             ),
-            e => panic!("Cannot destruct: {:?}", e),
+            e => panic!("Cannot destruct: {}", e),
         }
     }
 
@@ -129,12 +129,12 @@ impl Value {
                 Value::Neutral(neutral) => {
                     Value::Neutral(Neutral::Function((case_tree, context), Box::new(neutral)))
                 }
-                e => panic!("Cannot apply a: {:?}", e),
+                e => panic!("Cannot apply a: {}", e),
             },
             Value::Neutral(neutral) => {
                 Value::Neutral(Neutral::Application(Box::new(neutral), Box::new(argument)))
             }
-            e => panic!("Cannot apply on: {:?}", e),
+            e => panic!("Cannot apply on: {}", e),
         }
     }
 }
@@ -182,7 +182,7 @@ impl Expression {
             Expression::Declaration(declaration, rest) => {
                 rest.eval(Rc::new(Telescope::UpDec(context, *declaration)))
             }
-            e => panic!("Cannot eval: {:?}", e),
+            e => panic!("Cannot eval: {}", e),
         }
     }
 }

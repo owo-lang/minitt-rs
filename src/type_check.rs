@@ -32,7 +32,7 @@ pub fn update_gamma<'a>(
                 let second = second.instantiate(val_first);
                 update_gamma(gamma, pattern_second, second, val_second)
             }
-            _ => Err(format!("Cannot update Gamma by: {:?}", pattern)),
+            _ => Err(format!("Cannot update Gamma by: {}", pattern)),
         },
         Pattern::Var(name) => {
             let mut gamma = gamma.into_owned();
@@ -61,11 +61,11 @@ pub fn check_infer(
             .ok_or_else(|| format!("Unresolved reference `{}`", name).to_string()),
         First(pair) => match check_infer(index, context, gamma, *pair)? {
             Value::Sigma(first, _) => Ok(*first),
-            e => Err(format!("Expected Sigma, got: {:?}", e).to_string()),
+            e => Err(format!("Expected Sigma, got: {}", e).to_string()),
         },
         Second(pair) => match check_infer(index, context.clone(), gamma, *pair.clone())? {
             Value::Sigma(_, second) => Ok(second.instantiate(pair.eval(context).first())),
-            e => Err(format!("Expected Sigma, got: {:?}", e).to_string()),
+            e => Err(format!("Expected Sigma, got: {}", e).to_string()),
         },
         Application(function, argument) => {
             match check_infer(index, context.clone(), Cow::Borrowed(&gamma), *function)? {
@@ -73,10 +73,10 @@ pub fn check_infer(
                     check(index, context.clone(), gamma, *argument.clone(), *input)?;
                     Ok(output.instantiate(argument.eval(context)))
                 }
-                e => Err(format!("Expected Pi, got: {:?}", e).to_string()),
+                e => Err(format!("Expected Pi, got: {}", e).to_string()),
             }
         }
-        e => Err(format!("Cannot infer type of: {:?}", e)),
+        e => Err(format!("Cannot infer type of: {}", e)),
     }
 }
 
@@ -228,7 +228,8 @@ pub fn check(
                 if branches.is_empty() {
                     Ok(())
                 } else {
-                    Err(format!("Unexpected clauses: {:?}", branches).to_string())
+                    let clauses: Vec<_> = branches.keys().map(|br| br.as_str()).collect();
+                    Err(format!("Unexpected clauses: {}", clauses.join(", ")).to_string())
                 }
             }
             not_sum_so_fall_through => check_infer(index, context, gamma, E::Function(branches))?
@@ -294,7 +295,8 @@ mod tests {
                 Expression::One,
             )),
             Box::new(Expression::Void),
-        )).unwrap();
+        ))
+        .unwrap();
         check_main(Expression::Declaration(
             Box::new(Declaration::Simple(
                 Pattern::Unit,
@@ -302,6 +304,7 @@ mod tests {
                 Expression::Unit,
             )),
             Box::new(Expression::Void),
-        )).unwrap_err();
+        ))
+        .unwrap_err();
     }
 }

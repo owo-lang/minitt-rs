@@ -1,6 +1,6 @@
 use crate::normal::*;
 use crate::syntax::*;
-use std::fmt::Debug;
+use std::fmt::Display;
 use std::rc::Rc;
 
 /// `genV` in Mini-TT.
@@ -16,7 +16,7 @@ pub fn generate_value(id: u32) -> Value {
 pub trait ReadBack: Sized {
     /// Corresponding normal form type for the read-backable structures.<br/>
     /// This is needed because Rust does not support Higher-Kinded Types :(
-    type NormalForm: Eq + Debug;
+    type NormalForm: Eq + Display;
 
     /// Interface for `rbV`, `rbN` and `rbRho` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm;
@@ -30,7 +30,7 @@ pub trait ReadBack: Sized {
             Ok(())
         } else {
             Err(format!(
-                "TypeCheck: {:?} is not equal to {:?} up to normal form",
+                "TypeCheck: {} is not equal to {} up to normal form",
                 self_read_back, other_read_back
             )
             .to_string())
