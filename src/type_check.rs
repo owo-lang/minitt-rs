@@ -253,6 +253,11 @@ pub fn check_main(expression: Expression) -> TCM<()> {
     check(0, nil_rc(), Default::default(), expression, Value::One)
 }
 
+/// Similar to `checkMain` in Mini-TT, but for a declaration.
+pub fn check_declaration_main<'a>(declaration: Declaration) -> TCM<Gamma<'a>> {
+    check_declaration(0, nil_rc(), Default::default(), declaration)
+}
+
 /// To reuse code that checks if a sigma or a pi type is well-typed between `check_type` and `check`
 fn check_telescoped(
     index: u32,
@@ -283,27 +288,22 @@ mod tests {
     use crate::syntax::Declaration;
     use crate::syntax::Expression;
     use crate::syntax::Pattern;
-    use crate::type_check::check_main;
+    use crate::type_check::check_declaration_main;
 
     #[test]
     fn simple_check() {
-        check_main(Expression::Declaration(
-            Box::new(Declaration::Simple(
-                Pattern::Unit,
-                Expression::Type,
-                Expression::One,
-            )),
-            Box::new(Expression::Void),
+        check_declaration_main(Declaration::Simple(
+            Pattern::Unit,
+            Expression::Type,
+            Expression::One,
         ))
         .unwrap();
-        check_main(Expression::Declaration(
-            Box::new(Declaration::Simple(
-                Pattern::Unit,
-                Expression::Type,
-                Expression::Unit,
-            )),
-            Box::new(Expression::Void),
+        let error_message = check_declaration_main(Declaration::Simple(
+            Pattern::Unit,
+            Expression::Type,
+            Expression::Unit,
         ))
         .unwrap_err();
+        println!("{}", error_message);
     }
 }

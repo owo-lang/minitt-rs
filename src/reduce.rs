@@ -144,7 +144,6 @@ impl Expression {
     /// Evaluate an [`Expression`] to a [`Value`] under a [`Telescope`],
     /// panic if not well-typed.
     pub fn eval(self, context: Telescope) -> Value {
-        use crate::syntax::GenericTelescope as Telescope;
         match self {
             Expression::Unit => Value::Unit,
             Expression::One => Value::One,
@@ -180,7 +179,7 @@ impl Expression {
                 Value::Constructor(name, Box::new(body.eval(context)))
             }
             Expression::Declaration(declaration, rest) => {
-                rest.eval(Rc::new(Telescope::UpDec(context, *declaration)))
+                rest.eval(up_dec_rc(context, *declaration))
             }
             e => panic!("Cannot eval: {}", e),
         }

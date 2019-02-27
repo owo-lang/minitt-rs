@@ -5,7 +5,76 @@ use std::fmt::{Display, Error as FmtError, Formatter};
 
 impl Display for Value {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        f.write_str("TODO")
+        match self {
+            Value::Lambda(closure) => {
+                f.write_str("\u{039B} ")?;
+                closure.fmt(f)
+            }
+            Value::Pair(first, second) => {
+                f.write_char('(')?;
+                first.fmt(f)?;
+                f.write_str(", ")?;
+                second.fmt(f)?;
+                f.write_char(')')
+            }
+            Value::Unit => f.write_str("0"),
+            Value::One => f.write_str("1"),
+            Value::Pi(input, output) => {
+                f.write_str("\u{03A0} ")?;
+                input.fmt(f)?;
+                f.write_str(". ")?;
+                output.fmt(f)
+            }
+            Value::Type => f.write_str("U"),
+            Value::Sigma(first, second) => {
+                f.write_str("\u{03A3} ")?;
+                first.fmt(f)?;
+                f.write_str(". ")?;
+                second.fmt(f)
+            }
+            Value::Constructor(name, arguments) => {
+                name.fmt(f)?;
+                f.write_str(" ")?;
+                arguments.fmt(f)
+            }
+            // Don't print context
+            Value::Function((branches, _)) => {
+                f.write_str("fun (")?;
+                let mut started = false;
+                for (name, clause) in branches.iter() {
+                    name.fmt(f)?;
+                    f.write_str(": ")?;
+                    clause.fmt(f)?;
+                    if started {
+                        f.write_str(", ")?;
+                    } else {
+                        started = true;
+                    }
+                }
+                f.write_char(')')
+            }
+            // Don't print the context
+            Value::Sum((constructors, _)) => {
+                f.write_str("Sum (")?;
+                let mut started = false;
+                for (name, constructor) in constructors.iter() {
+                    name.fmt(f)?;
+                    f.write_str(": ")?;
+                    constructor.fmt(f)?;
+                    if started {
+                        f.write_str(", ")?;
+                    } else {
+                        started = true;
+                    }
+                }
+                f.write_char(')')
+            }
+            Value::Neutral(neutral) => {
+                f.write_str("#(")?;
+                neutral.fmt(f)?;
+                f.write_char(')')
+            }
+        }
     }
 }
 
@@ -28,10 +97,10 @@ impl Display for Expression {
                 argument.fmt(f)?;
                 f.write_char(')')
             }
-            Expression::Lambda(index, expression) => {
-                f.write_char('[')?;
-                index.fmt(f)?;
-                f.write_str("] ")?;
+            Expression::Lambda(pattern, expression) => {
+                f.write_str("\u{039B} ")?;
+                pattern.fmt(f)?;
+                f.write_str(". ")?;
                 expression.fmt(f)
             }
             Expression::Pair(first, second) => {
@@ -43,19 +112,15 @@ impl Display for Expression {
             }
             Expression::Unit => f.write_str("0"),
             Expression::One => f.write_str("1"),
-            Expression::Pi(input, index, output) => {
-                f.write_str("\u{03A0} [")?;
-                index.fmt(f)?;
-                f.write_str("] ")?;
+            Expression::Pi(pattern, input, output) => {
+                pattern.fmt(f)?;
                 input.fmt(f)?;
                 f.write_str(". ")?;
                 output.fmt(f)
             }
             Expression::Type => f.write_str("U"),
-            Expression::Sigma(first, index, second) => {
-                f.write_str("\u{03A3} [")?;
-                index.fmt(f)?;
-                f.write_str("] ")?;
+            Expression::Sigma(pattern, first, second) => {
+                pattern.fmt(f)?;
                 first.fmt(f)?;
                 f.write_str(". ")?;
                 second.fmt(f)
@@ -96,7 +161,12 @@ impl Display for Expression {
                 }
                 f.write_char(')')
             }
-            _ => unimplemented!(),
+            Expression::Declaration(declaration, rest) => {
+                declaration.fmt(f)?;
+                f.write_str(";\n")?;
+                rest.fmt(f)
+            }
+            Expression::Void => f.write_str(";\n"),
         }
     }
 }
@@ -142,7 +212,6 @@ impl Display for Closure {
                 expression.fmt(f)
             }
             Closure::Choice(rest, name) => {
-                f.write_str("\u{039B} ")?;
                 f.write_str(name.as_str())?;
                 f.write_str(". ")?;
                 rest.fmt(f)
@@ -153,7 +222,44 @@ impl Display for Closure {
 
 impl<Value: Display + Clone> Display for GenericNeutral<Value> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        f.write_str("TODO")
+        match self {
+            GenericNeutral::Generated(index) => {
+                f.write_char('[')?;
+                index.fmt(f)?;
+                f.write_char(']')
+            }
+            GenericNeutral::Application(function, argument) => {
+                f.write_char('(')?;
+                function.fmt(f)?;
+                f.write_char(' ')?;
+                argument.fmt(f)?;
+                f.write_char(')')
+            }
+            GenericNeutral::First(pair) => {
+                pair.fmt(f)?;
+                f.write_str(".1")
+            }
+            GenericNeutral::Second(pair) => {
+                pair.fmt(f)?;
+                f.write_str(".2")
+            }
+            GenericNeutral::Function((clauses, _), argument) => {
+                f.write_str("app (")?;
+                let mut started = false;
+                for (name, clause) in clauses.iter() {
+                    name.fmt(f)?;
+                    f.write_str(": ")?;
+                    clause.fmt(f)?;
+                    if started {
+                        f.write_str(", ")?;
+                    } else {
+                        started = true;
+                    }
+                }
+                f.write_char(')')?;
+                argument.fmt(f)
+            }
+        }
     }
 }
 
@@ -162,7 +268,7 @@ impl Display for NormalExpression {
         use crate::normal::NormalExpression as Expression;
         match self {
             Expression::Lambda(index, expression) => {
-                f.write_char('[')?;
+                f.write_str("\u{039B} [")?;
                 index.fmt(f)?;
                 f.write_str("] ")?;
                 expression.fmt(f)
@@ -230,7 +336,7 @@ impl Display for NormalExpression {
                 f.write_char(')')
             }
             Expression::Neutral(neutral) => {
-                f.write_str("n(")?;
+                f.write_str("#(")?;
                 neutral.fmt(f)?;
                 f.write_char(')')
             }
