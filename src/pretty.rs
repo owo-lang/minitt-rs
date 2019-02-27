@@ -210,6 +210,7 @@ impl Display for Closure {
                 f.write_str(". ")?;
                 expression.fmt(f)
             }
+            Closure::Value(value) => value.fmt(f),
             Closure::Choice(rest, name) => {
                 f.write_str(name.as_str())?;
                 f.write_str(". ")?;

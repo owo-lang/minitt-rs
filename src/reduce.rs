@@ -70,6 +70,7 @@ impl Closure {
             Closure::Function(pattern, expression, context) => {
                 expression.eval(Rc::new(Telescope::UpVar(*context, pattern, value)))
             }
+            Closure::Value(value) => *value,
             Closure::Choice(closure, name) => {
                 closure.instantiate(Value::Constructor(name, Box::new(value)))
             }

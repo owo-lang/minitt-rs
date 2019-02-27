@@ -29,6 +29,6 @@ don't get confused when they read the paper while reading this implementation.
 + [X] Everything that the Haskell implementation has
   + [ ] Use `Vec` for telescope instead of functional immutable list
   + [X] Use `BTreeMap` for branch/case tree so we become flexible on case order
-  + [ ] Support inferring type of a pair
+  + [X] Support inferring type of a pair
 + [ ] Parser as a cargo feature
 + [X] AST pretty-printer as a cargo feature

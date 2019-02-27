@@ -58,12 +58,14 @@ pub fn check_infer(
             .get(&name)
             .cloned()
             .ok_or_else(|| format!("Unresolved reference `{}`", name).to_string()),
-        // TODO: infer pair's type
-        // Pair(left, right) => {
-        //     let left = check_infer(index, context.clone(), Cow::Borrowed(&gamma), left)?;
-        //     let right = check_infer(index, context.clone(), Cow::Borrowed(&gamma), right)?;
-        //     Ok(Value::Sigma(Box::new(left), Closure::Function(Pattern::Unit, right, Box::new(context))))
-        // }
+        Pair(left, right) => {
+            let left = check_infer(index, context.clone(), Cow::Borrowed(&gamma), *left)?;
+            let right = check_infer(index, context.clone(), Cow::Borrowed(&gamma), *right)?;
+            Ok(Value::Sigma(
+                Box::new(left),
+                Closure::Value(Box::new(right)),
+            ))
+        }
         First(pair) => match check_infer(index, context, gamma, *pair)? {
             Value::Sigma(first, _) => Ok(*first),
             e => Err(format!("Expected Sigma, got: {}", e).to_string()),
@@ -295,6 +297,7 @@ mod tests {
     use crate::syntax::Expression;
     use crate::syntax::Pattern;
     use crate::type_check::check_declaration_main;
+    use crate::type_check::check_main;
 
     #[test]
     fn simple_check() {
@@ -311,5 +314,21 @@ mod tests {
         ))
         .unwrap_err();
         println!("{}", error_message);
+    }
+
+    #[test]
+    fn check_pair() {
+        let expr = Expression::Declaration(
+            Box::new(Declaration::Simple(
+                Pattern::Unit,
+                Expression::One,
+                Expression::Second(Box::new(Expression::Pair(
+                    Box::new(Expression::Unit),
+                    Box::new(Expression::Unit),
+                ))),
+            )),
+            Box::new(Expression::Void),
+        );
+        check_main(expr).unwrap();
     }
 }

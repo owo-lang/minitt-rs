@@ -124,10 +124,13 @@ pub fn nil_rc<Value: Clone>() -> Rc<GenericTelescope<Value>> {
 #[derive(Debug, Clone)]
 pub enum Closure {
     /// `cl` in Mini-TT.<br/>
-    /// `cl` probably stands for "Closure"
+    /// Closure that does a pattern matching.
     Function(Pattern, Expression, Box<Telescope>),
+    /// This is not present in Mini-TT.<br/>
+    /// Sometimes the closure is already an evaluated value.
+    Value(Box<Value>),
     /// `clCmp` in Mini-TT.
-    /// `clCmp` probably stands for "Closure that does a comparison"
+    /// Closure that has an extra lambda abstraction.
     Choice(Box<Self>, String),
 }
 
