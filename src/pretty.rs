@@ -166,7 +166,7 @@ impl Display for Expression {
                 f.write_str(";\n")?;
                 rest.fmt(f)
             }
-            Expression::Void => f.write_str(";\n"),
+            Expression::Void => Ok(()),
         }
     }
 }
@@ -179,7 +179,7 @@ impl Display for Pattern {
                 f.write_str(", ")?;
                 second.fmt(f)
             }
-            Pattern::Unit => f.write_char(' '),
+            Pattern::Unit => f.write_char('_'),
             Pattern::Var(name) => f.write_str(name.as_str()),
         }
     }
@@ -197,8 +197,7 @@ impl Display for Declaration {
         f.write_str(": ")?;
         signature.fmt(f)?;
         f.write_str(" = ")?;
-        body.fmt(f)?;
-        f.write_str(";\n")
+        body.fmt(f)
     }
 }
 
@@ -348,5 +347,48 @@ impl Display for NormalExpression {
 impl Display for GenericTelescope<NormalExpression> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.write_str("<context>")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::syntax::Declaration;
+    use crate::syntax::Expression;
+    use crate::syntax::Pattern;
+
+    #[test]
+    fn simple_expr() {
+        let expr = Expression::Second(Box::new(Expression::Pair(
+            Box::new(Expression::One),
+            Box::new(Expression::Unit),
+        )));
+        println!("{}", expr);
+    }
+
+    #[test]
+    fn simple_decl() {
+        let var = "a".to_string();
+        let expr = Expression::Declaration(
+            Box::new(Declaration::Simple(
+                Pattern::Unit,
+                Expression::One,
+                Expression::Second(Box::new(Expression::Pair(
+                    Box::new(Expression::Unit),
+                    Box::new(Expression::Unit),
+                ))),
+            )),
+            Box::new(Expression::Declaration(
+                Box::new(Declaration::Recursive(
+                    Pattern::Var(var.clone()),
+                    Expression::One,
+                    Expression::First(Box::new(Expression::Pair(
+                        Box::new(Expression::Unit),
+                        Box::new(Expression::Var(var)),
+                    ))),
+                )),
+                Box::new(Expression::Void),
+            )),
+        );
+        println!("{}", expr);
     }
 }

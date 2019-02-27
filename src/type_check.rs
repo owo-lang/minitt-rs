@@ -58,6 +58,12 @@ pub fn check_infer(
             .get(&name)
             .cloned()
             .ok_or_else(|| format!("Unresolved reference `{}`", name).to_string()),
+        // TODO: infer pair's type
+        // Pair(left, right) => {
+        //     let left = check_infer(index, context.clone(), Cow::Borrowed(&gamma), left)?;
+        //     let right = check_infer(index, context.clone(), Cow::Borrowed(&gamma), right)?;
+        //     Ok(Value::Sigma(Box::new(left), Closure::Function(Pattern::Unit, right, Box::new(context))))
+        // }
         First(pair) => match check_infer(index, context, gamma, *pair)? {
             Value::Sigma(first, _) => Ok(*first),
             e => Err(format!("Expected Sigma, got: {}", e).to_string()),
