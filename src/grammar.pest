@@ -1,0 +1,2 @@
+character = _{ 'a'..'z' | 'A'..'Z' | '_' | '\'' | '0'..'9' }
+identifier = { character+ }
