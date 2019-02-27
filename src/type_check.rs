@@ -16,8 +16,7 @@ pub type TCM<T> = Result<T, String>;
 
 /// `upG` in Mini-TT.<br/>
 /// `Gamma |- p : t = u => Gamma’`<br/><br/>
-/// However, since Rust is an imperative language, we use mutable reference instead of making it
-/// monadic.
+/// `Cow` is used to simulate immutability.
 pub fn update_gamma<'a>(
     gamma: Gamma<'a>,
     pattern: &Pattern,
