@@ -16,7 +16,7 @@ maintenance = { status = "passively-maintained" }
 [dependencies]
 pest = { version = "2.1.0", optional = true }
 pest_derive = { version = "2.1.0", optional = true }
-clap = { version = "2.32.0", optional = true }
+clap = { version = "2.32.0", features = ["wrap_help"], optional = true }
 
 [features]
 default = ["pretty", "parser"]

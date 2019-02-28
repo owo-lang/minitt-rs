@@ -3,7 +3,7 @@
 [![Crates.io](https://img.shields.io/crates/d/minitt.svg)][crates]
 [![Crates.io](https://img.shields.io/crates/v/minitt.svg)][crates]
 [![Crates.io](https://img.shields.io/crates/l/minitt.svg)][crates]
-[![docs.rs](https://docs.rs/minitt/badge.svg)](https://docs.rs/minitt)
+[![docs.rs](https://docs.rs/minitt/badge.svg)][doc-rs]
 [![Build status][av-svg]][av-url]
 [![CircleCI][cc-svg]][cc-url]
 
@@ -13,6 +13,8 @@
  [av-exe]: https://ci.appveyor.com/project/ice1000/minitt-rs/build/artifacts
  [cc-svg]: https://circleci.com/gh/owo-lang/minitt-rs/tree/master.svg?style=svg
  [cc-url]: https://circleci.com/gh/owo-lang/minitt-rs/tree/master
+ [doc-rs]: https://docs.rs/minitt
+ [clap]: https://clap.rs/
 
 Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
 Built with latest (when developing this) stable Rust, 2018 edition.
@@ -28,7 +30,7 @@ don't get confused when they read the paper while reading this implementation.
 
 + [Mini-TT Paper](http://www.cse.chalmers.se/~bengt/papers/GKminiTT.pdf)
 + [Code samples](./samples), tested on CI
-+ [Doc.rs](https://docs.rs/minitt) documentation
++ [Doc.rs][doc-rs] documentation
 
 ## Features
 
@@ -44,8 +46,11 @@ don't get confused when they read the paper while reading this implementation.
   + (Typed-)Holes?
     + [ ] For completion / context lookup
     + [ ] For type-directed development
-+ An executable for CLI usages
++ An executable for CLI usages (`minittc`)
   + [X] File checker
+  + [X] Completion script generation
+    + Get the script: `minittc completion zsh/bash/powershell/fish/elvish`
+    + Thanks to [clap][clap]!
   + [ ] REPL
   + [ ] Language server
   + Publish?
