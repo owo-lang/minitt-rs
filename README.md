@@ -30,14 +30,15 @@ don't get confused when they read the paper while reading this implementation.
 ## Features
 
 + [X] Everything that the Haskell implementation has
-+ Improvements to the original implementation
-  + [ ] Use `Vec` for telescope instead of functional immutable list
-  + [X] Use `BTreeMap` for branch/case tree so we become flexible on case order
-  + [X] Support inferring type of a pair
-  + [ ] Module system (or even a very simple one)
 + [X] Parser as a cargo feature
 + [X] AST pretty-printer as a cargo feature
++ Improvements to the original implementation
+  + [X] Use `BTreeMap` for branch/case tree so we become flexible on case order
+  + [ ] Use `Vec` for telescope instead of functional immutable list
++ New feature apart from trivial improvements
+  + [X] Support inferring type of a pair
+  + [ ] Module system (or even a very simple one)
 + An executable for CLI usages
+  + [X] File checker
   + [ ] REPL
-  + [ ] File checker
   + [ ] Language server

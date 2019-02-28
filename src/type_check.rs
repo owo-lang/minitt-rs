@@ -4,6 +4,7 @@ use crate::read_back::*;
 use crate::syntax::*;
 use std::borrow::Cow;
 
+/// Type-Checking context. Name as key, type of the declaration as value.
 pub type GammaRaw = BTreeMap<String, Value>;
 
 /// `Gamma` in Mini-TT.<br/>
@@ -211,8 +212,8 @@ pub fn check(
             check_telescoped(index, context, gamma, pattern, *first, *second)
         }
         (E::Declaration(declaration, rest), rest_type) => {
-            let gamma = check_declaration(index, context.clone(), gamma, *declaration)?;
-            check(index, context, gamma, *rest, rest_type)
+            let gamma = check_declaration(index, context.clone(), gamma, *declaration.clone())?;
+            check(index, up_dec_rc(context, *declaration), gamma, *rest, rest_type)
         }
         // I really wish to have box pattern here :(
         (E::Function(mut branches), V::Pi(sum, closure)) => match *sum {
