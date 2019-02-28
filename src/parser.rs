@@ -23,6 +23,7 @@ pub fn parse_str(input: &str) -> Result<Expression, String> {
 }
 
 /// Parse a string into an optional expression and print error
+#[inline]
 pub fn parse_str_err_printed(code: &str) -> Result<Expression, ()> {
     parse_str(code).map_err(|err| eprintln!("{}", err))
 }
@@ -35,24 +36,29 @@ macro_rules! next_rule {
     }};
 }
 
+#[inline]
 fn next_expression(inner: &mut Tik) -> Expression {
     next_rule!(inner, expression, expression_to_expression)
 }
 
+#[inline]
 fn next_atom(inner: &mut Tik) -> Expression {
     next_rule!(inner, atom, atom_to_expression)
 }
 
+#[inline]
 fn next_identifier(inner: &mut Tik) -> String {
     next_rule!(inner, identifier, identifier_to_name)
 }
 
+#[inline]
 fn next_constructor_name(inner: &mut Tik) -> String {
     next_rule!(inner, constructor_name, identifier_to_name)
 }
 
+#[inline]
 fn end_of_rule(inner: &mut Tik) {
-    assert_eq!(inner.next(), None)
+    debug_assert_eq!(inner.next(), None)
 }
 
 /// ```ignore
@@ -182,7 +188,7 @@ fn atom_to_expression(rules: Tok) -> Expression {
         Rule::sigma_type => sigma_type_to_expression(the_rule),
         Rule::lambda_expression => lambda_expression_to_expression(the_rule),
         Rule::expression => expression_to_expression(the_rule),
-        _ => panic!("{}", the_rule),
+        _ => unreachable!(),
     }
 }
 

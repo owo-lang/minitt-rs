@@ -213,7 +213,13 @@ pub fn check(
         }
         (E::Declaration(declaration, rest), rest_type) => {
             let gamma = check_declaration(index, context.clone(), gamma, *declaration.clone())?;
-            check(index, up_dec_rc(context, *declaration), gamma, *rest, rest_type)
+            check(
+                index,
+                up_dec_rc(context, *declaration),
+                gamma,
+                *rest,
+                rest_type,
+            )
         }
         // I really wish to have box pattern here :(
         (E::Function(mut branches), V::Pi(sum, closure)) => match *sum {

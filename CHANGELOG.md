@@ -4,6 +4,8 @@
 
 + Enable parser by default
 + Add executable
++ Add examples
++ Fix bug in scope manipulation
 
 # 0.1.3
 

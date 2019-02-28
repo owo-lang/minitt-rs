@@ -1,6 +1,5 @@
 // Lexical rules
-COMMENT = ${ "--" ~ (!"\n" ~ ANY)* }
-WHITESPACE = _{ " " | "\t" | NEWLINE }
+WHITESPACE = _{ " " | "\t" | NEWLINE | ("--" ~ (!NEWLINE ~ ANY)*) }
 
 // Primitive helpers
 character =
@@ -42,6 +41,12 @@ one = { "1" }
 unit = { "0" }
 universe = { "U" }
 void = { EOI }
+meta_var = { "_" }
+
+// Patterns
+atom_pattern = { identifier | meta_var }
+pair_pattern = { atom_pattern ~ "," ~ pattern }
+pattern = { pair_pattern | atom_pattern }
 
 // Extracted helpers
 typed_abstraction = _{ identifier ~ ":" ~ expression ~ "." ~ expression }
