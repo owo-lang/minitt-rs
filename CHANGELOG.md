@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.1.5
+
++ Syntactic sugars
+
 # 0.1.4
 
 + Enable parser by default

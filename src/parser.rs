@@ -65,6 +65,7 @@ fn end_of_rule(inner: &mut Tik) {
 /// expression =
 ///  { declaration
 ///  | application
+///  | function_type
 ///  | first
 ///  | second
 ///  | pair
@@ -77,6 +78,7 @@ fn expression_to_expression(rules: Tok) -> Expression {
     match the_rule.as_rule() {
         Rule::declaration => declaration_to_expression(the_rule),
         Rule::application => application_to_expression(the_rule),
+        Rule::function_type => function_type_to_expression(the_rule),
         Rule::first => first_to_expression(the_rule),
         Rule::second => second_to_expression(the_rule),
         Rule::pair => pair_to_expression(the_rule),
@@ -94,6 +96,17 @@ fn first_to_expression(the_rule: Tok) -> Expression {
     let pair = next_atom(&mut inner);
     end_of_rule(&mut inner);
     Expression::First(Box::new(pair))
+}
+
+/// ```ignore
+/// function_type = { atom ~ expression }
+/// ```
+fn function_type_to_expression(the_rule: Tok) -> Expression {
+    let mut inner: Tik = the_rule.into_inner();
+    let input = next_atom(&mut inner);
+    let output = next_expression(&mut inner);
+    end_of_rule(&mut inner);
+    Expression::Pi(Pattern::Unit, Box::new(input), Box::new(output))
 }
 
 /// ```ignore
@@ -260,6 +273,7 @@ fn pattern_to_pattern(the_rule: Tok) -> Pattern {
             let mut inner: Tik = rule.into_inner();
             let first = next_rule!(inner, atom_pattern, atom_pattern_to_pattern);
             let second = next_pattern(&mut inner);
+            end_of_rule(&mut inner);
             Pattern::Pair(Box::new(first), Box::new(second))
         }
         Rule::atom_pattern => atom_pattern_to_pattern(rule),

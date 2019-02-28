@@ -78,10 +78,12 @@ atom =
 application = { atom ~ expression }
 pair = { atom ~ "," ~ expression }
 first = { atom ~ ".1" }
+function_type = { atom ~ "->" ~ expression }
 second = { atom ~ ".2" }
 expression =
  { declaration
  | application
+ | function_type
  | first
  | second
  | pair
