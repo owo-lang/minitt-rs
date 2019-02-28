@@ -3,12 +3,21 @@ COMMENT = ${ "--" ~ (!"\n" ~ ANY)* }
 WHITESPACE = _{ " " | "\t" | NEWLINE }
 
 // Primitive helpers
-character = _{ ASCII_ALPHA | "_" | "\'" | '0'..'9' }
+character =
+ _{ ASCII_ALPHA
+  | "_"
+  | "\'"
+  | "\\"
+  | '0'..'9'
+  }
 identifier_simple =
  @{ !"let"
   ~ !"rec"
   ~ !"fun"
-  ~ !"Sum"
+  ~ !"sum"
+  ~ !"\\lambda"
+  ~ !"\\Sigma"
+  ~ !"\\Pi"
   ~ !"0"
   ~ !"1"
   ~ !"_"
@@ -16,7 +25,7 @@ identifier_simple =
   }
 identifier_raw =
  @{ ("fun" ~ character+)
-  | ("Sum" ~ character+)
+  | ("sum" ~ character+)
   | ("let" ~ character+)
   | ("rec" ~ character+)
   | ("0" ~ character+)
@@ -44,7 +53,7 @@ lambda_expression = { lambda ~ identifier ~ "." ~ expression }
 constructor = { constructor_name ~ expression }
 sigma_type = { sigma ~ typed_abstraction }
 function = { "fun" ~ branches }
-sum = { "Sum" ~ branches }
+sum = { "sum" ~ branches }
 variable = { identifier }
 atom =
   { constructor

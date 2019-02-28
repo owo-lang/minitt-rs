@@ -55,7 +55,7 @@ impl Display for Value {
             }
             // Don't print the context
             Value::Sum((constructors, _)) => {
-                f.write_str("Sum (")?;
+                f.write_str("sum (")?;
                 let mut started = false;
                 for (name, constructor) in constructors.iter() {
                     name.fmt(f)?;
@@ -155,7 +155,7 @@ impl Display for Expression {
             }
             // Don't print the context
             Expression::Sum(constructors) => {
-                f.write_str("Sum (")?;
+                f.write_str("sum (")?;
                 let mut started = false;
                 for (name, constructor) in constructors.iter() {
                     name.fmt(f)?;
@@ -335,7 +335,7 @@ impl Display for NormalExpression {
             }
             // Don't print the context
             Expression::Sum((constructors, _)) => {
-                f.write_str("Sum (")?;
+                f.write_str("sum (")?;
                 let mut started = false;
                 for (name, constructor) in constructors.iter() {
                     name.fmt(f)?;

@@ -172,6 +172,7 @@ fn atom_to_expression(rules: Tok) -> Expression {
         Rule::constructor => constructor_to_expression(the_rule),
         Rule::variable => variable_to_expression(the_rule),
         Rule::function => Expression::Function(branches_to_tree_map(the_rule)),
+        Rule::sum => Expression::Sum(branches_to_tree_map(the_rule)),
         Rule::one => Expression::One,
         Rule::unit => Expression::Unit,
         Rule::pi_type => pi_type_to_expression(the_rule),
@@ -282,7 +283,8 @@ mod tests {
 
     #[cfg(not(feature = "pretty"))]
     fn successful_test_case(code: &str) {
-        parse_str(code).map_err(|err| println!("{}", err)).unwrap();
+        let expr = parse_str(code).map_err(|err| println!("{}", err)).unwrap();
+        println!("{:?}", expr);
     }
 
     #[cfg(feature = "pretty")]
@@ -311,6 +313,6 @@ mod tests {
         successful_test_case("let sigma_type : \\Sigma x : x_type . y = x, y;");
         successful_test_case("let constructor : C k = C e;");
         successful_test_case("let pi_lambda : \\Pi a : b . c = \\lambda a . expr;");
-        successful_test_case("let function : k = fun (C e);");
+        successful_test_case("let function : sum (C e) = fun (C e);");
     }
 }

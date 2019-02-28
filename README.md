@@ -14,6 +14,7 @@
  [cc-url]: https://circleci.com/gh/owo-lang/minitt-rs/tree/master
 
 Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
+Built with latest (when developing this) stable Rust 2018.
 It can be used as a core language for complicated dependently-typed programming
 languages, or used for testing the correctness of translation algorithms.
 
@@ -30,5 +31,5 @@ don't get confused when they read the paper while reading this implementation.
   + [ ] Use `Vec` for telescope instead of functional immutable list
   + [X] Use `BTreeMap` for branch/case tree so we become flexible on case order
   + [X] Support inferring type of a pair
-+ [ ] Parser as a cargo feature
++ [X] Parser as a cargo feature
 + [X] AST pretty-printer as a cargo feature
