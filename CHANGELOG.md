@@ -1,8 +1,14 @@
 # Change Log
 
+# 0.1.4
+
++ Enable parser by default
++ Add generic user data
+
 # 0.1.3
 
 + Simple parser
++ Some fixes in pretty-printer
 
 # 0.1.2
 
