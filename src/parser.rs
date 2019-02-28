@@ -15,12 +15,40 @@ type Tok<'a> = Pair<'a, Rule>;
 /// entry = { expression }
 /// ```
 pub fn parse_str(input: &str) -> Result<Expression, String> {
-    Ok(rule_to_expression(
+    Ok(expression_to_expression(
         MiniParser::parse(Rule::expression, input)
             .map_err(|err| format!("Parse failed at: {}", err).to_string())?
             .next()
             .unwrap(),
     ))
+}
+
+macro_rules! next_expression {
+    ($inner:ident) => {{
+        let token = $inner.next().unwrap();
+        assert_eq!(token.as_rule(), Rule::expression);
+        expression_to_expression(token)
+    }};
+}
+
+macro_rules! next_atom {
+    ($inner:expr) => {{
+        let token = $inner.next().unwrap();
+        assert_eq!(token.as_rule(), Rule::atom);
+        atom_to_expression(token)
+    }};
+}
+
+macro_rules! next_identifier {
+    ($inner:expr) => {{
+        let token = $inner.next().unwrap();
+        assert_eq!(token.as_rule(), Rule::identifier);
+        identifier_to_name(token)
+    }};
+}
+
+macro_rules! end_of_rule {
+    ($inner:expr) => { assert_eq!($inner.next(), None) };
 }
 
 /// ```
@@ -34,57 +62,127 @@ pub fn parse_str(input: &str) -> Result<Expression, String> {
 ///  | void
 ///  }
 /// ```
-fn rule_to_expression(rules: Tok) -> Expression {
+fn expression_to_expression(rules: Tok) -> Expression {
     let the_rule: Tok = rules.into_inner().next().unwrap();
     match the_rule.as_rule() {
-        Rule::declaration => {
-            let mut inner = the_rule.into_inner();
-            let let_or_rec_rule = inner.next().unwrap();
-            assert_eq!(let_or_rec_rule.as_rule(), Rule::let_or_rec);
-            let rec = match let_or_rec_rule.as_str() {
-                "let" => false,
-                "rec" => true,
-                _ => unreachable!(),
-            };
-            let name_rule = inner.next().unwrap();
-            assert_eq!(name_rule.as_rule(), Rule::identifier);
-            // TODO parse pattern
-            let name = identifier_to_name(name_rule);
-            let signature_rule = inner.next().unwrap();
-            assert_eq!(signature_rule.as_rule(), Rule::expression);
-            let signature = expression!();
-            let body_rule = inner.next().unwrap();
-            assert_eq!(body_rule.as_rule(), Rule::expression);
-            let body = rule_to_expression(body_rule);
-            let rest_rule = inner.next().unwrap();
-            assert_eq!(rest_rule.as_rule(), Rule::expression);
-            let rest = rule_to_expression(rest_rule);
-            let declaration = if rec {
-                Declaration::Recursive(Pattern::Var(name), signature, body)
-            } else {
-                Declaration::Simple(Pattern::Var(name), signature, body)
-            };
-            assert_eq!(inner.next(), None);
-            Expression::Declaration(Box::new(declaration), Box::new(rest))
-        }
-        Rule::variable => {
-            let mut inner = the_rule.into_inner();
-            let name_rule = inner.next().unwrap();
-            assert_eq!(name_rule.as_rule(), Rule::identifier);
-            let name = identifier_to_name(name_rule);
-            assert_eq!(inner.next(), None);
-            Expression::Var(name)
-        }
-        // Rule::application => {}
-        // Rule::first => {}
-        // Rule::second => {}
-        // Rule::pair => {}
-        // Rule::atom => {}
+        Rule::declaration => declaration_to_expression(the_rule),
+        Rule::application => application_to_expression(the_rule),
+        Rule::first => first_to_expression(the_rule),
+        Rule::second => second_to_expression(the_rule),
+        Rule::pair => pair_to_expression(the_rule),
+        Rule::atom => atom_to_expression(the_rule),
         Rule::void => Expression::Void,
         _ => panic!("{}", the_rule),
     }
 }
 
+/// ```
+/// first = { atom ~ ".1" }
+/// ```
+fn first_to_expression(the_rule: Tok) -> Expression {
+    let mut inner = the_rule.into_inner();
+    let pair = next_atom!(inner);
+    end_of_rule!(inner);
+    Expression::First(Box::new(pair))
+}
+
+/// ```
+/// second = { atom ~ ".2" }
+/// ```
+fn second_to_expression(the_rule: Tok) -> Expression {
+    let mut inner = the_rule.into_inner();
+    let pair = next_atom!(inner);
+    end_of_rule!(inner);
+    Expression::Second(Box::new(pair))
+}
+
+/// ```
+/// pair = { atom ~ "," ~ expression }
+/// ```
+fn pair_to_expression(the_rule: Tok) -> Expression {
+    let mut inner = the_rule.into_inner();
+    let first = next_atom!(inner);
+    let second = next_expression!(inner);
+    end_of_rule!(inner);
+    Expression::Pair(Box::new(first), Box::new(second))
+}
+
+/// ```
+/// application = { atom ~ expression }
+/// ```
+fn application_to_expression(the_rule: Tok) -> Expression {
+    let mut inner = the_rule.into_inner();
+    let function = next_atom!(inner);
+    let argument = next_expression!(inner);
+    end_of_rule!(inner);
+    Expression::Application(Box::new(function), Box::new(argument))
+}
+
+/// ```
+/// declaration =
+///  { let_or_rec?
+///  ~ identifier
+///  ~ ":" ~ expression
+///  ~ "=" ~ expression
+///  ~ ";" ~ expression
+///  }
+/// ```
+fn declaration_to_expression(the_rule: Tok) -> Expression {
+    let mut inner = the_rule.into_inner();
+    let let_or_rec_rule = inner.next().unwrap();
+    assert_eq!(let_or_rec_rule.as_rule(), Rule::let_or_rec);
+    let rec = match let_or_rec_rule.as_str() {
+        "let" => false,
+        "rec" => true,
+        _ => unreachable!(),
+    };
+    // TODO: parse as pattern
+    let name = next_identifier!(inner);
+    let signature = next_expression!(inner);
+    let body = next_expression!(inner);
+    let rest = next_expression!(inner);
+    let declaration = if rec {
+        Declaration::Recursive(Pattern::Var(name), signature, body)
+    } else {
+        Declaration::Simple(Pattern::Var(name), signature, body)
+    };
+    end_of_rule!(inner);
+    Expression::Declaration(Box::new(declaration), Box::new(rest))
+}
+
+/// ```
+/// atom =
+///  _{ constructor
+///   | variable
+///   | function
+///   | sum
+///   | pi_type
+///   | sigma_type
+///   | lambda_expression
+///   | universe
+///   | "(" ~ expression ~ ")"
+///   }
+/// ```
+fn atom_to_expression(rules: Tok) -> Expression {
+    let the_rule: Tok = rules.into_inner().next().unwrap();
+    match the_rule.as_rule() {
+        Rule::variable => {
+            let mut inner = the_rule.into_inner();
+            let name = next_identifier!(inner);
+            end_of_rule!(inner);
+            Expression::Var(name)
+        }
+        Rule::universe => Expression::Type,
+        Rule::one => Expression::One,
+        Rule::unit => Expression::Unit,
+        Rule::expression => expression_to_expression(the_rule),
+        _ => panic!("{}", the_rule),
+    }
+}
+
+/// ```
+/// identifier = @{ !"let" ~ !"rec" ~ !"0" ~ !"1" ~ character+ }
+/// ```
 fn identifier_to_name(rule: Tok) -> String {
     rule.as_span().as_str().to_string()
 }
@@ -93,8 +191,18 @@ fn identifier_to_name(rule: Tok) -> String {
 mod tests {
     use crate::parser::parse_str;
 
+    fn successful_test_case(code: &str) {
+        println!("========= source ===========");
+        println!("{}", code);
+        println!("========= result ===========");
+        print!("{}", parse_str(code).unwrap());
+        println!("========= finish ===========\n");
+    }
+
     #[test]
     fn simple_parse() {
-        println!("{}", parse_str("let f : k = e;\n").unwrap());
+        successful_test_case("let f : 1 = 0;");
+        successful_test_case("let f : k = f e;");
+        successful_test_case("let f : k = ((x, y).1).2;");
     }
 }

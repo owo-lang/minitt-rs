@@ -4,7 +4,7 @@ WHITESPACE = _{ " " | "\t" | NEWLINE }
 
 // Primitive helpers
 character = _{ ASCII_ALPHA | "_" | "\'" | '0'..'9' }
-identifier = @{ !"let" ~ !"rec" ~ character+ }
+identifier = @{ !"let" ~ !"rec" ~ !"0" ~ !"1" ~ character+ }
 constructor_name = @{ ASCII_ALPHA_UPPER ~ identifier? }
 pi = { "Π" | "\\Pi" }
 sigma = { "Σ" | "\\Sigma" }
@@ -18,6 +18,8 @@ branches = _{ "(" ~ constructor* ~ ")" }
 
 // Atomic expressions
 pi_type = { pi ~ typed_abstraction }
+one = { "1" }
+unit = { "0" }
 lambda_expression = { lambda ~ typed_abstraction }
 constructor = { constructor_name ~ expression }
 sigma_type = { sigma ~ typed_abstraction }
@@ -25,10 +27,12 @@ function = { "fun" ~ branches }
 sum = { "Sum" ~ branches }
 variable = { identifier }
 atom =
- _{ constructor
+  { constructor
   | variable
   | function
   | sum
+  | one
+  | unit
   | pi_type
   | sigma_type
   | lambda_expression

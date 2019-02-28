@@ -83,12 +83,16 @@ impl Display for Expression {
         match self {
             Expression::Var(name) => name.fmt(f),
             Expression::First(pair) => {
+                f.write_char('(')?;
                 pair.fmt(f)?;
-                f.write_str(".1")
+                f.write_str(".1")?;
+                f.write_char(')')
             }
             Expression::Second(pair) => {
+                f.write_char('(')?;
                 pair.fmt(f)?;
-                f.write_str(".2")
+                f.write_str(".2")?;
+                f.write_char(')')
             }
             Expression::Application(function, argument) => {
                 f.write_char('(')?;
@@ -175,9 +179,11 @@ impl Display for Pattern {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Pattern::Pair(first, second) => {
+                f.write_char('(')?;
                 first.fmt(f)?;
                 f.write_str(", ")?;
-                second.fmt(f)
+                second.fmt(f)?;
+                f.write_char(')')
             }
             Pattern::Unit => f.write_char('_'),
             Pattern::Var(name) => f.write_str(name.as_str()),
@@ -236,12 +242,16 @@ impl<Value: Display + Clone> Display for GenericNeutral<Value> {
                 f.write_char(')')
             }
             GenericNeutral::First(pair) => {
+                f.write_char('(')?;
                 pair.fmt(f)?;
-                f.write_str(".1")
+                f.write_str(".1")?;
+                f.write_char(')')
             }
             GenericNeutral::Second(pair) => {
+                f.write_char('(')?;
                 pair.fmt(f)?;
-                f.write_str(".2")
+                f.write_str(".2")?;
+                f.write_char(')')
             }
             GenericNeutral::Function((clauses, _), argument) => {
                 f.write_str("app (")?;
