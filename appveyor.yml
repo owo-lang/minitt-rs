@@ -69,5 +69,10 @@ install:
 
 build: off
 
+artifacts:
+  - name: minittc-%channel%-%target%.exe
+    path: target\release\minittc.exe
+
 test_script:
+  - cargo build --release --bin minittc --all-features
   - cargo test --verbose --all-features %cargoflags%
