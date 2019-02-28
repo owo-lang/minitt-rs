@@ -8,7 +8,7 @@ $|++;
 
 say `cargo build --release --bin minittc --all-features`;
 
-my $minittc = "../target/release/minittc.exe";
+my $minittc = "../target/release/minittc";
 my $version = "$minittc --version";
 say "$version: @{[ `$version` ]}";
 my @failure = ();
