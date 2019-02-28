@@ -7,7 +7,6 @@ license = "Apache-2.0"
 description = "Mini-TT, a dependently-typed lambda calculus, implementated in Rust"
 readme = "README.md"
 categories = ["development-tools"]
-exclude = ["src/grammar.pest"]
 
 [badges]
 appveyor = { repository = "ice1000/minitt-rs", service = "github" }
@@ -17,8 +16,19 @@ maintenance = { status = "passively-maintained" }
 [dependencies]
 pest = { version = "2.1.0", optional = true }
 pest_derive = { version = "2.1.0", optional = true }
+clap = { version = "2.32.0", optional = true }
 
 [features]
 default = ["pretty", "parser"]
 pretty = []
 parser = ["pest", "pest_derive"]
+minittc-dummy-feature = ["clap"]
+
+[lib]
+name = "minitt"
+path = "src/lib.rs"
+
+[[bin]]
+name = "minittc"
+path = "src/main.rs"
+required-features = ["minittc-dummy-feature", "parser", "pretty"]

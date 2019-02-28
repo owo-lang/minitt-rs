@@ -3,7 +3,7 @@
 # 0.1.4
 
 + Enable parser by default
-+ Add generic user data
++ Add executable
 
 # 0.1.3
 

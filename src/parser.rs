@@ -13,9 +13,6 @@ type Tok<'a> = Pair<'a, Rule>;
 type Tik<'a> = Pairs<'a, Rule>;
 
 /// Parse a string into an optional expression
-/// ```ignore
-/// entry = { expression }
-/// ```
 pub fn parse_str(input: &str) -> Result<Expression, String> {
     Ok(expression_to_expression(
         MiniParser::parse(Rule::expression, input)
@@ -23,6 +20,11 @@ pub fn parse_str(input: &str) -> Result<Expression, String> {
             .next()
             .unwrap(),
     ))
+}
+
+/// Parse a string into an optional expression and print error
+pub fn parse_str_err_printed(code: &str) -> Result<Expression, ()> {
+    parse_str(code).map_err(|err| eprintln!("{}", err))
 }
 
 macro_rules! next_rule {
@@ -153,7 +155,8 @@ fn declaration_to_expression(the_rule: Tok) -> Expression {
 
 /// ```ignore
 /// atom =
-///   { constructor
+///   { universe
+///   | constructor
 ///   | variable
 ///   | function
 ///   | sum
@@ -162,13 +165,13 @@ fn declaration_to_expression(the_rule: Tok) -> Expression {
 ///   | pi_type
 ///   | sigma_type
 ///   | lambda_expression
-///   | universe
 ///   | "(" ~ expression ~ ")"
 ///   }
 /// ```
 fn atom_to_expression(rules: Tok) -> Expression {
     let the_rule: Tok = rules.into_inner().next().unwrap();
     match the_rule.as_rule() {
+        Rule::universe => Expression::Type,
         Rule::constructor => constructor_to_expression(the_rule),
         Rule::variable => variable_to_expression(the_rule),
         Rule::function => Expression::Function(branches_to_tree_map(the_rule)),
@@ -178,7 +181,6 @@ fn atom_to_expression(rules: Tok) -> Expression {
         Rule::pi_type => pi_type_to_expression(the_rule),
         Rule::sigma_type => sigma_type_to_expression(the_rule),
         Rule::lambda_expression => lambda_expression_to_expression(the_rule),
-        Rule::universe => Expression::Type,
         Rule::expression => expression_to_expression(the_rule),
         _ => panic!("{}", the_rule),
     }
@@ -279,11 +281,11 @@ fn identifier_to_name(rule: Tok) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::parse_str;
+    use crate::parser::parse_str_err_printed;
 
     #[cfg(not(feature = "pretty"))]
     fn successful_test_case(code: &str) {
-        let expr = parse_str(code).map_err(|err| println!("{}", err)).unwrap();
+        let expr = parse_str_err_printed(code).unwrap();
         println!("{:?}", expr);
     }
 
@@ -292,16 +294,11 @@ mod tests {
         println!("========= source ===========");
         println!("{}", code);
         println!("========= result ===========");
-        let expr = parse_str(code).map_err(|err| println!("{}", err)).unwrap();
+        let expr = parse_str_err_printed(code).unwrap();
         print!("{}", expr);
         let code = format!("{}", expr);
         println!("========= double ===========");
-        print!(
-            "{}",
-            parse_str(code.as_str())
-                .map_err(|err| println!("{}", err))
-                .unwrap()
-        );
+        print!("{}", parse_str_err_printed(code.as_str()).unwrap());
         println!("========= finish ===========\n");
     }
 
