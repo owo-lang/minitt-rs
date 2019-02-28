@@ -4,15 +4,26 @@ WHITESPACE = _{ " " | "\t" | NEWLINE }
 
 // Primitive helpers
 character = _{ ASCII_ALPHA | "_" | "\'" | '0'..'9' }
-identifier =
+identifier_simple =
  @{ !"let"
   ~ !"rec"
   ~ !"fun"
   ~ !"Sum"
   ~ !"0"
   ~ !"1"
+  ~ !"_"
   ~ character+
   }
+identifier_raw =
+ @{ ("fun" ~ character+)
+  | ("Sum" ~ character+)
+  | ("let" ~ character+)
+  | ("rec" ~ character+)
+  | ("0" ~ character+)
+  | ("1" ~ character+)
+  | ("_" ~ character+)
+  }
+identifier = { identifier_simple | identifier_raw }
 constructor_name = @{ ASCII_ALPHA_UPPER ~ identifier? }
 pi = _{ "Π" | "\\Pi" }
 sigma = _{ "Σ" | "\\Sigma" }
@@ -25,7 +36,7 @@ void = { EOI }
 
 // Extracted helpers
 typed_abstraction = _{ identifier ~ ":" ~ expression ~ "." ~ expression }
-branches = _{ "(" ~ constructor* ~ ")" }
+branches = _{ "(" ~ (constructor ~ ("|" ~ constructor)*)? ~ ")" }
 
 // Atomic expressions
 pi_type = { pi ~ typed_abstraction }

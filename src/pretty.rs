@@ -143,7 +143,7 @@ impl Display for Expression {
                 let mut started = false;
                 for (name, clause) in branches.iter() {
                     name.fmt(f)?;
-                    f.write_str(": ")?;
+                    f.write_char(' ')?;
                     clause.fmt(f)?;
                     if started {
                         f.write_str(", ")?;
@@ -159,7 +159,7 @@ impl Display for Expression {
                 let mut started = false;
                 for (name, constructor) in constructors.iter() {
                     name.fmt(f)?;
-                    f.write_str(": ")?;
+                    f.write_char(' ')?;
                     constructor.fmt(f)?;
                     if started {
                         f.write_str(", ")?;
