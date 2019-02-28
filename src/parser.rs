@@ -11,7 +11,7 @@ struct MiniParser;
 type Tok<'a> = Pair<'a, Rule>;
 
 /// Parse a string into an optional expression
-/// ```
+/// ```ignore
 /// entry = { expression }
 /// ```
 pub fn parse_str(input: &str) -> Result<Expression, String> {
@@ -55,7 +55,7 @@ macro_rules! end_of_rule {
     };
 }
 
-/// ```
+/// ```ignore
 /// expression =
 ///  { declaration
 ///  | application
@@ -80,7 +80,7 @@ fn expression_to_expression(rules: Tok) -> Expression {
     }
 }
 
-/// ```
+/// ```ignore
 /// first = { atom ~ ".1" }
 /// ```
 fn first_to_expression(the_rule: Tok) -> Expression {
@@ -90,7 +90,7 @@ fn first_to_expression(the_rule: Tok) -> Expression {
     Expression::First(Box::new(pair))
 }
 
-/// ```
+/// ```ignore
 /// second = { atom ~ ".2" }
 /// ```
 fn second_to_expression(the_rule: Tok) -> Expression {
@@ -100,7 +100,7 @@ fn second_to_expression(the_rule: Tok) -> Expression {
     Expression::Second(Box::new(pair))
 }
 
-/// ```
+/// ```ignore
 /// pair = { atom ~ "," ~ expression }
 /// ```
 fn pair_to_expression(the_rule: Tok) -> Expression {
@@ -111,7 +111,7 @@ fn pair_to_expression(the_rule: Tok) -> Expression {
     Expression::Pair(Box::new(first), Box::new(second))
 }
 
-/// ```
+/// ```ignore
 /// application = { atom ~ expression }
 /// ```
 fn application_to_expression(the_rule: Tok) -> Expression {
@@ -122,7 +122,7 @@ fn application_to_expression(the_rule: Tok) -> Expression {
     Expression::Application(Box::new(function), Box::new(argument))
 }
 
-/// ```
+/// ```ignore
 /// declaration =
 ///  { let_or_rec?
 ///  ~ identifier
@@ -153,7 +153,7 @@ fn declaration_to_expression(the_rule: Tok) -> Expression {
     Expression::Declaration(Box::new(declaration), Box::new(rest))
 }
 
-/// ```
+/// ```ignore
 /// atom =
 ///   { constructor
 ///   | variable
@@ -184,7 +184,7 @@ fn atom_to_expression(rules: Tok) -> Expression {
     }
 }
 
-/// ```
+/// ```ignore
 /// pi = _{ Pi unicode | "\\Pi" }
 /// pi_type = { pi ~ typed_abstraction }
 /// ```
@@ -193,7 +193,7 @@ fn pi_type_to_expression(the_rule: Tok) -> Expression {
     Expression::Pi(first_name, Box::new(first_type), Box::new(second))
 }
 
-/// ```
+/// ```ignore
 /// pi = _{ Pi unicode | "\\Pi" }
 /// pi_type = { pi ~ typed_abstraction }
 /// ```
@@ -202,7 +202,7 @@ fn sigma_type_to_expression(the_rule: Tok) -> Expression {
     Expression::Sigma(input_name, Box::new(input_type), Box::new(output))
 }
 
-/// ```
+/// ```ignore
 /// typed_abstraction = _{ identifier ~ ":" ~ expression ~ "." ~ expression }
 /// ```
 fn typed_abstraction_to_tuple(the_rule: Tok) -> (Pattern, Expression, Expression) {
@@ -215,7 +215,7 @@ fn typed_abstraction_to_tuple(the_rule: Tok) -> (Pattern, Expression, Expression
     (Pattern::Var(input_name), input_type, output)
 }
 
-/// ```
+/// ```ignore
 /// lambda = _{ lambda unicode | "\\lambda" }
 /// lambda_expression = { lambda ~ identifier ~ "." ~ expression }
 /// ```
@@ -234,7 +234,7 @@ fn constructor_to_expression(the_rule: Tok) -> Expression {
     Expression::Constructor(constructor, Box::new(argument))
 }
 
-/// ```
+/// ```ignore
 /// constructor_name = @{ ASCII_ALPHA_UPPER ~ identifier? }
 /// constructor = { constructor_name ~ expression }
 /// ```
@@ -246,7 +246,7 @@ fn constructor_to_tuple(the_rule: Tok) -> (String, Expression) {
     (constructor, argument)
 }
 
-/// ```
+/// ```ignore
 /// variable = { identifier }
 /// ```
 fn variable_to_expression(the_rule: Tok) -> Expression {
@@ -256,7 +256,7 @@ fn variable_to_expression(the_rule: Tok) -> Expression {
     Expression::Var(name)
 }
 
-/// ```
+/// ```ignore
 /// identifier = @{ !"let" ~ !"rec" ~ !"0" ~ !"1" ~ character+ }
 /// ```
 fn identifier_to_name(rule: Tok) -> String {
