@@ -17,7 +17,7 @@ type Tok<'a> = Pair<'a, Rule>;
 pub fn parse_str(input: &str) -> Result<Expression, String> {
     Ok(expression_to_expression(
         MiniParser::parse(Rule::expression, input)
-            .map_err(|err| format!("Parse failed at: {}", err).to_string())?
+            .map_err(|err| format!("Parse failed at:{}", err).to_string())?
             .next()
             .unwrap(),
     ))
@@ -175,10 +175,57 @@ fn atom_to_expression(rules: Tok) -> Expression {
         Rule::variable => variable_to_expression(the_rule),
         Rule::one => Expression::One,
         Rule::unit => Expression::Unit,
+        Rule::pi_type => pi_type_to_expression(the_rule),
+        Rule::sigma_type => sigma_type_to_expression(the_rule),
+        Rule::lambda_expression => lambda_expression_to_expression(the_rule),
         Rule::universe => Expression::Type,
         Rule::expression => expression_to_expression(the_rule),
         _ => panic!("{}", the_rule),
     }
+}
+
+/// ```
+/// pi = _{ Pi unicode | "\\Pi" }
+/// pi_type = { pi ~ typed_abstraction }
+/// ```
+fn pi_type_to_expression(the_rule: Tok) -> Expression {
+    let (first_name, first_type, second) = typed_abstraction_to_tuple(the_rule);
+    Expression::Pi(first_name, Box::new(first_type), Box::new(second))
+}
+
+/// ```
+/// pi = _{ Pi unicode | "\\Pi" }
+/// pi_type = { pi ~ typed_abstraction }
+/// ```
+fn sigma_type_to_expression(the_rule: Tok) -> Expression {
+    let (input_name, input_type, output) = typed_abstraction_to_tuple(the_rule);
+    Expression::Sigma(input_name, Box::new(input_type), Box::new(output))
+}
+
+/// ```
+/// typed_abstraction = _{ identifier ~ ":" ~ expression ~ "." ~ expression }
+/// ```
+fn typed_abstraction_to_tuple(the_rule: Tok) -> (Pattern, Expression, Expression) {
+    let mut inner = the_rule.into_inner();
+    // TODO: parse as pattern
+    let input_name = next_identifier!(inner);
+    let input_type = next_expression!(inner);
+    let output = next_expression!(inner);
+    end_of_rule!(inner);
+    (Pattern::Var(input_name), input_type, output)
+}
+
+/// ```
+/// lambda = _{ lambda unicode | "\\lambda" }
+/// lambda_expression = { lambda ~ identifier ~ "." ~ expression }
+/// ```
+fn lambda_expression_to_expression(the_rule: Tok) -> Expression {
+    let mut inner = the_rule.into_inner();
+    // TODO: parse as pattern
+    let parameter = next_identifier!(inner);
+    let body = next_expression!(inner);
+    end_of_rule!(inner);
+    Expression::Lambda(Pattern::Var(parameter), Box::new(body))
 }
 
 /// ```
@@ -218,15 +265,18 @@ mod tests {
         println!("========= source ===========");
         println!("{}", code);
         println!("========= result ===========");
-        print!("{}", parse_str(code).unwrap());
+        let code = parse_str(code).map_err(|err| println!("{}", err)).unwrap();
+        print!("{}", code);
         println!("========= finish ===========\n");
     }
 
     #[test]
     fn simple_parse() {
-        successful_test_case("let f : 1 = 0;");
-        successful_test_case("let f : k = f e;");
-        successful_test_case("let f : k = ((x, y).1).2;");
-        successful_test_case("let f : C k = C e;");
+        successful_test_case("let unit_one : 1 = 0;\nlet type_one : U = unit_one;");
+        successful_test_case("let application : k = f e;");
+        successful_test_case("let pair_first_second : k = ((x, y).1).2;");
+        successful_test_case("let sigma_type : \\Sigma x : x_type . y = x, y;");
+        successful_test_case("let constructor : C k = C e;");
+        successful_test_case("let pi_lambda : \\Pi a : b . c = \\lambda a . expr;");
     }
 }

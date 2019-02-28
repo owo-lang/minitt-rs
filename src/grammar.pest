@@ -6,10 +6,12 @@ WHITESPACE = _{ " " | "\t" | NEWLINE }
 character = _{ ASCII_ALPHA | "_" | "\'" | '0'..'9' }
 identifier = @{ !"let" ~ !"rec" ~ !"0" ~ !"1" ~ character+ }
 constructor_name = @{ ASCII_ALPHA_UPPER ~ identifier? }
-pi = { "Π" | "\\Pi" }
-sigma = { "Σ" | "\\Sigma" }
-lambda = { "λ" | "\\lambda" }
+pi = _{ "Π" | "\\Pi" }
+sigma = _{ "Σ" | "\\Sigma" }
+lambda = _{ "λ" | "\\lambda" }
 let_or_rec = { "let" | "rec" }
+one = { "1" }
+unit = { "0" }
 universe = { "U" }
 
 // Extracted helpers
@@ -18,9 +20,7 @@ branches = _{ "(" ~ constructor* ~ ")" }
 
 // Atomic expressions
 pi_type = { pi ~ typed_abstraction }
-one = { "1" }
-unit = { "0" }
-lambda_expression = { lambda ~ typed_abstraction }
+lambda_expression = { lambda ~ identifier ~ "." ~ expression }
 constructor = { constructor_name ~ expression }
 sigma_type = { sigma ~ typed_abstraction }
 function = { "fun" ~ branches }
