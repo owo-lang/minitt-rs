@@ -6,9 +6,11 @@ use Term::ANSIColor;
 use v5.10;
 $|++;
 
-say `cargo build --release --bin minittc --all-features`;
+my $is_release = 0;
+say $is_release ? `cargo build --release --bin minittc --all-features`
+                : `cargo build --bin minittc --all-features`;
 
-my $minittc = "../target/release/minittc";
+my $minittc = "../target/@{[ $is_release ? 'release' : 'debug' ]}/minittc";
 my $version = "$minittc --version";
 say "$version: @{[ `$version` ]}";
 my @failure = ();

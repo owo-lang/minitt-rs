@@ -1,0 +1,6 @@
+rec nat : U = sum (Zero 1 | Suc nat);
+-- Inductive definition of nat
+
+-- let one : nat = Zero 0;
+-- let two : nat = Suc one;
+-- No working ATM, very sorry
