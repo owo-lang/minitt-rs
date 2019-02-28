@@ -4,7 +4,7 @@ use crate::syntax::*;
 
 impl Pattern {
     /// `inPat` in Mini-TT.
-    pub fn contains(&self, name: &String) -> bool {
+    pub fn contains(&self, name: &str) -> bool {
         match self {
             Pattern::Var(pattern_name) => pattern_name == name,
             Pattern::Pair(first, second) => first.contains(name) || second.contains(name),
@@ -13,7 +13,7 @@ impl Pattern {
     }
 
     /// `patProj` in Mini-TT.
-    pub fn project(&self, name: &String, val: Value) -> Value {
+    pub fn project(&self, name: &str, val: Value) -> Value {
         match self {
             Pattern::Pair(first, second) => {
                 if first.contains(name) {
@@ -38,7 +38,7 @@ impl Pattern {
 
 impl TelescopeRaw {
     /// `getRho` in Mini-TT.
-    pub fn resolve(&self, name: &String) -> Value {
+    pub fn resolve(&self, name: &str) -> Value {
         use crate::syntax::GenericTelescope::*;
         match self {
             Nil => panic!("Unresolved reference: `{}`", name),

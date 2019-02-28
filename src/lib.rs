@@ -1,3 +1,7 @@
+#[cfg(feature = "parser")]
+#[macro_use]
+extern crate pest_derive;
+
 /// Reduction: eval and eval's friends.
 ///
 /// Functions in this module are put into `impl` blocks, their docs can be found in:
@@ -43,3 +47,7 @@ pub mod type_check;
 /// Pretty print utilities
 #[cfg(feature = "pretty")]
 pub mod pretty;
+
+/// Parser, from text to AST and a bunch of utilities
+#[cfg(feature = "parser")]
+pub mod parser;

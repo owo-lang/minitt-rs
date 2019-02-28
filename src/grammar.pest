@@ -1,2 +1,62 @@
-character = _{ 'a'..'z' | 'A'..'Z' | '_' | '\'' | '0'..'9' }
-identifier = { character+ }
+// Lexical rules
+COMMENT = ${ "--" ~ (!"\n" ~ ANY)* }
+WHITESPACE = _{ " " | "\t" | NEWLINE }
+
+// Primitive helpers
+character = _{ ASCII_ALPHA | "_" | "\'" | '0'..'9' }
+identifier = @{ !"let" ~ !"rec" ~ character+ }
+constructor_name = @{ ASCII_ALPHA_UPPER ~ identifier? }
+pi = { "Π" | "\\Pi" }
+sigma = { "Σ" | "\\Sigma" }
+lambda = { "λ" | "\\lambda" }
+let_or_rec = { "let" | "rec" }
+universe = { "U" }
+
+// Extracted helpers
+typed_abstraction = _{ identifier ~ ":" ~ expression ~ "." ~ expression }
+branches = _{ "(" ~ constructor* ~ ")" }
+
+// Atomic expressions
+pi_type = { pi ~ typed_abstraction }
+lambda_expression = { lambda ~ typed_abstraction }
+constructor = { constructor_name ~ expression }
+sigma_type = { sigma ~ typed_abstraction }
+function = { "fun" ~ branches }
+sum = { "Sum" ~ branches }
+variable = { identifier }
+atom =
+ _{ constructor
+  | variable
+  | function
+  | sum
+  | pi_type
+  | sigma_type
+  | lambda_expression
+  | universe
+  | "(" ~ expression ~ ")"
+  }
+void = { EOI }
+
+// Higher-level expressions
+application = { atom ~ expression }
+pair = { atom ~ "," ~ expression }
+first = { atom ~ ".1" }
+second = { atom ~ ".2" }
+expression =
+ { declaration
+ | application
+ | first
+ | second
+ | pair
+ | atom
+ | void
+ }
+
+// Declaration
+declaration =
+ { let_or_rec?
+ ~ identifier
+ ~ ":" ~ expression
+ ~ "=" ~ expression
+ ~ ";" ~ expression
+ }
