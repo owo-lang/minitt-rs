@@ -17,7 +17,7 @@ type Tok<'a> = Pair<'a, Rule>;
 pub fn parse_str(input: &str) -> Result<Expression, String> {
     Ok(expression_to_expression(
         MiniParser::parse(Rule::expression, input)
-            .map_err(|err| format!("Parse failed at:{}", err).to_string())?
+            .map_err(|err| format!("Parse failed at:{}", err))?
             .next()
             .unwrap(),
     ))
@@ -265,8 +265,16 @@ mod tests {
         println!("========= source ===========");
         println!("{}", code);
         println!("========= result ===========");
-        let code = parse_str(code).map_err(|err| println!("{}", err)).unwrap();
-        print!("{}", code);
+        let expr = parse_str(code).map_err(|err| println!("{}", err)).unwrap();
+        print!("{}", expr);
+        let code = format!("{}", expr);
+        println!("========= double ===========");
+        print!(
+            "{}",
+            parse_str(code.as_str())
+                .map_err(|err| println!("{}", err))
+                .unwrap()
+        );
         println!("========= finish ===========\n");
     }
 
