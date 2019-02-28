@@ -7,7 +7,7 @@ impl Display for Value {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Value::Lambda(closure) => {
-                f.write_str("\u{039B} ")?;
+                f.write_str("\u{03BB} ")?;
                 closure.fmt(f)
             }
             Value::Pair(first, second) => {
@@ -101,11 +101,11 @@ impl Display for Expression {
                 argument.fmt(f)?;
                 f.write_char(')')
             }
-            Expression::Lambda(pattern, expression) => {
-                f.write_str("\u{039B} ")?;
+            Expression::Lambda(pattern, body) => {
+                f.write_str("\u{03BB} ")?;
                 pattern.fmt(f)?;
                 f.write_str(". ")?;
-                expression.fmt(f)
+                body.fmt(f)
             }
             Expression::Pair(first, second) => {
                 f.write_char('(')?;
@@ -117,14 +117,18 @@ impl Display for Expression {
             Expression::Unit => f.write_str("0"),
             Expression::One => f.write_str("1"),
             Expression::Pi(pattern, input, output) => {
+                f.write_str("\u{03A0} ")?;
                 pattern.fmt(f)?;
+                f.write_str(": ")?;
                 input.fmt(f)?;
                 f.write_str(". ")?;
                 output.fmt(f)
             }
             Expression::Type => f.write_str("U"),
             Expression::Sigma(pattern, first, second) => {
+                f.write_str("\u{03A3} ")?;
                 pattern.fmt(f)?;
+                f.write_str(": ")?;
                 first.fmt(f)?;
                 f.write_str(". ")?;
                 second.fmt(f)
@@ -278,7 +282,7 @@ impl Display for NormalExpression {
         use crate::normal::NormalExpression as Expression;
         match self {
             Expression::Lambda(index, expression) => {
-                f.write_str("\u{039B} [")?;
+                f.write_str("\u{03BB} [")?;
                 index.fmt(f)?;
                 f.write_str("] ")?;
                 expression.fmt(f)

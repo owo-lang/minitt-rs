@@ -70,4 +70,4 @@ install:
 build: off
 
 test_script:
-  - cargo test --verbose %cargoflags%
+  - cargo test --verbose --all-features %cargoflags%

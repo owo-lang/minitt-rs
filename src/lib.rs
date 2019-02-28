@@ -1,5 +1,4 @@
 #[cfg(feature = "parser")]
-#[macro_use]
 extern crate pest_derive;
 
 /// Reduction: eval and eval's friends.
