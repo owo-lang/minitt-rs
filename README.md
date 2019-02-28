@@ -14,7 +14,7 @@
  [cc-url]: https://circleci.com/gh/owo-lang/minitt-rs/tree/master
 
 Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
-Built with latest (when developing this) stable Rust 2018.
+Built with latest (when developing this) stable Rust, 2018 edition.
 It can be used as a core language for complicated dependently-typed programming
 languages, or used for testing the correctness of translation algorithms.
 
@@ -26,6 +26,8 @@ don't get confused when they read the paper while reading this implementation.
 ## Resources
 
 + [Mini-TT Paper](http://www.cse.chalmers.se/~bengt/papers/GKminiTT.pdf)
++ [Code samples](./samples), tested on CI
++ [Doc.rs](https://docs.rs/minitt) documentation
 
 ## Features
 

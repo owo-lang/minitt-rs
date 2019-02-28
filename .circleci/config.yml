@@ -34,6 +34,12 @@ jobs:
       - run:
           name: Test
           command: rustup run stable cargo test --all-features
+      - run:
+          name: Integration Test
+          command: |
+            cd samples
+            perl test.pl
+            cd ..
       # - run:
           # name: Upload Coverage
           # command: ./scripts/codecov.sh
