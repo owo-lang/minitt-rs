@@ -58,7 +58,7 @@ expression =
 
 // Declaration
 declaration =
- { let_or_rec?
+ { let_or_rec
  ~ identifier
  ~ ":" ~ expression
  ~ "=" ~ expression

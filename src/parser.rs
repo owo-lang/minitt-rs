@@ -23,32 +23,36 @@ pub fn parse_str(input: &str) -> Result<Expression, String> {
     ))
 }
 
-macro_rules! next_expression {
-    ($inner:ident) => {{
+macro_rules! next_rule {
+    ($inner:expr, $rule_name:ident, $function:ident) => {{
         let token = $inner.next().unwrap();
-        assert_eq!(token.as_rule(), Rule::expression);
-        expression_to_expression(token)
+        assert_eq!(token.as_rule(), Rule::$rule_name);
+        $function(token)
     }};
 }
 
+macro_rules! next_expression {
+    ($inner:expr) => {
+        next_rule!($inner, expression, expression_to_expression)
+    };
+}
+
 macro_rules! next_atom {
-    ($inner:expr) => {{
-        let token = $inner.next().unwrap();
-        assert_eq!(token.as_rule(), Rule::atom);
-        atom_to_expression(token)
-    }};
+    ($inner:expr) => {
+        next_rule!($inner, atom, atom_to_expression)
+    };
 }
 
 macro_rules! next_identifier {
     ($inner:expr) => {{
-        let token = $inner.next().unwrap();
-        assert_eq!(token.as_rule(), Rule::identifier);
-        identifier_to_name(token)
+        next_rule!($inner, identifier, identifier_to_name)
     }};
 }
 
 macro_rules! end_of_rule {
-    ($inner:expr) => { assert_eq!($inner.next(), None) };
+    ($inner:expr) => {
+        assert_eq!($inner.next(), None)
+    };
 }
 
 /// ```
@@ -72,7 +76,7 @@ fn expression_to_expression(rules: Tok) -> Expression {
         Rule::pair => pair_to_expression(the_rule),
         Rule::atom => atom_to_expression(the_rule),
         Rule::void => Expression::Void,
-        _ => panic!("{}", the_rule),
+        _ => unreachable!(),
     }
 }
 
@@ -130,7 +134,6 @@ fn application_to_expression(the_rule: Tok) -> Expression {
 fn declaration_to_expression(the_rule: Tok) -> Expression {
     let mut inner = the_rule.into_inner();
     let let_or_rec_rule = inner.next().unwrap();
-    assert_eq!(let_or_rec_rule.as_rule(), Rule::let_or_rec);
     let rec = match let_or_rec_rule.as_str() {
         "let" => false,
         "rec" => true,
@@ -152,10 +155,12 @@ fn declaration_to_expression(the_rule: Tok) -> Expression {
 
 /// ```
 /// atom =
-///  _{ constructor
+///   { constructor
 ///   | variable
 ///   | function
 ///   | sum
+///   | one
+///   | unit
 ///   | pi_type
 ///   | sigma_type
 ///   | lambda_expression
@@ -166,18 +171,36 @@ fn declaration_to_expression(the_rule: Tok) -> Expression {
 fn atom_to_expression(rules: Tok) -> Expression {
     let the_rule: Tok = rules.into_inner().next().unwrap();
     match the_rule.as_rule() {
-        Rule::variable => {
-            let mut inner = the_rule.into_inner();
-            let name = next_identifier!(inner);
-            end_of_rule!(inner);
-            Expression::Var(name)
-        }
-        Rule::universe => Expression::Type,
+        Rule::constructor => constructor_to_expression(the_rule),
+        Rule::variable => variable_to_expression(the_rule),
         Rule::one => Expression::One,
         Rule::unit => Expression::Unit,
+        Rule::universe => Expression::Type,
         Rule::expression => expression_to_expression(the_rule),
         _ => panic!("{}", the_rule),
     }
+}
+
+/// ```
+/// constructor_name = @{ ASCII_ALPHA_UPPER ~ identifier? }
+/// constructor = { constructor_name ~ expression }
+/// ```
+fn constructor_to_expression(the_rule: Tok) -> Expression {
+    let mut inner = the_rule.into_inner();
+    let constructor = next_rule!(inner, constructor_name, identifier_to_name);
+    let argument = next_expression!(inner);
+    end_of_rule!(inner);
+    Expression::Constructor(constructor, Box::new(argument))
+}
+
+/// ```
+/// variable = { identifier }
+/// ```
+fn variable_to_expression(the_rule: Tok) -> Expression {
+    let mut inner = the_rule.into_inner();
+    let name = next_identifier!(inner);
+    end_of_rule!(inner);
+    Expression::Var(name)
 }
 
 /// ```
@@ -204,5 +227,6 @@ mod tests {
         successful_test_case("let f : 1 = 0;");
         successful_test_case("let f : k = f e;");
         successful_test_case("let f : k = ((x, y).1).2;");
+        successful_test_case("let f : C k = C e;");
     }
 }
