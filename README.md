@@ -10,7 +10,6 @@
  [crates]: https://crates.io/crates/minitt/
  [av-svg]: https://ci.appveyor.com/api/projects/status/0pnq07tqo5skyjeo/branch/master?svg=true
  [av-url]: https://ci.appveyor.com/project/ice1000/minitt-rs/branch/master
- [av-exe]: https://ci.appveyor.com/project/ice1000/minitt-rs/build/artifacts
  [cc-svg]: https://circleci.com/gh/owo-lang/minitt-rs/tree/master.svg?style=svg
  [cc-url]: https://circleci.com/gh/owo-lang/minitt-rs/tree/master
  [doc-rs]: https://docs.rs/minitt
@@ -31,6 +30,7 @@ don't get confused when they read the paper while reading this implementation.
 + [Mini-TT Paper](http://www.cse.chalmers.se/~bengt/papers/GKminiTT.pdf)
 + [Code samples](./samples), tested on CI
 + [Doc.rs][doc-rs] documentation
++ Windows binary download by [AppVeyor][av-url]
 
 ## Features
 
@@ -55,4 +55,5 @@ don't get confused when they read the paper while reading this implementation.
   + [ ] Language server
   + Publish?
     + By `cargo install --path . --bin minittc --all-features`
-    + By [AppVeyor][av-exe]
+    + By [AppVeyor][av-url]
+      (Just find the configuration fits you best and get the artifact)
