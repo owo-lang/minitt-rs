@@ -44,17 +44,17 @@ void = { EOI }
 meta_var = { "_" }
 
 // Patterns
-atom_pattern = { identifier | meta_var }
+atom_pattern = { identifier | meta_var | "(" ~ pattern ~ ")" }
 pair_pattern = { atom_pattern ~ "," ~ pattern }
 pattern = { pair_pattern | atom_pattern }
 
 // Extracted helpers
-typed_abstraction = _{ identifier ~ ":" ~ expression ~ "." ~ expression }
+typed_abstraction = _{ pattern ~ ":" ~ expression ~ "." ~ expression }
 branches = _{ "(" ~ (constructor ~ ("|" ~ constructor)*)? ~ ")" }
 
 // Atomic expressions
 pi_type = { pi ~ typed_abstraction }
-lambda_expression = { lambda ~ identifier ~ "." ~ expression }
+lambda_expression = { lambda ~ pattern ~ "." ~ expression }
 constructor = { constructor_name ~ expression }
 sigma_type = { sigma ~ typed_abstraction }
 function = { "fun" ~ branches }
@@ -92,7 +92,7 @@ expression =
 // Declaration
 declaration =
  { let_or_rec
- ~ identifier
+ ~ pattern
  ~ ":" ~ expression
  ~ "=" ~ expression
  ~ ";" ~ expression

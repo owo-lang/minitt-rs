@@ -47,8 +47,8 @@ fn next_atom(inner: &mut Tik) -> Expression {
 }
 
 #[inline]
-fn next_identifier(inner: &mut Tik) -> String {
-    next_rule!(inner, identifier, identifier_to_name)
+fn next_pattern(inner: &mut Tik) -> Pattern {
+    next_rule!(inner, pattern, pattern_to_pattern)
 }
 
 #[inline]
@@ -131,7 +131,7 @@ fn application_to_expression(the_rule: Tok) -> Expression {
 /// ```ignore
 /// declaration =
 ///  { let_or_rec?
-///  ~ identifier
+///  ~ pattern
 ///  ~ ":" ~ expression
 ///  ~ "=" ~ expression
 ///  ~ ";" ~ expression
@@ -145,15 +145,14 @@ fn declaration_to_expression(the_rule: Tok) -> Expression {
         "rec" => true,
         _ => unreachable!(),
     };
-    // TODO: parse as pattern
-    let name = next_identifier(&mut inner);
+    let name = next_pattern(&mut inner);
     let signature = next_expression(&mut inner);
     let body = next_expression(&mut inner);
     let rest = next_expression(&mut inner);
     let declaration = if rec {
-        Declaration::Recursive(Pattern::Var(name), signature, body)
+        Declaration::Recursive(name, signature, body)
     } else {
-        Declaration::Simple(Pattern::Var(name), signature, body)
+        Declaration::Simple(name, signature, body)
     };
     end_of_rule(&mut inner);
     Expression::Declaration(Box::new(declaration), Box::new(rest))
@@ -225,29 +224,59 @@ fn sigma_type_to_expression(the_rule: Tok) -> Expression {
 }
 
 /// ```ignore
-/// typed_abstraction = _{ identifier ~ ":" ~ expression ~ "." ~ expression }
+/// typed_abstraction = _{ pattern ~ ":" ~ expression ~ "." ~ expression }
 /// ```
 fn typed_abstraction_to_tuple(the_rule: Tok) -> (Pattern, Expression, Expression) {
     let mut inner: Tik = the_rule.into_inner();
-    // TODO: parse as pattern
-    let input_name = next_identifier(&mut inner);
+    let input_name = next_pattern(&mut inner);
     let input_type = next_expression(&mut inner);
     let output = next_expression(&mut inner);
     end_of_rule(&mut inner);
-    (Pattern::Var(input_name), input_type, output)
+    (input_name, input_type, output)
+}
+
+/// ```ignore
+/// atom_pattern = { identifier | meta_var | "(" ~ pattern ~ ")" }
+/// pattern = { pair_pattern | atom_pattern }
+/// ```
+fn atom_pattern_to_pattern(the_rule: Tok) -> Pattern {
+    let rule: Tok = the_rule.into_inner().next().unwrap();
+    match rule.as_rule() {
+        Rule::identifier => Pattern::Var(identifier_to_name(rule)),
+        Rule::meta_var => Pattern::Unit,
+        Rule::pattern => pattern_to_pattern(rule),
+        _ => unreachable!(),
+    }
+}
+
+/// ```ignore
+/// pair_pattern = { atom_pattern ~ "," ~ pattern }
+/// pattern = { pair_pattern | atom_pattern }
+/// ```
+fn pattern_to_pattern(the_rule: Tok) -> Pattern {
+    let rule: Tok = the_rule.into_inner().next().unwrap();
+    match rule.as_rule() {
+        Rule::pair_pattern => {
+            let mut inner: Tik = rule.into_inner();
+            let first = next_rule!(inner, atom_pattern, atom_pattern_to_pattern);
+            let second = next_pattern(&mut inner);
+            Pattern::Pair(Box::new(first), Box::new(second))
+        }
+        Rule::atom_pattern => atom_pattern_to_pattern(rule),
+        _ => unreachable!(),
+    }
 }
 
 /// ```ignore
 /// lambda = _{ lambda unicode | "\\lambda" }
-/// lambda_expression = { lambda ~ identifier ~ "." ~ expression }
+/// lambda_expression = { lambda ~ pattern ~ "." ~ expression }
 /// ```
 fn lambda_expression_to_expression(the_rule: Tok) -> Expression {
     let mut inner: Tik = the_rule.into_inner();
-    // TODO: parse as pattern
-    let parameter = next_identifier(&mut inner);
+    let parameter = next_pattern(&mut inner);
     let body = next_expression(&mut inner);
     end_of_rule(&mut inner);
-    Expression::Lambda(Pattern::Var(parameter), Box::new(body))
+    Expression::Lambda(parameter, Box::new(body))
 }
 
 /// Constructor as an expression
@@ -273,7 +302,7 @@ fn constructor_to_tuple(the_rule: Tok) -> (String, Expression) {
 /// ```
 fn variable_to_expression(the_rule: Tok) -> Expression {
     let mut inner: Tik = the_rule.into_inner();
-    let name = next_identifier(&mut inner);
+    let name = next_rule!(inner, identifier, identifier_to_name);
     end_of_rule(&mut inner);
     Expression::Var(name)
 }
@@ -317,5 +346,6 @@ mod tests {
         successful_test_case("let constructor : C k = C e;");
         successful_test_case("let pi_lambda : \\Pi a : b . c = \\lambda a . expr;");
         successful_test_case("let function : sum (C e) = fun (C e);");
+        successful_test_case("let pat, pat2 : \\Pi _ : b . c = \\lambda _ . expr;");
     }
 }

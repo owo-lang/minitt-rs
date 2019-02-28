@@ -6,6 +6,7 @@
 + Add executable
 + Add examples
 + Fix bug in scope manipulation
++ Parse patterns
 
 # 0.1.3
 
