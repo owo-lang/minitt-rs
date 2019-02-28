@@ -4,7 +4,15 @@ WHITESPACE = _{ " " | "\t" | NEWLINE }
 
 // Primitive helpers
 character = _{ ASCII_ALPHA | "_" | "\'" | '0'..'9' }
-identifier = @{ !"let" ~ !"rec" ~ !"0" ~ !"1" ~ character+ }
+identifier =
+ @{ !"let"
+  ~ !"rec"
+  ~ !"fun"
+  ~ !"Sum"
+  ~ !"0"
+  ~ !"1"
+  ~ character+
+  }
 constructor_name = @{ ASCII_ALPHA_UPPER ~ identifier? }
 pi = _{ "Π" | "\\Pi" }
 sigma = _{ "Σ" | "\\Sigma" }
@@ -13,6 +21,7 @@ let_or_rec = { "let" | "rec" }
 one = { "1" }
 unit = { "0" }
 universe = { "U" }
+void = { EOI }
 
 // Extracted helpers
 typed_abstraction = _{ identifier ~ ":" ~ expression ~ "." ~ expression }
@@ -39,7 +48,6 @@ atom =
   | universe
   | "(" ~ expression ~ ")"
   }
-void = { EOI }
 
 // Higher-level expressions
 application = { atom ~ expression }

@@ -228,16 +228,22 @@ fn lambda_expression_to_expression(the_rule: Tok) -> Expression {
     Expression::Lambda(Pattern::Var(parameter), Box::new(body))
 }
 
+/// Constructor as an expression
+fn constructor_to_expression(the_rule: Tok) -> Expression {
+    let (constructor, argument) = constructor_to_tuple(the_rule);
+    Expression::Constructor(constructor, Box::new(argument))
+}
+
 /// ```
 /// constructor_name = @{ ASCII_ALPHA_UPPER ~ identifier? }
 /// constructor = { constructor_name ~ expression }
 /// ```
-fn constructor_to_expression(the_rule: Tok) -> Expression {
+fn constructor_to_tuple(the_rule: Tok) -> (String, Expression) {
     let mut inner = the_rule.into_inner();
     let constructor = next_rule!(inner, constructor_name, identifier_to_name);
     let argument = next_expression!(inner);
     end_of_rule!(inner);
-    Expression::Constructor(constructor, Box::new(argument))
+    (constructor, argument)
 }
 
 /// ```
