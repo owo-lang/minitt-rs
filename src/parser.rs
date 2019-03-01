@@ -379,7 +379,7 @@ mod tests {
         successful_test_case("let sigma_type : \\Sigma x : x_type . y = x, y;");
         successful_test_case("let constructor : C k = C e;");
         successful_test_case("let pi_lambda : \\Pi a : b . c = \\lambda a . expr;");
-        successful_test_case("let function : sum (C e) = fun (C e);");
+        parse_str_err_printed("let function : sum {C e} = split {C _ => e};").unwrap();
         successful_test_case("let pat, pat2 : \\Pi _ : b . c = \\lambda _ . expr;");
     }
 }
