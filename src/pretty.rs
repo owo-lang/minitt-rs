@@ -139,35 +139,35 @@ impl Display for Expression {
                 arguments.fmt(f)
             }
             Expression::Function(branches) => {
-                f.write_str("fun (")?;
+                f.write_str("split {")?;
                 let mut started = false;
                 for (name, clause) in branches.iter() {
+                    if started {
+                        f.write_str(" | ")?;
+                    } else {
+                        started = true;
+                    }
                     name.fmt(f)?;
                     f.write_char(' ')?;
                     clause.fmt(f)?;
-                    if started {
-                        f.write_str(", ")?;
-                    } else {
-                        started = true;
-                    }
                 }
-                f.write_char(')')
+                f.write_char('}')
             }
             // Don't print the context
             Expression::Sum(constructors) => {
-                f.write_str("sum (")?;
+                f.write_str("sum {")?;
                 let mut started = false;
                 for (name, constructor) in constructors.iter() {
-                    name.fmt(f)?;
-                    f.write_char(' ')?;
-                    constructor.fmt(f)?;
                     if started {
-                        f.write_str(", ")?;
+                        f.write_str(" | ")?;
                     } else {
                         started = true;
                     }
+                    name.fmt(f)?;
+                    f.write_char(' ')?;
+                    constructor.fmt(f)?;
                 }
-                f.write_char(')')
+                f.write_char('}')
             }
             Expression::Declaration(declaration, rest) => {
                 declaration.fmt(f)?;
@@ -319,35 +319,35 @@ impl Display for NormalExpression {
                 arguments.fmt(f)
             }
             Expression::Function((clauses, _)) => {
-                f.write_str("fun (")?;
+                f.write_str("split {")?;
                 let mut started = false;
                 for (name, clause) in clauses.iter() {
+                    if started {
+                        f.write_str(" | ")?;
+                    } else {
+                        started = true;
+                    }
                     name.fmt(f)?;
                     f.write_str(": ")?;
                     clause.fmt(f)?;
-                    if started {
-                        f.write_str(", ")?;
-                    } else {
-                        started = true;
-                    }
                 }
-                f.write_char(')')
+                f.write_char('}')
             }
             // Don't print the context
             Expression::Sum((constructors, _)) => {
-                f.write_str("sum (")?;
+                f.write_str("sum {")?;
                 let mut started = false;
                 for (name, constructor) in constructors.iter() {
-                    name.fmt(f)?;
-                    f.write_str(": ")?;
-                    constructor.fmt(f)?;
                     if started {
-                        f.write_str(", ")?;
+                        f.write_str(" | ")?;
                     } else {
                         started = true;
                     }
+                    name.fmt(f)?;
+                    f.write_str(": ")?;
+                    constructor.fmt(f)?;
                 }
-                f.write_char(')')
+                f.write_char('}')
             }
             Expression::Neutral(neutral) => {
                 f.write_str("#(")?;

@@ -37,8 +37,8 @@ pub enum Value {
     Sigma(Box<Self>, Closure),
     Pair(Box<Self>, Box<Self>),
     Constructor(String, Box<Self>),
-    Function(DeepClosure),
-    Sum(DeepClosure),
+    Function(CaseTree),
+    Sum(CaseTree),
     Neutral(Neutral),
 }
 
@@ -51,7 +51,7 @@ pub enum GenericNeutral<Value: Clone> {
     Application(Box<Self>, Box<Value>),
     First(Box<Self>),
     Second(Box<Self>),
-    Function(GenericDeepClosure<Value>, Box<Self>),
+    Function(GenericCaseTree<Value>, Box<Self>),
 }
 
 /// `Neut` in Mini-TT, neutral value.
@@ -134,10 +134,9 @@ pub enum Closure {
     Choice(Box<Self>, String),
 }
 
-/// Generic definition for two kinds of deep closures
-pub type GenericDeepClosure<Value> = (Box<Branch>, Box<Rc<GenericTelescope<Value>>>);
+/// Generic definition for two kinds of case trees
+pub type GenericCaseTree<Value> = (Box<Branch>, Box<Rc<GenericTelescope<Value>>>);
 
 /// `SClos` in Mini-TT.<br/>
-/// A closure that comes with a pattern, like the data type (sum) definition (all the constructors
-/// are pattern-like) or the function definition (it's built on top of a pattern tree)
-pub type DeepClosure = GenericDeepClosure<Value>;
+/// Case tree.
+pub type CaseTree = GenericCaseTree<Value>;

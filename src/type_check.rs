@@ -224,17 +224,17 @@ pub fn check(
         // I really wish to have box pattern here :(
         (E::Function(mut branches), V::Pi(sum, closure)) => match *sum {
             V::Sum((sum_branches, telescope)) => {
-                for (name, clause) in sum_branches.into_iter() {
-                    let constructor = *branches
+                for (name, branch) in sum_branches.into_iter() {
+                    let clause = *branches
                         .remove(&name)
                         .ok_or_else(|| format!("Missing clause for `{}`", name).to_string())?;
                     check(
                         index,
                         context.clone(),
                         Cow::Borrowed(&gamma),
-                        *clause,
+                        *branch,
                         V::Pi(
-                            Box::new(constructor.eval(*telescope.clone())),
+                            Box::new(clause.eval(*telescope.clone())),
                             Closure::Choice(Box::new(closure.clone()), name.clone()),
                         ),
                     )?;

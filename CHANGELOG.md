@@ -3,7 +3,7 @@
 # 0.1.5
 
 + Syntactic sugars
-+ Make `Sum` and `fun` usable
++ Rename `fun` into `split`, let `split` and `sum` use `{ }`
 
 # 0.1.4
 

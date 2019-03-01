@@ -6,7 +6,7 @@ use crate::syntax::*;
 pub type NormalTelescope = Rc<GenericTelescope<NormalExpression>>;
 
 /// `NSClos` in Mini-TT, normal form closures.
-pub type NormalDeepClosure = GenericDeepClosure<NormalExpression>;
+pub type NormalDeepClosure = GenericCaseTree<NormalExpression>;
 
 /// `NNeut` in Mini-TT, normal form neutral values.
 pub type NormalNeutral = GenericNeutral<NormalExpression>;

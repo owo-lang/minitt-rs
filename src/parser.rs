@@ -176,7 +176,7 @@ fn declaration_to_expression(the_rule: Tok) -> Expression {
 ///   { universe
 ///   | constructor
 ///   | variable
-///   | function
+///   | split
 ///   | sum
 ///   | one
 ///   | unit
@@ -192,7 +192,7 @@ fn atom_to_expression(rules: Tok) -> Expression {
         Rule::universe => Expression::Type,
         Rule::constructor => constructor_to_expression(the_rule),
         Rule::variable => variable_to_expression(the_rule),
-        Rule::function => Expression::Function(branches_to_tree_map(the_rule)),
+        Rule::split => Expression::Function(choices_to_tree_map(the_rule)),
         Rule::sum => Expression::Sum(branches_to_tree_map(the_rule)),
         Rule::one => Expression::One,
         Rule::unit => Expression::Unit,
@@ -205,7 +205,8 @@ fn atom_to_expression(rules: Tok) -> Expression {
 }
 
 /// ```ignore
-/// branches = _{ "(" ~ (constructor ~ ("|" ~ constructor)*)? ~ ")" }
+/// branches = _{ "{" ~ (constructor ~ ("|" ~ constructor)*)? ~ "}" }
+/// constructor = { constructor_name ~ expression }
 /// ```
 fn branches_to_tree_map(the_rule: Tok) -> Branch {
     let mut map: Branch = Default::default();
@@ -214,6 +215,25 @@ fn branches_to_tree_map(the_rule: Tok) -> Branch {
         let constructor_name = next_constructor_name(&mut inner);
         let expression = next_expression(&mut inner);
         map.insert(constructor_name, Box::new(expression));
+    }
+    map
+}
+
+/// ```ignore
+/// choices = _{ "{" ~ (pattern_match ~ ("|" ~ pattern_match)*)? ~ "}" }
+/// pattern_match = { constructor_name ~ pattern ~ "=>" ~ expression }
+/// ```
+fn choices_to_tree_map(the_rule: Tok) -> Branch {
+    let mut map: Branch = Default::default();
+    for pattern_match in the_rule.into_inner() {
+        let mut inner: Tik = pattern_match.into_inner();
+        let constructor_name = next_constructor_name(&mut inner);
+        let pattern = next_pattern(&mut inner);
+        let expression = next_expression(&mut inner);
+        map.insert(
+            constructor_name,
+            Box::new(Expression::Lambda(pattern, Box::new(expression))),
+        );
     }
     map
 }

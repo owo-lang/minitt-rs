@@ -24,6 +24,7 @@ jobs:
             rustup run nightly rustc --version --verbose
             rustup run nightly cargo --version --verbose
             rustup run nightly cargo build --release --all-features
+            rustup run nightly cargo build --all-features
       - run:
           name: Stable Build
           command: |
@@ -31,6 +32,7 @@ jobs:
             rustup run stable rustc --version --verbose
             rustup run stable cargo --version --verbose
             rustup run stable cargo build --release --all-features
+            rustup run stable cargo build --all-features
       - run:
           name: Test
           command: rustup run stable cargo test --all-features

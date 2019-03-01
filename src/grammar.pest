@@ -12,7 +12,7 @@ character =
 identifier_simple =
  @{ !"let"
   ~ !"rec"
-  ~ !"fun"
+  ~ !"split"
   ~ !"sum"
   ~ !"\\lambda"
   ~ !"\\Sigma"
@@ -24,7 +24,7 @@ identifier_simple =
   }
 identifier_raw =
  @{ ("fun" ~ character+)
-  | ("sum" ~ character+)
+  | ("split" ~ character+)
   | ("let" ~ character+)
   | ("rec" ~ character+)
   | ("0" ~ character+)
@@ -50,21 +50,23 @@ pattern = { pair_pattern | atom_pattern }
 
 // Extracted helpers
 typed_abstraction = _{ pattern ~ ":" ~ expression ~ "." ~ expression }
-branches = _{ "(" ~ (constructor ~ ("|" ~ constructor)*)? ~ ")" }
+branches = _{ "{" ~ (constructor ~ ("|" ~ constructor)*)? ~ "}" }
+choices = _{ "{" ~ (pattern_match ~ ("|" ~ pattern_match)*)? ~ "}" }
 
 // Atomic expressions
 pi_type = { pi ~ typed_abstraction }
 lambda_expression = { lambda ~ pattern ~ "." ~ expression }
 constructor = { constructor_name ~ expression }
+pattern_match = { constructor_name ~ pattern ~ "=>" ~ expression }
 sigma_type = { sigma ~ typed_abstraction }
-function = { "fun" ~ branches }
+split = { "split" ~ choices }
 sum = { "sum" ~ branches }
 variable = { identifier }
 atom =
   { universe
   | constructor
   | variable
-  | function
+  | split
   | sum
   | one
   | unit

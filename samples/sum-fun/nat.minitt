@@ -1,6 +1,12 @@
-rec nat : U = sum (Zero 1 | Suc nat);
+rec nat : U = sum { Zero 1 | Suc nat };
 -- Inductive definition of nat
 
--- let one : nat = Zero 0;
+let one : nat = Zero 0;
+
 -- let two : nat = Suc one;
 -- No working ATM, very sorry
+
+-- let pred : \Pi n : nat . nat = split
+--  { Zero _ => Zero 0
+--  | Suc  n => n
+--  };
