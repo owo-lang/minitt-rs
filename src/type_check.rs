@@ -58,7 +58,7 @@ pub fn check_infer(
         Var(name) => gamma
             .get(&name)
             .cloned()
-            .ok_or_else(|| format!("Unresolved reference `{}`", name).to_string()),
+            .ok_or_else(|| format!("Unresolved reference `{}`", name)),
         Pair(left, right) => {
             let left = check_infer(index, context.clone(), Cow::Borrowed(&gamma), *left)?;
             let right = check_infer(index, context.clone(), Cow::Borrowed(&gamma), *right)?;
@@ -69,11 +69,11 @@ pub fn check_infer(
         }
         First(pair) => match check_infer(index, context, gamma, *pair)? {
             Value::Sigma(first, _) => Ok(*first),
-            e => Err(format!("Expected Sigma, got: {}", e).to_string()),
+            e => Err(format!("Expected Sigma, got: {}", e)),
         },
         Second(pair) => match check_infer(index, context.clone(), gamma, *pair.clone())? {
             Value::Sigma(_, second) => Ok(second.instantiate(pair.eval(context).first())),
-            e => Err(format!("Expected Sigma, got: {}", e).to_string()),
+            e => Err(format!("Expected Sigma, got: {}", e)),
         },
         Application(function, argument) => {
             match check_infer(index, context.clone(), Cow::Borrowed(&gamma), *function)? {
@@ -81,7 +81,7 @@ pub fn check_infer(
                     check(index, context.clone(), gamma, *argument.clone(), *input)?;
                     Ok(output.instantiate(argument.eval(context)))
                 }
-                e => Err(format!("Expected Pi, got: {}", e).to_string()),
+                e => Err(format!("Expected Pi, got: {}", e)),
             }
         }
         e => Err(format!("Cannot infer type of: {}", e)),
@@ -203,7 +203,7 @@ pub fn check(
         (E::Constructor(name, body), V::Sum((constructors, telescope))) => {
             let constructor = *constructors
                 .get(&name)
-                .ok_or_else(|| format!("Invalid constructor: `{}`", name).to_string())?
+                .ok_or_else(|| format!("Invalid constructor: `{}`", name))?
                 .clone();
             check(index, context, gamma, *body, constructor.eval(*telescope))
         }
@@ -227,7 +227,7 @@ pub fn check(
                 for (name, branch) in sum_branches.into_iter() {
                     let pattern_match = *branches
                         .remove(&name)
-                        .ok_or_else(|| format!("Missing clause for `{}`", name).to_string())?;
+                        .ok_or_else(|| format!("Missing clause for `{}`", name))?;
                     check(
                         index,
                         context.clone(),
@@ -245,7 +245,7 @@ pub fn check(
                     Ok(())
                 } else {
                     let clauses: Vec<_> = branches.keys().map(|br| br.as_str()).collect();
-                    Err(format!("Unexpected clauses: {}", clauses.join(" | ")).to_string())
+                    Err(format!("Unexpected clauses: {}", clauses.join(" | ")))
                 }
             }
             not_sum_so_fall_through => check_infer(index, context, gamma, E::Split(branches))?

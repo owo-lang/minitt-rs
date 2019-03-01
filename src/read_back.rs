@@ -32,8 +32,7 @@ pub trait ReadBack: Sized {
             Err(format!(
                 "TypeCheck: {} is not equal to {} up to normal form",
                 self_read_back, other_read_back
-            )
-            .to_string())
+            ))
         }
     }
 }
