@@ -1,0 +1,17 @@
+let bool: U = sum { True 1 | False 1 };
+-- Each constructor have only one argument
+
+let not: bool -> bool = split
+ { True  n => False n
+ | False n => True  n
+ };
+-- Pattern matching
+
+let boolean_id: bool -> bool = \lambda n . n;
+-- Simple functions can be defined with lambdas
+
+let and: bool -> bool -> bool = split
+ { True n => boolean_id
+ | False n => \lambda _. False n
+ };
+-- Nested functions
