@@ -3,4 +3,8 @@
 Recommended reading order:
 
 + [basics](./basics)
-+ [sum and fun](./sum-fun)
+  + [basic syntax](./basics/simple.minitt)
+  + [reference to other definitions](./basics/reference.minitt)
++ [sum and split](./sum-split)
+  + [non-recursive sum: bool](./sum-split/bool.minitt)
+  + [recursive sum: nat](./sum-split/nat.minitt)
