@@ -1,10 +1,15 @@
 # Change Log
 
+# 0.1.6
+
++ Address scoping issue of sum type expressions
+
 # 0.1.5
 
 + Syntactic sugars
 + Rename `fun` into `split`, let `split` and `sum` use `{ }`
 + Use better variable name in codes, fix some mistakes in comments
++ Fix a very stupid bug. It's too stupid to be written in the changelog.
 
 # 0.1.4
 

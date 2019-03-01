@@ -234,7 +234,9 @@ pub fn check(
                         Cow::Borrowed(&gamma),
                         pattern_match,
                         V::Pi(
-                            Box::new(branch.eval(*telescope.clone())),
+                            // FIXME: using context.clone() as an alternative to telescope
+                            // is a tmp workaround
+                            Box::new(branch.eval(context.clone())),
                             Closure::Choice(Box::new(closure.clone()), name.clone()),
                         ),
                     )?;
@@ -243,7 +245,7 @@ pub fn check(
                     Ok(())
                 } else {
                     let clauses: Vec<_> = branches.keys().map(|br| br.as_str()).collect();
-                    Err(format!("Unexpected clauses: {}", clauses.join(", ")).to_string())
+                    Err(format!("Unexpected clauses: {}", clauses.join(" | ")).to_string())
                 }
             }
             not_sum_so_fall_through => check_infer(index, context, gamma, E::Split(branches))?
