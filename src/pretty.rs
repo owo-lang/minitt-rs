@@ -38,7 +38,7 @@ impl Display for Value {
                 arguments.fmt(f)
             }
             // Don't print context
-            Value::Function((branches, _)) => {
+            Value::Split((branches, _)) => {
                 f.write_str("fun (")?;
                 let mut started = false;
                 for (name, clause) in branches.iter() {
@@ -138,7 +138,7 @@ impl Display for Expression {
                 f.write_str(" ")?;
                 arguments.fmt(f)
             }
-            Expression::Function(branches) => {
+            Expression::Split(branches) => {
                 f.write_str("split {")?;
                 let mut started = false;
                 for (name, clause) in branches.iter() {
@@ -215,7 +215,7 @@ impl Display for Closure {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             // Don't print the scope
-            Closure::Function(pattern, expression, _) => {
+            Closure::Abstraction(pattern, expression, _) => {
                 pattern.fmt(f)?;
                 f.write_str(". ")?;
                 expression.fmt(f)
@@ -257,7 +257,7 @@ impl<Value: Display + Clone> Display for GenericNeutral<Value> {
                 f.write_str(".2")?;
                 f.write_char(')')
             }
-            GenericNeutral::Function((clauses, _), argument) => {
+            GenericNeutral::Split((clauses, _), argument) => {
                 f.write_str("app (")?;
                 let mut started = false;
                 for (name, clause) in clauses.iter() {
@@ -318,7 +318,7 @@ impl Display for NormalExpression {
                 f.write_str(" ")?;
                 arguments.fmt(f)
             }
-            Expression::Function((clauses, _)) => {
+            Expression::Split((clauses, _)) => {
                 f.write_str("split {")?;
                 let mut started = false;
                 for (name, clause) in clauses.iter() {

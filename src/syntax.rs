@@ -11,7 +11,7 @@ pub enum Expression {
     Void,
     Var(String),
     Sum(Branch),
-    Function(Branch),
+    Split(Branch),
     Pi(Pattern, Box<Self>, Box<Self>),
     Sigma(Pattern, Box<Self>, Box<Self>),
     Lambda(Pattern, Box<Self>),
@@ -37,7 +37,7 @@ pub enum Value {
     Sigma(Box<Self>, Closure),
     Pair(Box<Self>, Box<Self>),
     Constructor(String, Box<Self>),
-    Function(CaseTree),
+    Split(CaseTree),
     Sum(CaseTree),
     Neutral(Neutral),
 }
@@ -51,7 +51,7 @@ pub enum GenericNeutral<Value: Clone> {
     Application(Box<Self>, Box<Value>),
     First(Box<Self>),
     Second(Box<Self>),
-    Function(GenericCaseTree<Value>, Box<Self>),
+    Split(GenericCaseTree<Value>, Box<Self>),
 }
 
 /// `Neut` in Mini-TT, neutral value.
@@ -116,6 +116,7 @@ pub fn up_dec_rc<Value: Clone>(
     Rc::new(GenericTelescope::UpDec(me, declaration))
 }
 
+/// Because we can't `impl` a `Default` for `Rc`.
 pub fn nil_rc<Value: Clone>() -> Rc<GenericTelescope<Value>> {
     Rc::new(GenericTelescope::Nil)
 }
@@ -125,12 +126,12 @@ pub fn nil_rc<Value: Clone>() -> Rc<GenericTelescope<Value>> {
 pub enum Closure {
     /// `cl` in Mini-TT.<br/>
     /// Closure that does a pattern matching.
-    Function(Pattern, Expression, Box<Telescope>),
+    Abstraction(Pattern, Expression, Box<Telescope>),
     /// This is not present in Mini-TT.<br/>
     /// Sometimes the closure is already an evaluated value.
     Value(Box<Value>),
-    /// `clCmp` in Mini-TT.
-    /// Closure that has an extra lambda abstraction.
+    /// `clCmp` in Mini-TT.<br/>
+    /// Closure that was inside of a case-split.
     Choice(Box<Self>, String),
 }
 

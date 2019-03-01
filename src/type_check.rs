@@ -222,7 +222,7 @@ pub fn check(
             )
         }
         // I really wish to have box pattern here :(
-        (E::Function(mut branches), V::Pi(sum, closure)) => match *sum {
+        (E::Split(mut branches), V::Pi(sum, closure)) => match *sum {
             V::Sum((sum_branches, telescope)) => {
                 for (name, branch) in sum_branches.into_iter() {
                     let clause = *branches
@@ -246,7 +246,7 @@ pub fn check(
                     Err(format!("Unexpected clauses: {}", clauses.join(", ")).to_string())
                 }
             }
-            not_sum_so_fall_through => check_infer(index, context, gamma, E::Function(branches))?
+            not_sum_so_fall_through => check_infer(index, context, gamma, E::Split(branches))?
                 .eq_normal(index, V::Pi(Box::new(not_sum_so_fall_through), closure)),
         },
         (expression, value) => {

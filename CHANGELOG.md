@@ -4,6 +4,7 @@
 
 + Syntactic sugars
 + Rename `fun` into `split`, let `split` and `sum` use `{ }`
++ Use better variable name in codes, fix some mistakes in comments
 
 # 0.1.4
 

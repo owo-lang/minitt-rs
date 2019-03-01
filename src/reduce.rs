@@ -67,7 +67,7 @@ impl Closure {
     pub fn instantiate(self, value: Value) -> Value {
         use crate::syntax::GenericTelescope as Telescope;
         match self {
-            Closure::Function(pattern, expression, context) => {
+            Closure::Abstraction(pattern, expression, context) => {
                 expression.eval(Rc::new(Telescope::UpVar(*context, pattern, value)))
             }
             Closure::Value(value) => *value,
@@ -120,7 +120,7 @@ impl Value {
         use crate::syntax::GenericNeutral as Neutral;
         match self {
             Value::Lambda(closure) => closure.instantiate(argument),
-            Value::Function((case_tree, context)) => match argument {
+            Value::Split((case_tree, context)) => match argument {
                 Value::Constructor(name, body) => case_tree
                     .get(&name)
                     .unwrap_or_else(|| panic!("Cannot find constructor `{}`.", name))
@@ -128,7 +128,7 @@ impl Value {
                     .eval(*context)
                     .apply(*body),
                 Value::Neutral(neutral) => {
-                    Value::Neutral(Neutral::Function((case_tree, context), Box::new(neutral)))
+                    Value::Neutral(Neutral::Split((case_tree, context), Box::new(neutral)))
                 }
                 e => panic!("Cannot apply a: {}", e),
             },
@@ -153,19 +153,17 @@ impl Expression {
             Expression::Sum(constructors) => {
                 Value::Sum((Box::new(constructors), Box::new(context)))
             }
-            Expression::Function(case_tree) => {
-                Value::Function((Box::new(case_tree), Box::new(context)))
-            }
+            Expression::Split(case_tree) => Value::Split((Box::new(case_tree), Box::new(context))),
             Expression::Pi(pattern, first, second) => Value::Pi(
                 Box::new(first.eval(context.clone())),
-                Closure::Function(pattern, *second, Box::new(context)),
+                Closure::Abstraction(pattern, *second, Box::new(context)),
             ),
             Expression::Sigma(pattern, first, second) => Value::Sigma(
                 Box::new(first.eval(context.clone())),
-                Closure::Function(pattern, *second, Box::new(context)),
+                Closure::Abstraction(pattern, *second, Box::new(context)),
             ),
             Expression::Lambda(pattern, body) => {
-                Value::Lambda(Closure::Function(pattern, *body, Box::new(context)))
+                Value::Lambda(Closure::Abstraction(pattern, *body, Box::new(context)))
             }
             Expression::First(pair) => pair.eval(context).first(),
             Expression::Second(pair) => pair.eval(context).second(),

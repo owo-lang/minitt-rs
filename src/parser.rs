@@ -192,7 +192,7 @@ fn atom_to_expression(rules: Tok) -> Expression {
         Rule::universe => Expression::Type,
         Rule::constructor => constructor_to_expression(the_rule),
         Rule::variable => variable_to_expression(the_rule),
-        Rule::split => Expression::Function(choices_to_tree_map(the_rule)),
+        Rule::split => Expression::Split(choices_to_tree_map(the_rule)),
         Rule::sum => Expression::Sum(branches_to_tree_map(the_rule)),
         Rule::one => Expression::One,
         Rule::unit => Expression::Unit,

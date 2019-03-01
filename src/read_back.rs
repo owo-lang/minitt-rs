@@ -80,8 +80,8 @@ impl ReadBack for Value {
             Value::Constructor(name, body) => {
                 NormalExpression::Constructor(name, Box::new(body.read_back(index)))
             }
-            Value::Function((case_tree, context)) => {
-                NormalExpression::Function((case_tree, Box::new(context.read_back(index))))
+            Value::Split((case_tree, context)) => {
+                NormalExpression::Split((case_tree, Box::new(context.read_back(index))))
             }
             Value::Sum((constructors, context)) => {
                 NormalExpression::Sum((constructors, Box::new(context.read_back(index))))
@@ -126,7 +126,7 @@ impl ReadBack for Neutral {
             ),
             First(neutral) => First(Box::new(neutral.read_back(index))),
             Second(neutral) => Second(Box::new(neutral.read_back(index))),
-            Function((case_tree, context), body) => Function(
+            Split((case_tree, context), body) => Split(
                 (case_tree, Box::new(context.read_back(index))),
                 Box::new(body.read_back(index)),
             ),

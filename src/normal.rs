@@ -23,7 +23,7 @@ pub enum NormalExpression {
     Pi(Box<Self>, u32, Box<Self>),
     Sigma(Box<Self>, u32, Box<Self>),
     Constructor(String, Box<Self>),
-    Function(NormalDeepClosure),
+    Split(NormalDeepClosure),
     Sum(NormalDeepClosure),
     Neutral(NormalNeutral),
 }
