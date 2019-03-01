@@ -1,5 +1,7 @@
 let bool: U = sum { True 1 | False 1 };
 -- Each constructor have only one argument
+-- Capitalized names are constructors so constructor calls are lexically
+-- recognizable
 
 let not: bool -> bool = split
  { True  n => False n

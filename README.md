@@ -25,6 +25,29 @@ I'm also doing a general clean-up of the Haskell implementation and comment the
 functions with their counterparts' names in the Haskell implementation so people
 don't get confused when they read the paper while reading this implementation.
 
+A program dependent types in [samples](./samples/dependent/function.minitt):
+
+```haskell
+let bool: U = sum { True 1 | False 1 };
+let unit: U = sum { TT 1 };
+-- A 2 type and a 1 type
+
+let return_type: bool -> U = split
+ { True _ => unit
+ | False _ => 1
+ };
+-- By `function.minitt` of course I mean dependent functions :)
+
+let function: \Pi b: bool. return_type b = split
+ { True _ => TT 0
+ | False _ => 0
+ };
+-- Return things that are of different types.
+```
+
+We can have functions returning values of different types, while it's still
+statically-typed. Very flexible.
+
 ## Resources
 
 + [Mini-TT Paper](http://www.cse.chalmers.se/~bengt/papers/GKminiTT.pdf)
@@ -43,6 +66,8 @@ don't get confused when they read the paper while reading this implementation.
   + [ ] Use `Vec` for telescope instead of functional immutable list
 + New feature apart from trivial improvements
   + [X] Infer type of a pair
+  + [ ] Infer type of a constructor call
+  + [ ] Infer type of a case-split
   + [ ] Module system (or even a very simple one)
   + (Typed-)Holes?
     + [ ] For completion / context lookup
