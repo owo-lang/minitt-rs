@@ -6,6 +6,7 @@
 [![docs.rs](https://docs.rs/minitt/badge.svg)][doc-rs]
 [![Build status][av-svg]][av-url]
 [![CircleCI][cc-svg]][cc-url]
+[![dependency status][dep-svg]][dep-rs]
 
  [crates]: https://crates.io/crates/minitt/
  [av-svg]: https://ci.appveyor.com/api/projects/status/0pnq07tqo5skyjeo/branch/master?svg=true
@@ -13,6 +14,8 @@
  [cc-svg]: https://circleci.com/gh/owo-lang/minitt-rs/tree/master.svg?style=svg
  [cc-url]: https://circleci.com/gh/owo-lang/minitt-rs/tree/master
  [doc-rs]: https://docs.rs/minitt
+ [dep-rs]: https://deps.rs/repo/github/owo-lang/minitt-rs
+ [dep-svg]: https://deps.rs/repo/github/owo-lang/minitt-rs/status.svg
  [clap]: https://clap.rs/
 
 Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
