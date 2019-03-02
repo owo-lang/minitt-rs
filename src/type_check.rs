@@ -138,6 +138,9 @@ pub fn check_declaration(
                 body.clone(),
                 signature.clone(),
             )?;
+            // Just a self-clone
+            // FIXME: if we put a self **before type-checking** (which requires special treatment)
+            // into the context, self-reference are not gonna get resolved.
             let declaration = Recursive(pattern.clone(), signature_plain, body.clone());
             let body = body.eval(up_dec_rc(context, declaration));
             update_gamma(gamma, &pattern, signature, body)
@@ -205,7 +208,8 @@ pub fn check(
                 .get(&name)
                 .ok_or_else(|| format!("Invalid constructor: `{}`", name))?
                 .clone();
-            check(index, context, gamma, *body, constructor.eval(*telescope))
+            // FIXME: this is a workaround for recursive types
+            check(index, context.clone(), gamma, *body, constructor.eval(context))
         }
         (E::Sum(constructors), V::Type) => check_sum_type(index, context, gamma, constructors),
         (E::Sigma(pattern, first, second), V::Type) | (E::Pi(pattern, first, second), V::Type) => {

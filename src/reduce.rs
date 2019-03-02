@@ -13,7 +13,7 @@ impl Pattern {
     }
 
     /// `patProj` in Mini-TT.
-    pub fn project(&self, name: &str, val: Value) -> Value {
+    pub fn project(&self, name: &str, val: Value) -> Result<Value, String> {
         match self {
             Pattern::Pair(first, second) => {
                 if first.contains(name) {
@@ -21,27 +21,30 @@ impl Pattern {
                 } else if second.contains(name) {
                     second.project(name, val.second())
                 } else {
-                    panic!("Cannot project with `{}`", name)
+                    Err(format!("Cannot project with `{}`", name))
                 }
             }
             Pattern::Var(pattern_name) => {
                 if pattern_name == name {
-                    val
+                    Ok(val)
                 } else {
-                    panic!("Expected projection: `{}`, found: `{}`", pattern_name, name)
+                    Err(format!(
+                        "Expected projection: `{}`, found: `{}`",
+                        pattern_name, name
+                    ))
                 }
             }
-            Pattern::Unit => panic!("Cannot project unit pattern"),
+            Pattern::Unit => Err(format!("Cannot project unit pattern")),
         }
     }
 }
 
 impl TelescopeRaw {
     /// `getRho` in Mini-TT.
-    pub fn resolve(&self, name: &str) -> Value {
+    pub fn resolve(&self, name: &str) -> Result<Value, String> {
         use crate::syntax::GenericTelescope::*;
         match self {
-            Nil => panic!("Unresolved reference: `{}`", name),
+            Nil => Err(format!("Unresolved reference: `{}`", name)),
             UpDec(context, Declaration::Simple(pattern, _, expression))
             | UpDec(context, Declaration::Recursive(pattern, _, expression)) => {
                 if pattern.contains(name) {
@@ -152,8 +155,12 @@ impl Expression {
             E::One => V::One,
             E::Type => V::Type,
             E::Var(name) => context
-                .resolve(&name),
-            E::Sum(constructors) => V::Sum((Box::new(constructors), Box::new(context))),
+                .resolve(&name)
+                .map_err(|err| eprintln!("{}", err))
+                .unwrap(),
+            E::Sum(constructors) => {
+                V::Sum((Box::new(constructors), Box::new(context)))
+            }
             E::Split(case_tree) => V::Split((Box::new(case_tree), Box::new(context))),
             E::Pi(pattern, first, second) => V::Pi(
                 Box::new(first.eval(context.clone())),

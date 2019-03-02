@@ -95,29 +95,30 @@ pub enum GenericTelescope<Value: Clone> {
 }
 
 pub type TelescopeRaw = GenericTelescope<Value>;
+pub type TelescopeRc<Value> = Rc<GenericTelescope<Value>>;
 
 /// `Rho` in Mini-TT, dependent context.
 pub type Telescope = Rc<TelescopeRaw>;
 
 /// Just for simplifying constructing an `Rc`.
 pub fn up_var_rc<Value: Clone>(
-    me: Rc<GenericTelescope<Value>>,
+    me: TelescopeRc<Value>,
     pattern: Pattern,
     value: Value,
-) -> Rc<GenericTelescope<Value>> {
+) -> TelescopeRc<Value> {
     Rc::new(GenericTelescope::UpVar(me, pattern, value))
 }
 
 /// Just for simplifying constructing an `Rc`.
 pub fn up_dec_rc<Value: Clone>(
-    me: Rc<GenericTelescope<Value>>,
+    me: TelescopeRc<Value>,
     declaration: Declaration,
-) -> Rc<GenericTelescope<Value>> {
+) -> TelescopeRc<Value> {
     Rc::new(GenericTelescope::UpDec(me, declaration))
 }
 
 /// Because we can't `impl` a `Default` for `Rc`.
-pub fn nil_rc<Value: Clone>() -> Rc<GenericTelescope<Value>> {
+pub fn nil_rc<Value: Clone>() -> TelescopeRc<Value> {
     Rc::new(GenericTelescope::Nil)
 }
 
