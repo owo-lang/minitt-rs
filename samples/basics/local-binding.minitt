@@ -1,0 +1,4 @@
+let sample: U =
+  let unit: U = sum { TT 1 };
+  unit;
+-- Local let-bindings!
