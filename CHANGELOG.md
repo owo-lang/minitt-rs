@@ -2,6 +2,8 @@
 
 # 0.1.7
 
++ Use `structopt` for command line parsing
+
 # 0.1.6
 
 + Discover and provide a temporary workaround for a scoping issue of sum type

@@ -15,6 +15,10 @@ pub type Gamma<'a> = Cow<'a, GammaRaw>;
 /// Type-Checking Monad.
 pub type TCM<T> = Result<T, String>;
 
+/// Type-Checking Result.<br/>
+/// This is not present in Mini-TT.
+pub type TCR<'a> = (Gamma<'a>, Telescope);
+
 /// `upG` in Mini-TT.<br/>
 /// `Gamma |- p : t = u => Gamma’`<br/><br/>
 /// `Cow` is used to simulate immutability.
@@ -150,32 +154,38 @@ pub fn check_declaration(
 
 /// `checkT` in Mini-TT.<br/>
 /// Check if an expression is a well-typed type expression.
-pub fn check_type(index: u32, context: Telescope, gamma: Gamma, expression: Expression) -> TCM<()> {
+pub fn check_type(
+    index: u32,
+    context: Telescope,
+    gamma: Gamma,
+    expression: Expression,
+) -> TCM<TCR> {
     use crate::syntax::Expression::*;
     match expression {
         Sum(constructors) => check_sum_type(index, context, gamma, constructors),
         Pi(pattern, first, second) | Sigma(pattern, first, second) => {
             check_telescoped(index, context, gamma, pattern, *first, *second)
         }
-        Type | Void | One => Ok(()),
+        Type | Void | One => Ok((gamma, context)),
         expression => check(index, context, gamma, expression, Value::Type),
     }
 }
 
 /// `check` in Mini-TT.<br/>
+/// However, telescope and gamma are preserved for REPL use.
 pub fn check(
     index: u32,
     context: Telescope,
     gamma: Gamma,
     expression: Expression,
     value: Value,
-) -> TCM<()> {
+) -> TCM<TCR> {
     use crate::syntax::Expression as E;
     use crate::syntax::Value as V;
     match (expression, value) {
-        (E::Unit, V::One) | (E::Type, V::Type) | (E::One, V::Type) => Ok(()),
+        (E::Unit, V::One) | (E::Type, V::Type) | (E::One, V::Type) => Ok((gamma, context)),
         // There's nothing left to check.
-        (E::Void, _) => Ok(()),
+        (E::Void, _) => Ok((gamma, context)),
         (E::Lambda(pattern, body), V::Pi(signature, closure)) => {
             let generated = generate_value(index);
             let gamma = update_gamma(gamma, &pattern, *signature, generated.clone())?;
@@ -252,31 +262,39 @@ pub fn check(
                     )?;
                 }
                 if branches.is_empty() {
-                    Ok(())
+                    Ok((gamma, context))
                 } else {
                     let clauses: Vec<_> = branches.keys().map(|br| br.as_str()).collect();
                     Err(format!("Unexpected clauses: {}", clauses.join(" | ")))
                 }
             }
-            not_sum_so_fall_through => check_infer(index, context, gamma, E::Split(branches))?
-                .eq_normal(index, V::Pi(Box::new(not_sum_so_fall_through), closure)),
+            not_sum_so_fall_through => check_infer(
+                index,
+                context.clone(),
+                Cow::Borrowed(&gamma),
+                E::Split(branches),
+            )?
+            .eq_normal(index, V::Pi(Box::new(not_sum_so_fall_through), closure))
+            .map(|()| (gamma, context)),
         },
         (expression, value) => {
-            check_infer(index, context, gamma, expression)?.eq_normal(index, value)
+            check_infer(index, context.clone(), Cow::Borrowed(&gamma), expression)?
+                .eq_normal(index, value)
+                .map(|()| (gamma, context))
         }
     }
 }
 
 /// To reuse code that checks if a sum type is well-typed between `check_type` and `check`
-fn check_sum_type(index: u32, context: Telescope, gamma: Gamma, constructors: Branch) -> TCM<()> {
+fn check_sum_type(index: u32, context: Telescope, gamma: Gamma, constructors: Branch) -> TCM<TCR> {
     for constructor in constructors.values().cloned() {
         check_type(index, context.clone(), Cow::Borrowed(&gamma), *constructor)?;
     }
-    Ok(())
+    Ok((gamma, context))
 }
 
 /// `checkMain` in Mini-TT.
-pub fn check_main(expression: Expression) -> TCM<()> {
+pub fn check_main<'a>(expression: Expression) -> TCM<TCR<'a>> {
     check(0, nil_rc(), Default::default(), expression, Value::One)
 }
 
@@ -293,11 +311,11 @@ fn check_telescoped(
     pattern: Pattern,
     first: Expression,
     second: Expression,
-) -> TCM<()> {
+) -> TCM<TCR> {
     check_type(index, context.clone(), Cow::Borrowed(&gamma), first.clone())?;
     let generated = generate_value(index);
     let gamma = update_gamma(
-        Cow::Borrowed(&gamma),
+        gamma,
         &pattern,
         first.eval(context.clone()),
         generated.clone(),
