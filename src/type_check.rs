@@ -277,7 +277,11 @@ fn check_sum_type(index: u32, (gamma, context): TCS, constructors: Branch) -> TC
 
 /// `checkMain` in Mini-TT.
 pub fn check_main<'a>(expression: Expression) -> TCM<TCS<'a>> {
-    check(0, default_state(), expression, Value::One)
+    check_contextual(default_state(), expression)
+}
+
+pub fn check_contextual(tcs: TCS, expression: Expression) -> TCM<TCS> {
+    check(0, tcs, expression, Value::One)
 }
 
 /// Similar to `checkMain` in Mini-TT, but for a declaration.

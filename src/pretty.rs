@@ -39,35 +39,35 @@ impl Display for Value {
             }
             // Don't print context
             Value::Split((branches, _)) => {
-                f.write_str("fun (")?;
+                f.write_str("split {")?;
                 let mut started = false;
                 for (name, clause) in branches.iter() {
+                    if started {
+                        f.write_str(" | ")?;
+                    } else {
+                        started = true;
+                    }
                     name.fmt(f)?;
                     f.write_str(": ")?;
                     clause.fmt(f)?;
-                    if started {
-                        f.write_str(", ")?;
-                    } else {
-                        started = true;
-                    }
                 }
-                f.write_char(')')
+                f.write_char('}')
             }
             // Don't print the context
             Value::Sum((constructors, _)) => {
-                f.write_str("sum (")?;
+                f.write_str("sum {")?;
                 let mut started = false;
                 for (name, constructor) in constructors.iter() {
-                    name.fmt(f)?;
-                    f.write_str(": ")?;
-                    constructor.fmt(f)?;
                     if started {
-                        f.write_str(", ")?;
+                        f.write_str(" | ")?;
                     } else {
                         started = true;
                     }
+                    name.fmt(f)?;
+                    f.write_str(": ")?;
+                    constructor.fmt(f)?;
                 }
-                f.write_char(')')
+                f.write_char('}')
             }
             Value::Neutral(neutral) => {
                 f.write_str("#(")?;
