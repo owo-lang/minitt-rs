@@ -9,8 +9,8 @@ readme = "README.md"
 categories = ["development-tools"]
 
 [badges]
-appveyor = { repository = "ice1000/minitt-rs", service = "github" }
-circle-ci = { repository = "ice1000/minitt-rs", branch = "master" }
+appveyor = { repository = "owo-lang/minitt-rs", service = "github" }
+circle-ci = { repository = "owo-lang/minitt-rs", branch = "master" }
 maintenance = { status = "passively-maintained" }
 
 [dependencies]
@@ -22,7 +22,7 @@ clap = { version = "2.32.0", features = ["wrap_help"], optional = true }
 default = ["pretty", "parser"]
 pretty = []
 parser = ["pest", "pest_derive"]
-minittc-dummy-feature = ["clap"]
+cli = ["clap"]
 
 [lib]
 name = "minitt"
@@ -31,4 +31,4 @@ path = "src/lib.rs"
 [[bin]]
 name = "minittc"
 path = "src/main.rs"
-required-features = ["minittc-dummy-feature", "parser", "pretty"]
+required-features = ["cli", "parser", "pretty"]

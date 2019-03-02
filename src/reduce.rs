@@ -145,41 +145,38 @@ impl Expression {
     /// Evaluate an [`Expression`] to a [`Value`] under a [`Telescope`],
     /// panic if not well-typed.
     pub fn eval(self, context: Telescope) -> Value {
+        use crate::syntax::Expression as E;
+        use crate::syntax::Value as V;
         match self {
-            Expression::Unit => Value::Unit,
-            Expression::One => Value::One,
-            Expression::Type => Value::Type,
-            Expression::Var(name) => context.resolve(&name),
-            Expression::Sum(constructors) => {
-                Value::Sum((Box::new(constructors), Box::new(context)))
-            }
-            Expression::Split(case_tree) => Value::Split((Box::new(case_tree), Box::new(context))),
-            Expression::Pi(pattern, first, second) => Value::Pi(
+            E::Unit => V::Unit,
+            E::One => V::One,
+            E::Type => V::Type,
+            E::Var(name) => context
+                .resolve(&name),
+            E::Sum(constructors) => V::Sum((Box::new(constructors), Box::new(context))),
+            E::Split(case_tree) => V::Split((Box::new(case_tree), Box::new(context))),
+            E::Pi(pattern, first, second) => V::Pi(
                 Box::new(first.eval(context.clone())),
                 Closure::Abstraction(pattern, *second, Box::new(context)),
             ),
-            Expression::Sigma(pattern, first, second) => Value::Sigma(
+            E::Sigma(pattern, first, second) => V::Sigma(
                 Box::new(first.eval(context.clone())),
                 Closure::Abstraction(pattern, *second, Box::new(context)),
             ),
-            Expression::Lambda(pattern, body) => {
-                Value::Lambda(Closure::Abstraction(pattern, *body, Box::new(context)))
+            E::Lambda(pattern, body) => {
+                V::Lambda(Closure::Abstraction(pattern, *body, Box::new(context)))
             }
-            Expression::First(pair) => pair.eval(context).first(),
-            Expression::Second(pair) => pair.eval(context).second(),
-            Expression::Application(function, argument) => {
+            E::First(pair) => pair.eval(context).first(),
+            E::Second(pair) => pair.eval(context).second(),
+            E::Application(function, argument) => {
                 function.eval(context.clone()).apply(argument.eval(context))
             }
-            Expression::Pair(first, second) => Value::Pair(
+            E::Pair(first, second) => V::Pair(
                 Box::new(first.eval(context.clone())),
                 Box::new(second.eval(context)),
             ),
-            Expression::Constructor(name, body) => {
-                Value::Constructor(name, Box::new(body.eval(context)))
-            }
-            Expression::Declaration(declaration, rest) => {
-                rest.eval(up_dec_rc(context, *declaration))
-            }
+            E::Constructor(name, body) => V::Constructor(name, Box::new(body.eval(context))),
+            E::Declaration(declaration, rest) => rest.eval(up_dec_rc(context, *declaration)),
             e => panic!("Cannot eval: {}", e),
         }
     }
