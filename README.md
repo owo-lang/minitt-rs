@@ -25,7 +25,7 @@ I'm also doing a general clean-up of the Haskell implementation and comment the
 functions with their counterparts' names in the Haskell implementation so people
 don't get confused when they read the paper while reading this implementation.
 
-A program dependent types in [samples](./samples/dependent/function.minitt):
+A dependently-typed program in [samples](./samples/dependent/function.minitt):
 
 ```haskell
 let bool: U = sum { True 1 | False 1 };
@@ -53,6 +53,7 @@ statically-typed. Very flexible.
 + [Mini-TT Paper](http://www.cse.chalmers.se/~bengt/papers/GKminiTT.pdf)
 + [Code samples](./samples), tested on CI
 + [Doc.rs][doc-rs] documentation
++ [Change log](CHANGELOG.md)
 + Windows binary download by [AppVeyor][av-url]
 
 ## Features
