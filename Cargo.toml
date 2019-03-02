@@ -13,18 +13,21 @@ repository = "https://github.com/owo-lang/minitt-rs"
 [badges]
 appveyor = { repository = "owo-lang/minitt-rs", service = "github" }
 circle-ci = { repository = "owo-lang/minitt-rs", branch = "master" }
-maintenance = { status = "passively-maintained" }
+maintenance = { status = "actively-developed" }
+is-it-maintained-issue-resolution = { repository = "owo-lang/minitt-rs" }
+is-it-maintained-open-issues = { repository = "owo-lang/minitt-rs" }
 
 [dependencies]
 pest = { version = "2.1.0", optional = true }
 pest_derive = { version = "2.1.0", optional = true }
 clap = { version = "2.32.0", features = ["wrap_help"], optional = true }
+structopt = { version = "0.2", optional = true }
 
 [features]
 default = ["pretty", "parser"]
 pretty = []
 parser = ["pest", "pest_derive"]
-cli = ["clap"]
+cli = ["clap", "structopt"]
 
 [lib]
 name = "minitt"

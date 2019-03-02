@@ -3,9 +3,6 @@ Reading the [README](https://github.com/owo-lang/minitt-rs/blob/master/README.md
 before reading the documentation.
 */
 
-#[cfg(feature = "parser")]
-extern crate pest_derive;
-
 /// Reduction: eval and eval's friends.
 ///
 /// Functions in this module are put into `impl` blocks, their docs can be found in:

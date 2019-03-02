@@ -1,11 +1,47 @@
-use clap::{App, Arg, Shell, SubCommand};
+use clap::{App, Shell};
 use minitt::parser::parse_str_err_printed;
 use minitt::type_check::check_main;
 use std::io::Read;
-use std::str::FromStr;
 use std::{fs, io, str};
+use structopt::StructOpt;
 
-const BIN_NAME: &'static str = "minittc";
+#[derive(StructOpt)]
+#[structopt(
+    name = "minittc",
+    rename_all = "kebab-case",
+    raw(setting = "structopt::clap::AppSettings::ColoredHelp")
+)]
+struct CliOptions {
+    /// Parses but do not type-check the input file
+    #[structopt(short = "p", long)]
+    parse_only: bool,
+    /// Prints code generated from parsed AST (in most cases it's accepted by the parser as well)
+    #[structopt(short = "g", long)]
+    generated: bool,
+    /// Prints errors only
+    #[structopt(short = "q", long)]
+    quiet: bool,
+    /// the input file to type-check (Notice: file should be UTF-8 encoded)
+    #[structopt(name = "FILE")]
+    file: String,
+    #[structopt(subcommand)]
+    completion: Option<GenShellSubCommand>,
+}
+
+#[derive(StructOpt)]
+#[structopt(rename_all = "kebab-case")]
+enum GenShellSubCommand {
+    /// Prints completion scripts for your shell
+    Completion {
+        /// Prints completion scripts for your shell
+        #[structopt(
+            name = "generate-completion-script-for",
+            alias = "gcf",
+            raw(possible_values = "&Shell::variants()", case_insensitive = "true")
+        )]
+        shell: Shell,
+    },
+}
 
 fn read_file(file_arg: &str) -> io::Result<Vec<u8>> {
     let mut file = fs::File::open(file_arg)?;
@@ -18,51 +54,24 @@ fn read_file(file_arg: &str) -> io::Result<Vec<u8>> {
 fn app<'a, 'b>() -> App<'a, 'b> {
     let extra_help = "For extra help please head to \
                       https://github.com/owo-lang/minitt-rs/issues/new";
-    let file_arg = "[FILE] 'the input file to type-check (Notice: file should be UTF-8 encoded)'";
-    App::new(BIN_NAME)
-        .arg_from_usage("-p --parse-only 'Parse but do not type-check the input file'")
-        .arg_from_usage("-g --generated 'Print code generated from parsed AST'")
-        .arg_from_usage("-q --quiet 'Do not print anything if no error occurs'")
-        .arg_from_usage(file_arg)
-        .subcommand(
-            SubCommand::with_name("completions")
-                .about("Generates completion scripts for your shell to screen")
-                .arg(
-                    Arg::with_name("SHELL")
-                        .required(true)
-                        .possible_values(&Shell::variants())
-                        .help("The shell you want to use"),
-                ),
-        )
+    // Introduced a variable because stupid CLion :(
+    let app: App = CliOptions::clap();
+    app.after_help(extra_help)
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
-        .after_help(extra_help)
 }
 
 fn main() {
-    let matches = app().get_matches();
-    match matches.subcommand() {
-        ("completions", Some(sub_matches)) => {
-            // Should never fail
-            let shell = sub_matches.value_of("SHELL").unwrap();
-            app().gen_completions_to(
-                BIN_NAME,
-                // Should never fail
-                Shell::from_str(shell).unwrap(),
-                &mut io::stdout(),
-            );
-        }
-        _ => (),
-    };
+    let args: CliOptions = CliOptions::from_clap(&app().get_matches());
+    if let Some(GenShellSubCommand::Completion { shell }) = args.completion {
+        app().gen_completions_to("minittc", shell, &mut io::stdout());
+    }
 
     // If no FILE is specified, return.
-    let file_arg = match matches.value_of("FILE") {
-        None => return,
-        Some(a) => a,
-    };
+    let file_arg = args.file;
     // If cannot read input, return.
-    let file_content = match read_file(file_arg) {
+    let file_content = match read_file(file_arg.as_str()) {
         Ok(c) => c,
         Err(io_err) => {
             eprintln!("Cannot read `{}`: {}", file_arg, io_err);
@@ -71,19 +80,18 @@ fn main() {
     };
     let file_content_utf8 = str::from_utf8(file_content.as_slice()).unwrap();
     let ast = parse_str_err_printed(file_content_utf8).unwrap();
-    let quiet = matches.is_present("quiet");
-    if !quiet {
+    if !args.quiet {
         println!("Parse successful.");
+        if args.generated {
+            println!("{}", ast);
+        }
     }
     // If parse-only, return before type-checking.
-    if matches.is_present("generated") {
-        println!("{}", ast);
-    }
-    if matches.is_present("parse-only") {
+    if args.parse_only {
         return;
     }
     check_main(ast).map_err(|err| eprintln!("{}", err)).unwrap();
-    if !quiet {
+    if !args.quiet {
         println!("Type-check successful.");
     }
 }
