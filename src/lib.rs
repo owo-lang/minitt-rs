@@ -1,3 +1,8 @@
+/*!
+Reading the [README](https://github.com/owo-lang/minitt-rs/blob/master/README.md) is recommended
+before reading the documentation.
+*/
+
 #[cfg(feature = "parser")]
 extern crate pest_derive;
 

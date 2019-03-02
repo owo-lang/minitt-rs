@@ -2,11 +2,11 @@
 
 Recommended reading order:
 
-+ [basics](./basics)
-  + [basic syntax](./basics/simple.minitt)
-  + [reference to other definitions](./basics/reference.minitt)
-+ [sum and split](./sum-split)
-  + [non-recursive sum: bool](./sum-split/bool.minitt)
-  + [recursive sum: nat](./sum-split/nat.minitt)
-+ [dependent product/coproduct](./dependent)
-  + [dependent coproduct: sigma type](./dependent/sigma.minitt)
++ [basic syntax](./basics/simple.minitt)
++ [reference to other definitions](./basics/reference.minitt)
++ [some syntax sugars](./basics/syntacic-sugar.minitt)
++ [unicode syntax example](./basics/unicode.minitt)
++ [non-recursive sum: bool](./sum-split/bool.minitt)
++ [dependent product: pi type](./dependent/function.minitt)
++ [recursive sum: nat](./sum-split/nat.minitt)
++ [dependent coproduct: sigma type](./dependent/sigma.minitt) (WIP)

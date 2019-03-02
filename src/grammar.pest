@@ -36,7 +36,9 @@ constructor_name = @{ ASCII_ALPHA_UPPER ~ identifier? }
 pi = _{ "Π" | "\\Pi" }
 sigma = _{ "Σ" | "\\Sigma" }
 lambda = _{ "λ" | "\\lambda" }
-multiplication = _{ "*" | "\\times" | "×" }
+multiplication = _{ "*" | "\\times" | "×" | "✖" }
+double_arrow = _{ "=>" | "⇒" }
+single_arrow = _{ "->" | "→" }
 let_or_rec = { "let" | "rec" }
 one = { "1" }
 unit = { "0" }
@@ -58,7 +60,7 @@ choices = _{ "{" ~ (pattern_match ~ ("|" ~ pattern_match)*)? ~ "}" }
 pi_type = { pi ~ typed_abstraction }
 lambda_expression = { lambda ~ pattern ~ "." ~ expression }
 constructor = { constructor_name ~ expression }
-pattern_match = { constructor_name ~ pattern ~ "=>" ~ expression }
+pattern_match = { constructor_name ~ pattern ~ double_arrow ~ expression }
 sigma_type = { sigma ~ typed_abstraction }
 split = { "split" ~ choices }
 sum = { "sum" ~ branches }
@@ -78,7 +80,7 @@ atom =
   }
 
 // Syntactic sugars: short-hand for unit patterns
-function_type = { atom ~ "->" ~ expression }
+function_type = { atom ~ single_arrow ~ expression }
 pair_type = { atom ~ multiplication ~ expression }
 
 // Higher-level expressions

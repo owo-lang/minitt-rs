@@ -1,2 +1,7 @@
 Parse successful.
+let a: U = 1;
+let b: U = 1;
+let f: Π _: a. b = λ x. x;
+let p: Σ _: a. b = (0, 0);
+
 Type-check successful.

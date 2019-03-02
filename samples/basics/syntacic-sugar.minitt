@@ -2,6 +2,7 @@ let a : U = 1;
 let b : U = 1;
 
 let f : a -> b = \lambda x . x;
--- Equivalent to \Pi _ : a -> b
+-- Arrows are equivalent to \Pi _: a. b
 
 let p : a * b = 0, 0;
+-- Arteries are equivalent to \Sigma _: a. b
