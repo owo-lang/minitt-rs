@@ -36,6 +36,7 @@ constructor_name = @{ ASCII_ALPHA_UPPER ~ identifier? }
 pi = _{ "Π" | "\\Pi" }
 sigma = _{ "Σ" | "\\Sigma" }
 lambda = _{ "λ" | "\\lambda" }
+multiplication = _{ "*" | "\\times" | "×" }
 let_or_rec = { "let" | "rec" }
 one = { "1" }
 unit = { "0" }
@@ -76,16 +77,20 @@ atom =
   | "(" ~ expression ~ ")"
   }
 
+// Syntactic sugars: short-hand for unit patterns
+function_type = { atom ~ "->" ~ expression }
+pair_type = { atom ~ multiplication ~ expression }
+
 // Higher-level expressions
 application = { atom ~ expression }
 pair = { atom ~ "," ~ expression }
 first = { atom ~ ".1" }
-function_type = { atom ~ "->" ~ expression }
 second = { atom ~ ".2" }
 expression =
  { declaration
  | application
  | function_type
+ | pair_type
  | first
  | second
  | pair

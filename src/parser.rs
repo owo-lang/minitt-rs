@@ -66,6 +66,7 @@ fn end_of_rule(inner: &mut Tik) {
 ///  { declaration
 ///  | application
 ///  | function_type
+///  | pair_type
 ///  | first
 ///  | second
 ///  | pair
@@ -79,6 +80,7 @@ fn expression_to_expression(rules: Tok) -> Expression {
         Rule::declaration => declaration_to_expression(the_rule),
         Rule::application => application_to_expression(the_rule),
         Rule::function_type => function_type_to_expression(the_rule),
+        Rule::pair_type => pair_type_to_expression(the_rule),
         Rule::first => first_to_expression(the_rule),
         Rule::second => second_to_expression(the_rule),
         Rule::pair => pair_to_expression(the_rule),
@@ -99,14 +101,29 @@ fn first_to_expression(the_rule: Tok) -> Expression {
 }
 
 /// ```ignore
-/// function_type = { atom ~ expression }
+/// function_type = { atom ~ "->" ~ expression }
 /// ```
 fn function_type_to_expression(the_rule: Tok) -> Expression {
+    let (input, output) = atom_and_expression_to_tuple(the_rule);
+    Expression::Pi(Pattern::Unit, Box::new(input), Box::new(output))
+}
+
+/// ```ignore
+/// multiplication = _{ "*" | "\\times" | "×" }
+/// pair_type = { atom ~ multiplication ~ expression }
+/// ```
+fn pair_type_to_expression(the_rule: Tok) -> Expression {
+    let (first, second) = atom_and_expression_to_tuple(the_rule);
+    Expression::Sigma(Pattern::Unit, Box::new(first), Box::new(second))
+}
+
+/// Helper, extracted.
+fn atom_and_expression_to_tuple(the_rule: Tok) -> (Expression, Expression) {
     let mut inner: Tik = the_rule.into_inner();
     let input = next_atom(&mut inner);
     let output = next_expression(&mut inner);
     end_of_rule(&mut inner);
-    Expression::Pi(Pattern::Unit, Box::new(input), Box::new(output))
+    (input, output)
 }
 
 /// ```ignore

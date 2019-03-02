@@ -5,7 +5,8 @@
 + Discover and provide a temporary workaround for a scoping issue of sum type
   expressions, maybe fix later
 + Fix badges in `Cargo.toml`
-+ 
++ Support quiet in cli
++ Support `*` syntactic sugar
 
 # 0.1.5
 

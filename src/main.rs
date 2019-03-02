@@ -22,6 +22,7 @@ fn app<'a, 'b>() -> App<'a, 'b> {
     App::new(BIN_NAME)
         .arg_from_usage("-p --parse-only 'Parse but do not type-check the input file'")
         .arg_from_usage("-g --generated 'Print code generated from parsed AST'")
+        .arg_from_usage("-q --quiet 'Do not print anything if no error occurs'")
         .arg_from_usage(file_arg)
         .subcommand(
             SubCommand::with_name("completions")
@@ -70,7 +71,10 @@ fn main() {
     };
     let file_content_utf8 = str::from_utf8(file_content.as_slice()).unwrap();
     let ast = parse_str_err_printed(file_content_utf8).unwrap();
-    println!("Parse successful.");
+    let quiet = matches.is_present("quiet");
+    if !quiet {
+        println!("Parse successful.");
+    }
     // If parse-only, return before type-checking.
     if matches.is_present("generated") {
         println!("{}", ast);
@@ -79,5 +83,7 @@ fn main() {
         return;
     }
     check_main(ast).map_err(|err| eprintln!("{}", err)).unwrap();
-    println!("Type-check successful.");
+    if !quiet {
+        println!("Type-check successful.");
+    }
 }

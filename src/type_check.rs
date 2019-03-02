@@ -209,7 +209,13 @@ pub fn check(
                 .ok_or_else(|| format!("Invalid constructor: `{}`", name))?
                 .clone();
             // FIXME: this is a workaround for recursive types
-            check(index, context.clone(), gamma, *body, constructor.eval(context))
+            check(
+                index,
+                context.clone(),
+                gamma,
+                *body,
+                constructor.eval(context),
+            )
         }
         (E::Sum(constructors), V::Type) => check_sum_type(index, context, gamma, constructors),
         (E::Sigma(pattern, first, second), V::Type) | (E::Pi(pattern, first, second), V::Type) => {

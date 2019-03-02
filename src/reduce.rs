@@ -158,9 +158,7 @@ impl Expression {
                 .resolve(&name)
                 .map_err(|err| eprintln!("{}", err))
                 .unwrap(),
-            E::Sum(constructors) => {
-                V::Sum((Box::new(constructors), Box::new(context)))
-            }
+            E::Sum(constructors) => V::Sum((Box::new(constructors), Box::new(context))),
             E::Split(case_tree) => V::Split((Box::new(case_tree), Box::new(context))),
             E::Pi(pattern, first, second) => V::Pi(
                 Box::new(first.eval(context.clone())),
