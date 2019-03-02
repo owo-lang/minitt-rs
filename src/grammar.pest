@@ -43,7 +43,7 @@ let_or_rec = { "let" | "rec" }
 one = { "1" }
 unit = { "0" }
 universe = { "U" }
-void = { EOI }
+// void = { EOI }
 meta_var = { "_" }
 
 // Patterns
@@ -97,7 +97,6 @@ expression =
  | second
  | pair
  | atom
- | void
  }
 
 // Declaration
@@ -106,5 +105,5 @@ declaration =
  ~ pattern
  ~ ":" ~ expression
  ~ "=" ~ expression
- ~ ";" ~ expression
+ ~ ";" ~ expression?
  }

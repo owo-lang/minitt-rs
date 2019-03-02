@@ -31,7 +31,7 @@ pub fn parse_str_err_printed(code: &str) -> Result<Expression, ()> {
 macro_rules! next_rule {
     ($inner:expr, $rule_name:ident, $function:ident) => {{
         let token = $inner.next().unwrap();
-        assert_eq!(token.as_rule(), Rule::$rule_name);
+        debug_assert_eq!(token.as_rule(), Rule::$rule_name);
         $function(token)
     }};
 }
@@ -71,7 +71,6 @@ fn end_of_rule(inner: &mut Tik) {
 ///  | second
 ///  | pair
 ///  | atom
-///  | void
 ///  }
 /// ```
 fn expression_to_expression(rules: Tok) -> Expression {
@@ -85,7 +84,6 @@ fn expression_to_expression(rules: Tok) -> Expression {
         Rule::second => second_to_expression(the_rule),
         Rule::pair => pair_to_expression(the_rule),
         Rule::atom => atom_to_expression(the_rule),
-        Rule::void => Expression::Void,
         _ => unreachable!(),
     }
 }
@@ -164,7 +162,7 @@ fn application_to_expression(the_rule: Tok) -> Expression {
 ///  ~ pattern
 ///  ~ ":" ~ expression
 ///  ~ "=" ~ expression
-///  ~ ";" ~ expression
+///  ~ ";" ~ expression?
 ///  }
 /// ```
 fn declaration_to_expression(the_rule: Tok) -> Expression {
@@ -178,13 +176,16 @@ fn declaration_to_expression(the_rule: Tok) -> Expression {
     let name = next_pattern(&mut inner);
     let signature = next_expression(&mut inner);
     let body = next_expression(&mut inner);
-    let rest = next_expression(&mut inner);
+    let rest = inner
+        .next()
+        .map(expression_to_expression)
+        .unwrap_or(Expression::Void);
+    end_of_rule(&mut inner);
     let declaration = if rec {
         Declaration::Recursive(name, signature, body)
     } else {
         Declaration::Simple(name, signature, body)
     };
-    end_of_rule(&mut inner);
     Expression::Declaration(Box::new(declaration), Box::new(rest))
 }
 
