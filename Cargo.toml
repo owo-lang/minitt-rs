@@ -7,6 +7,8 @@ license = "Apache-2.0"
 description = "Mini-TT, a dependently-typed lambda calculus, implementated in Rust"
 readme = "README.md"
 categories = ["development-tools"]
+documentation = "https://docs.rs/minitt"
+repository = "https://github.com/owo-lang/minitt-rs"
 
 [badges]
 appveyor = { repository = "owo-lang/minitt-rs", service = "github" }
