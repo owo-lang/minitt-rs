@@ -1,12 +1,5 @@
-use std::io::Read;
-use std::{fs, io, str};
-
 use clap::{App, Shell};
-use rustyline::Editor;
 use structopt::StructOpt;
-
-use minitt::parser::parse_str_err_printed;
-use minitt::type_check::check_main;
 
 #[derive(StructOpt)]
 #[structopt(
