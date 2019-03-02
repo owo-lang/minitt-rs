@@ -13,7 +13,7 @@ fn read_file(file_arg: &str) -> io::Result<Vec<u8>> {
 
 pub fn ast(file_arg: &str) -> Option<Expression> {
     // If cannot read input, return.
-    let file_content = match read_file(file_arg.as_str()) {
+    let file_content = match read_file(file_arg) {
         Ok(c) => c,
         Err(io_err) => {
             eprintln!("Cannot read `{}`: {}", file_arg, io_err);

@@ -22,14 +22,14 @@ pub struct CliOptions {
     pub quiet: bool,
     /// the input file to type-check (Notice: file should be UTF-8 encoded)
     #[structopt(name = "FILE")]
-    pub file: String,
+    pub file: Option<String>,
     #[structopt(subcommand)]
-    pub completion: Option<GenShellSubCommand>,
+    completion: Option<GenShellSubCommand>,
 }
 
 #[derive(StructOpt)]
 #[structopt(rename_all = "kebab-case")]
-pub enum GenShellSubCommand {
+enum GenShellSubCommand {
     /// Prints completion scripts for your shell
     Completion {
         /// Prints completion scripts for your shell
@@ -42,7 +42,7 @@ pub enum GenShellSubCommand {
     },
 }
 
-pub fn app<'a, 'b>() -> App<'a, 'b> {
+fn app<'a, 'b>() -> App<'a, 'b> {
     let extra_help = "For extra help please head to \
                       https://github.com/owo-lang/minitt-rs/issues/new";
     // Introduced a variable because stupid CLion :(
@@ -51,4 +51,12 @@ pub fn app<'a, 'b>() -> App<'a, 'b> {
         .version(env!("CARGO_PKG_VERSION"))
         .author(env!("CARGO_PKG_AUTHORS"))
         .about(env!("CARGO_PKG_DESCRIPTION"))
+}
+
+pub fn pre() -> CliOptions {
+    let args: CliOptions = CliOptions::from_clap(&app().get_matches());
+    if let Some(GenShellSubCommand::Completion { shell }) = args.completion {
+        app().gen_completions_to("minittc", shell, &mut std::io::stdout());
+    }
+    args
 }

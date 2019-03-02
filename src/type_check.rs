@@ -15,9 +15,14 @@ pub type Gamma<'a> = Cow<'a, GammaRaw>;
 /// Type-Checking Monad.
 pub type TCM<T> = Result<T, String>;
 
-/// Type-Checking Result.<br/>
+/// Type-Checking State~~, not "Theoretical Computer Science"~~.<br/>
 /// This is not present in Mini-TT.
-pub type TCR<'a> = (Gamma<'a>, Telescope);
+pub type TCS<'a> = (Gamma<'a>, Telescope);
+
+/// Empty `TCS`.
+pub fn default_state<'a>() -> TCS<'a> {
+    (Default::default(), nil_rc())
+}
 
 /// `upG` in Mini-TT.<br/>
 /// `Gamma |- p : t = u => Gamma’`<br/><br/>
@@ -49,12 +54,7 @@ pub fn update_gamma<'a>(
 
 /// `checkI` in Mini-TT.<br/>
 /// Type inference rule. More inferences are added here (maybe it's useful?).
-pub fn check_infer(
-    index: u32,
-    context: Telescope,
-    gamma: Gamma,
-    expression: Expression,
-) -> TCM<Value> {
+pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) -> TCM<Value> {
     use crate::syntax::Expression::*;
     match expression {
         Unit => Ok(Value::One),
@@ -64,25 +64,25 @@ pub fn check_infer(
             .cloned()
             .ok_or_else(|| format!("Unresolved reference `{}`", name)),
         Pair(left, right) => {
-            let left = check_infer(index, context.clone(), Cow::Borrowed(&gamma), *left)?;
-            let right = check_infer(index, context.clone(), Cow::Borrowed(&gamma), *right)?;
+            let left = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *left)?;
+            let right = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *right)?;
             Ok(Value::Sigma(
                 Box::new(left),
                 Closure::Value(Box::new(right)),
             ))
         }
-        First(pair) => match check_infer(index, context, gamma, *pair)? {
+        First(pair) => match check_infer(index, (gamma, context), *pair)? {
             Value::Sigma(first, _) => Ok(*first),
             e => Err(format!("Expected Sigma, got: {}", e)),
         },
-        Second(pair) => match check_infer(index, context.clone(), gamma, *pair.clone())? {
+        Second(pair) => match check_infer(index, (gamma, context.clone()), *pair.clone())? {
             Value::Sigma(_, second) => Ok(second.instantiate(pair.eval(context).first())),
             e => Err(format!("Expected Sigma, got: {}", e)),
         },
         Application(function, argument) => {
-            match check_infer(index, context.clone(), Cow::Borrowed(&gamma), *function)? {
+            match check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *function)? {
                 Value::Pi(input, output) => {
-                    check(index, context.clone(), gamma, *argument.clone(), *input)?;
+                    check(index, (gamma, context.clone()), *argument.clone(), *input)?;
                     Ok(output.instantiate(argument.eval(context)))
                 }
                 e => Err(format!("Expected Pi, got: {}", e)),
@@ -96,8 +96,7 @@ pub fn check_infer(
 /// Check if a declaration is well-typed and update the context.
 pub fn check_declaration(
     index: u32,
-    context: Telescope,
-    gamma: Gamma,
+    (gamma, context): TCS,
     declaration: Declaration,
 ) -> TCM<Gamma> {
     use crate::syntax::Declaration::*;
@@ -105,15 +104,13 @@ pub fn check_declaration(
         Simple(pattern, signature, body) => {
             check_type(
                 index,
-                context.clone(),
-                Cow::Borrowed(&gamma),
+                (Cow::Borrowed(&gamma), context.clone()),
                 signature.clone(),
             )?;
             let signature = signature.eval(context.clone());
             check(
                 index,
-                context.clone(),
-                Cow::Borrowed(&gamma),
+                (Cow::Borrowed(&gamma), context.clone()),
                 body.clone(),
                 signature.clone(),
             )?;
@@ -122,8 +119,7 @@ pub fn check_declaration(
         Recursive(pattern, signature, body) => {
             check_type(
                 index,
-                context.clone(),
-                Cow::Borrowed(&gamma),
+                (Cow::Borrowed(&gamma), context.clone()),
                 signature.clone(),
             )?;
             let signature_plain = signature.clone();
@@ -135,10 +131,10 @@ pub fn check_declaration(
                 signature.clone(),
                 generated.clone(),
             )?;
+            let fake_context = up_var_rc(context.clone(), pattern.clone(), generated);
             check(
                 index + 1,
-                up_var_rc(context.clone(), pattern.clone(), generated),
-                fake_gamma,
+                (fake_gamma, fake_context),
                 body.clone(),
                 signature.clone(),
             )?;
@@ -154,32 +150,21 @@ pub fn check_declaration(
 
 /// `checkT` in Mini-TT.<br/>
 /// Check if an expression is a well-typed type expression.
-pub fn check_type(
-    index: u32,
-    context: Telescope,
-    gamma: Gamma,
-    expression: Expression,
-) -> TCM<TCR> {
+pub fn check_type(index: u32, (gamma, context): TCS, expression: Expression) -> TCM<TCS> {
     use crate::syntax::Expression::*;
     match expression {
-        Sum(constructors) => check_sum_type(index, context, gamma, constructors),
+        Sum(constructors) => check_sum_type(index, (gamma, context), constructors),
         Pi(pattern, first, second) | Sigma(pattern, first, second) => {
-            check_telescoped(index, context, gamma, pattern, *first, *second)
+            check_telescoped(index, (gamma, context), pattern, *first, *second)
         }
         Type | Void | One => Ok((gamma, context)),
-        expression => check(index, context, gamma, expression, Value::Type),
+        expression => check(index, (gamma, context), expression, Value::Type),
     }
 }
 
 /// `check` in Mini-TT.<br/>
 /// However, telescope and gamma are preserved for REPL use.
-pub fn check(
-    index: u32,
-    context: Telescope,
-    gamma: Gamma,
-    expression: Expression,
-    value: Value,
-) -> TCM<TCR> {
+pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: Value) -> TCM<TCS> {
     use crate::syntax::Expression as E;
     use crate::syntax::Value as V;
     match (expression, value) {
@@ -191,8 +176,7 @@ pub fn check(
             let gamma = update_gamma(gamma, &pattern, *signature, generated.clone())?;
             check(
                 index + 1,
-                up_var_rc(context, pattern, generated.clone()),
-                gamma,
+                (gamma, up_var_rc(context, pattern, generated.clone())),
                 *body,
                 closure.instantiate(generated),
             )
@@ -200,15 +184,13 @@ pub fn check(
         (E::Pair(first, second), V::Sigma(first_type, second_type)) => {
             check(
                 index,
-                context.clone(),
-                Cow::Borrowed(&gamma),
+                (Cow::Borrowed(&gamma), context.clone()),
                 *first.clone(),
                 *first_type,
             )?;
             check(
                 index,
-                context.clone(),
-                gamma,
+                (gamma, context.clone()),
                 *second,
                 second_type.instantiate(first.eval(context)),
             )
@@ -221,22 +203,20 @@ pub fn check(
             // FIXME: this is a workaround for recursive types
             check(
                 index,
-                context.clone(),
-                gamma,
+                (gamma, context.clone()),
                 *body,
                 constructor.eval(context),
             )
         }
-        (E::Sum(constructors), V::Type) => check_sum_type(index, context, gamma, constructors),
+        (E::Sum(constructors), V::Type) => check_sum_type(index, (gamma, context), constructors),
         (E::Sigma(pattern, first, second), V::Type) | (E::Pi(pattern, first, second), V::Type) => {
-            check_telescoped(index, context, gamma, pattern, *first, *second)
+            check_telescoped(index, (gamma, context), pattern, *first, *second)
         }
         (E::Declaration(declaration, rest), rest_type) => {
-            let gamma = check_declaration(index, context.clone(), gamma, *declaration.clone())?;
+            let gamma = check_declaration(index, (gamma, context.clone()), *declaration.clone())?;
             check(
                 index,
-                up_dec_rc(context, *declaration),
-                gamma,
+                (gamma, up_dec_rc(context, *declaration)),
                 *rest,
                 rest_type,
             )
@@ -250,8 +230,7 @@ pub fn check(
                         .ok_or_else(|| format!("Missing clause for `{}`", name))?;
                     check(
                         index,
-                        context.clone(),
-                        Cow::Borrowed(&gamma),
+                        (Cow::Borrowed(&gamma), context.clone()),
                         pattern_match,
                         V::Pi(
                             // FIXME: using context.clone() as an alternative to telescope
@@ -270,15 +249,14 @@ pub fn check(
             }
             not_sum_so_fall_through => check_infer(
                 index,
-                context.clone(),
-                Cow::Borrowed(&gamma),
+                (Cow::Borrowed(&gamma), context.clone()),
                 E::Split(branches),
             )?
             .eq_normal(index, V::Pi(Box::new(not_sum_so_fall_through), closure))
             .map(|()| (gamma, context)),
         },
         (expression, value) => {
-            check_infer(index, context.clone(), Cow::Borrowed(&gamma), expression)?
+            check_infer(index, (Cow::Borrowed(&gamma), context.clone()), expression)?
                 .eq_normal(index, value)
                 .map(|()| (gamma, context))
         }
@@ -286,33 +264,40 @@ pub fn check(
 }
 
 /// To reuse code that checks if a sum type is well-typed between `check_type` and `check`
-fn check_sum_type(index: u32, context: Telescope, gamma: Gamma, constructors: Branch) -> TCM<TCR> {
+fn check_sum_type(index: u32, (gamma, context): TCS, constructors: Branch) -> TCM<TCS> {
     for constructor in constructors.values().cloned() {
-        check_type(index, context.clone(), Cow::Borrowed(&gamma), *constructor)?;
+        check_type(
+            index,
+            (Cow::Borrowed(&gamma), context.clone()),
+            *constructor,
+        )?;
     }
     Ok((gamma, context))
 }
 
 /// `checkMain` in Mini-TT.
-pub fn check_main<'a>(expression: Expression) -> TCM<TCR<'a>> {
-    check(0, nil_rc(), Default::default(), expression, Value::One)
+pub fn check_main<'a>(expression: Expression) -> TCM<TCS<'a>> {
+    check(0, default_state(), expression, Value::One)
 }
 
 /// Similar to `checkMain` in Mini-TT, but for a declaration.
 pub fn check_declaration_main<'a>(declaration: Declaration) -> TCM<Gamma<'a>> {
-    check_declaration(0, nil_rc(), Default::default(), declaration)
+    check_declaration(0, default_state(), declaration)
 }
 
 /// To reuse code that checks if a sigma or a pi type is well-typed between `check_type` and `check`
 fn check_telescoped(
     index: u32,
-    context: Telescope,
-    gamma: Gamma,
+    (gamma, context): TCS,
     pattern: Pattern,
     first: Expression,
     second: Expression,
-) -> TCM<TCR> {
-    check_type(index, context.clone(), Cow::Borrowed(&gamma), first.clone())?;
+) -> TCM<TCS> {
+    check_type(
+        index,
+        (Cow::Borrowed(&gamma), context.clone()),
+        first.clone(),
+    )?;
     let generated = generate_value(index);
     let gamma = update_gamma(
         gamma,
@@ -322,8 +307,7 @@ fn check_telescoped(
     )?;
     check_type(
         index + 1,
-        up_var_rc(context, pattern, generated),
-        gamma,
+        (gamma, up_var_rc(context, pattern, generated)),
         second,
     )
 }

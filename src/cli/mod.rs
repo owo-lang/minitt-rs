@@ -1,46 +1,44 @@
 /// CLI arguments. Based on structopt (clap)
-pub mod args;
+mod args;
 
-/// File IO and CLI IO.
-pub mod io;
+/// File IO. Build AST.
+mod util;
 
-use cli::args::*;
-use cli::io::*;
-
-use minitt::type_check::check_main;
-use rustyline::Editor;
-use std::io::stdout;
-use structopt::StructOpt;
+/// REPL
+mod repl;
 
 pub fn main() {
-    let args: CliOptions = CliOptions::from_clap(&app().get_matches());
-    if let Some(GenShellSubCommand::Completion { shell }) = args.completion {
-        app().gen_completions_to("minittc", shell, &mut stdout());
-    }
+    use minitt::type_check::{check_main, default_state};
+    let args = args::pre();
 
-    let file_arg = args.file;
-    // Parse
-    let ast = match ast(file_arg.as_str()) {
-        Some(ast) => ast,
-        None => return,
-    };
-    if !args.quiet {
-        println!("Parse successful.");
-        if args.generated {
-            println!("{}", ast);
-        }
-    }
     // Type Check
-    let _checked = if !args.parse_only {
-        check_main(ast).map_err(|err| eprintln!("{}", err)).unwrap();
-        if !args.quiet {
-            println!("Type-check successful.");
-        }
-    } else {
-        Default::default()
-    };
+    let checked =
+        // Parse
+        match args.file.and_then(|s| util::ast(s.as_str())) {
+            Some(ast) => {
+                if !args.quiet {
+                    println!("Parse successful.");
+                    if args.generated {
+                        println!("{}", ast);
+                    }
+                }
+                if !args.parse_only {
+                    let checked = check_main(ast)
+                        .map_err(|err| eprintln!("{}", err))
+                        .expect("Type-Check failed.");
+                    if !args.quiet {
+                        println!("Type-Check successful.");
+                    }
+                    checked
+                } else {
+                    default_state()
+                }
+            }
+            None => default_state(),
+        };
+
     // REPL
     if args.interactive {
-        let _r = Editor::<()>::new();
+        repl::repl(checked)
     }
 }

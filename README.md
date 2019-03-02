@@ -64,7 +64,7 @@ statically-typed. Very flexible.
 + Improvements to the original implementation
   + [ ] Fix recursive data type definition scoping problem
   + [X] Use `BTreeMap` for branch/case tree so we become flexible on case order
-  + [ ] Use `Vec` for telescope instead of functional immutable list
+  + [ ] Use `Vec` for telescope/declaration instead of functional immutable list
 + New feature apart from trivial improvements
   + [X] Infer type of a pair
   + [ ] Infer type of a constructor call
