@@ -17,6 +17,8 @@
  [dep-rs]: https://deps.rs/repo/github/owo-lang/minitt-rs
  [dep-svg]: https://deps.rs/repo/github/owo-lang/minitt-rs/status.svg
  [clap]: https://clap.rs/
+ [pest]: https://pest.rs/
+ [rustyline]: https://docs.rs/rustyline/
 
 Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
 Built with latest (when developing this) stable Rust, 2018 edition.
@@ -63,7 +65,7 @@ statically-typed. Very flexible.
 ## Features
 
 + [X] Everything that the Haskell implementation has
-+ [X] Parser as a cargo feature
++ [X] Parser as a cargo feature (using [pest][pest])
 + [X] AST pretty-printer as a cargo feature
 + Improvements to the original implementation
   + [ ] Fix recursive data type definition scoping problem
@@ -77,19 +79,18 @@ statically-typed. Very flexible.
   + (Typed-)Holes?
     + [ ] For completion / context lookup
     + [ ] For type-directed development
-+ An executable for CLI usages (`minittc`)
++ An executable for CLI usages (`minittc`) (using [clap][clap])
   + [X] File checker
   + [X] Completion script generation
     + Get the script: `minittc completion zsh/bash/powershell/fish/elvish`
-    + Thanks to [clap][clap]!
-  + REPL
+  + REPL (using [rustyline][rustyline])
     + [X] Load file
     + [X] Infer type
     + [X] Add single declaration
     + [X] Show context/gamma
     + [X] Help
     + [ ] Completion
-  + [ ] Language server
+  + [ ] Language server (?)
   + Publish?
     + By `cargo install --path . --bin minittc --all-features`
     + By [AppVeyor][av-url]

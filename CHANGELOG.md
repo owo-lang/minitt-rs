@@ -4,6 +4,7 @@
 
 + Use `structopt` for command line parsing
 + Initial REPL support
++ Discover that mutual recursion is not working correctly
 
 # 0.1.6
 
