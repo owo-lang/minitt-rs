@@ -3,6 +3,7 @@
 # 0.1.7
 
 + Use `structopt` for command line parsing
++ Initial REPL support
 
 # 0.1.6
 

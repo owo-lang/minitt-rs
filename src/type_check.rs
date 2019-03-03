@@ -280,8 +280,14 @@ pub fn check_main<'a>(expression: Expression) -> TCM<TCS<'a>> {
     check_contextual(default_state(), expression)
 }
 
+/// For REPL: check an expression under an existing context
 pub fn check_contextual(tcs: TCS, expression: Expression) -> TCM<TCS> {
     check(0, tcs, expression, Value::One)
+}
+
+/// For REPL: infer the type of an expression under an existing context
+pub fn check_infer_contextual(tcs: TCS, expression: Expression) -> TCM<Value> {
+    check_infer(0, tcs, expression)
 }
 
 /// Similar to `checkMain` in Mini-TT, but for a declaration.

@@ -1,5 +1,9 @@
+use crate::cli::util::ast;
 use minitt::parser::parse_str_err_printed;
+use minitt::syntax::Expression;
 use minitt::syntax::GenericTelescope;
+use minitt::type_check::check_infer;
+use minitt::type_check::check_infer_contextual;
 use minitt::type_check::{check_contextual, default_state, TCS};
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
@@ -15,35 +19,36 @@ pub fn repl(mut tcs: TCS) {
                 if line == ":exit" || line == ":quit" || line == ":q" {
                     break;
                 } else if line == ":gamma" || line == ":g" {
-                    let (gamma, _) = &tcs;
-                    if gamma.is_empty() {
-                        println!("Current Gamma is empty.");
-                    } else {
-                        println!("Current Gamma:");
-                    }
-                    gamma
-                        .iter()
-                        .for_each(|(name, value)| println!("{}: {}", name, value));
+                    show_gamma(&tcs);
                 } else if line == ":context" || line == ":c" {
-                    let (_, context) = &tcs;
-                    match context.as_ref() {
-                        GenericTelescope::Nil => println!("Current Telescope is empty."),
-                        context => println!("Current Telescope:"),
-                    }
+                    show_telescope(&tcs)
                 } else if line.starts_with(":load ") || line.starts_with(":l ") {
-                    // TODO
+                    let file = line
+                        .trim_start_matches(":l")
+                        .trim_start_matches("oad")
+                        .trim_start();
+                    tcs = match ast(file) {
+                        Some(ast) => update_tcs(tcs, ast),
+                        None => tcs,
+                    }
+                } else if line.starts_with(":type ") || line.starts_with(":t ") {
+                    let file = line
+                        .trim_start_matches(":t")
+                        .trim_start_matches("ype")
+                        .trim_start();
+                    parse_str_err_printed(file)
+                        .map_err(|()| "".to_string())
+                        .and_then(|ast| check_infer_contextual(tcs.clone(), ast))
+                        .map(|val| println!("{}", val))
+                        .unwrap_or_else(|err| eprintln!("{}", err));
                 } else if line.starts_with(':') {
                     println!("Unrecognized command: {}", line);
-                } else if let Some(expr) = parse_str_err_printed(line).ok() {
-                    match check_contextual(tcs, expr) {
-                        Ok(new_tcs) => tcs = new_tcs,
-                        Err(err) => {
-                            tcs = default_state();
-                            eprintln!("{}", err);
-                            eprintln!("Type-Checking State reset due to error (maybe implement recover later).")
-                        }
+                    println!("Maybe you want to get some `:help`?");
+                } else {
+                    tcs = match parse_str_err_printed(line).ok() {
+                        Some(expr) => update_tcs(tcs, expr),
+                        None => tcs,
                     }
-                    // TODO
                 }
             }
             Err(ReadlineError::Interrupted) => {
@@ -61,4 +66,32 @@ pub fn repl(mut tcs: TCS) {
         }
     }
     // Write history?
+}
+
+fn update_tcs(tcs: TCS, expr: Expression) -> TCS {
+    check_contextual(tcs, expr).unwrap_or_else(|err| {
+        eprintln!("{}", err);
+        eprintln!("Type-Checking State reset due to error (maybe implement recover later).");
+        default_state()
+    })
+}
+
+fn show_telescope(tcs: &TCS) {
+    let (_, context) = &tcs;
+    match context.as_ref() {
+        GenericTelescope::Nil => println!("Current Telescope is empty."),
+        context => println!("Current Telescope:"),
+    }
+}
+
+fn show_gamma(tcs: &TCS) {
+    let (gamma, _) = &tcs;
+    if gamma.is_empty() {
+        println!("Current Gamma is empty.");
+    } else {
+        println!("Current Gamma:");
+    }
+    gamma
+        .iter()
+        .for_each(|(name, value)| println!("{}: {}", name, value));
 }
