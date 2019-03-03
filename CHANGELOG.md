@@ -1,5 +1,7 @@
 # Change Log
 
+# 0.1.8
+
 # 0.1.7
 
 + Use `structopt` for command line parsing
