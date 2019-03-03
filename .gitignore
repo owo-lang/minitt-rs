@@ -13,3 +13,5 @@ Cargo.lock
 .vscode
 .vs
 *.iml
+
+samples/bugs

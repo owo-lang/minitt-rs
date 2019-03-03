@@ -20,32 +20,7 @@ pub fn repl(mut tcs: TCS) {
                 } else if line == ":context" || line == ":c" {
                     show_telescope(&tcs)
                 } else if line == ":help" || line == ":h" {
-                    println!(
-                        "Interactive minittc {}\n\
-                         Commands:\n\
-                         {:<8} {:<9} {}\n\
-                         {:<8} {:<9} {}\n\
-                         {:<8} {:<9} {}\n\
-                         {:<8} {:<9} {}\n\
-                         {:<8} {:<9} {}\n\
-                         ",
-                        env!("CARGO_PKG_VERSION"),
-                        ":quit",
-                        ":q",
-                        "Quit the REPL.",
-                        ":gamma",
-                        ":g",
-                        "Show current typing context.",
-                        ":context",
-                        ":c",
-                        "Show current value context.",
-                        ":load",
-                        ":l <FILE>",
-                        "Load an external file.",
-                        ":type",
-                        ":t <EXPR>",
-                        "Try to infer the type of an expression.",
-                    );
+                    help();
                 } else if line.starts_with(":load ") || line.starts_with(":l ") {
                     let file = line
                         .trim_start_matches(":l")
@@ -56,15 +31,7 @@ pub fn repl(mut tcs: TCS) {
                         None => tcs,
                     }
                 } else if line.starts_with(":type ") || line.starts_with(":t ") {
-                    let file = line
-                        .trim_start_matches(":t")
-                        .trim_start_matches("ype")
-                        .trim_start();
-                    parse_str_err_printed(file)
-                        .map_err(|()| "".to_string())
-                        .and_then(|ast| check_infer_contextual(tcs.clone(), ast))
-                        .map(|val| println!("{}", val))
-                        .unwrap_or_else(|err| eprintln!("{}", err));
+                    infer(tcs.clone(), line);
                 } else if line.starts_with(':') {
                     println!("Unrecognized command: {}", line);
                     println!("Maybe you want to get some `:help` or `:h`?");
@@ -90,6 +57,47 @@ pub fn repl(mut tcs: TCS) {
         }
     }
     // Write history?
+}
+
+fn infer(tcs: TCS, line: &str) {
+    let file = line
+        .trim_start_matches(":t")
+        .trim_start_matches("ype")
+        .trim_start();
+    parse_str_err_printed(file)
+        .map_err(|()| "".to_string())
+        .and_then(|ast| check_infer_contextual(tcs, ast))
+        .map(|val| println!("{}", val))
+        .unwrap_or_else(|err| eprintln!("{}", err));
+}
+
+fn help() {
+    println!(
+        "Interactive minittc {}\n\
+         Commands:\n\
+         {:<8} {:<9} {}\n\
+         {:<8} {:<9} {}\n\
+         {:<8} {:<9} {}\n\
+         {:<8} {:<9} {}\n\
+         {:<8} {:<9} {}\n\
+         ",
+        env!("CARGO_PKG_VERSION"),
+        ":quit",
+        ":q",
+        "Quit the REPL.",
+        ":gamma",
+        ":g",
+        "Show current typing context.",
+        ":context",
+        ":c",
+        "Show current value context.",
+        ":load",
+        ":l <FILE>",
+        "Load an external file.",
+        ":type",
+        ":t <EXPR>",
+        "Try to infer the type of an expression.",
+    );
 }
 
 fn update_tcs(tcs: TCS, expr: Expression) -> TCS {

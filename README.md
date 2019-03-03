@@ -54,9 +54,10 @@ statically-typed. Very flexible.
 ## Resources
 
 + [Mini-TT Paper](http://www.cse.chalmers.se/~bengt/papers/GKminiTT.pdf)
-+ [Code samples](./samples), tested on CI
++ [Code Samples](./samples), tested on CI
 + [Doc.rs][doc-rs] documentation
-+ [Change log](CHANGELOG.md)
++ [Change Log](CHANGELOG.md)
++ [REPL Example](./samples/REPL.md)
 + Windows binary download by [AppVeyor][av-url]
 
 ## Features
