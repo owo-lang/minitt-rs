@@ -13,7 +13,7 @@ pub type Gamma<'a> = Cow<'a, GammaRaw>;
 
 /// `G` in Mini-TT.<br/>
 /// Type-Checking Monad.
-pub type TCM<T> = Result<T, String>;
+pub type TCM<'a, T> = Result<T, (TCS<'a>, String)>;
 
 /// Type-Checking State~~, not "Theoretical Computer Science"~~.<br/>
 /// This is not present in Mini-TT.
@@ -32,7 +32,7 @@ pub fn update_gamma<'a>(
     pattern: &Pattern,
     type_val: Value,
     val: Value,
-) -> TCM<Gamma<'a>> {
+) -> TCM<'a, Gamma<'a>> {
     match pattern {
         Pattern::Pair(pattern_first, pattern_second) => match type_val {
             Value::Sigma(first, second) => {
@@ -41,7 +41,10 @@ pub fn update_gamma<'a>(
                 let second = second.instantiate(val_first);
                 update_gamma(gamma, pattern_second, second, val_second)
             }
-            _ => Err(format!("Cannot update Gamma by: {}", pattern)),
+            _ => Err((
+                (gamma, nil_rc()),
+                format!("Cannot update Gamma by: {}", pattern),
+            )),
         },
         Pattern::Var(name) => {
             let mut gamma = gamma.into_owned();
@@ -59,10 +62,12 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
     match expression {
         Unit => Ok(Value::One),
         Type | Void | One => Ok(Value::Type),
-        Var(name) => gamma
+        Var(name) => match gamma
             .get(&name)
-            .cloned()
-            .ok_or_else(|| format!("Unresolved reference `{}`", name)),
+            .cloned() {
+            Some(var) => Ok(var),
+            None => Err(((gamma, context), format!("Unresolved reference `{}`", name))),
+        }
         Pair(left, right) => {
             let left = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *left)?;
             let right = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *right)?;
@@ -71,13 +76,17 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
                 Closure::Value(Box::new(right)),
             ))
         }
-        First(pair) => match check_infer(index, (gamma, context), *pair)? {
+        First(pair) => match check_infer(index, (Cow::Borrowed(&gamma), context), *pair)? {
             Value::Sigma(first, _) => Ok(*first),
-            e => Err(format!("Expected Sigma, got: {}", e)),
+            e => Err(((gamma, context), format!("Expected Sigma, got: {}", e))),
         },
-        Second(pair) => match check_infer(index, (gamma, context.clone()), *pair.clone())? {
+        Second(pair) => match check_infer(
+            index,
+            (Cow::Borrowed(&gamma), context.clone()),
+            *pair.clone(),
+        )? {
             Value::Sigma(_, second) => Ok(second.instantiate(pair.eval(context).first())),
-            e => Err(format!("Expected Sigma, got: {}", e)),
+            e => Err(((gamma, context), format!("Expected Sigma, got: {}", e))),
         },
         Application(function, argument) => {
             match check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *function)? {
@@ -85,10 +94,10 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
                     check(index, (gamma, context.clone()), *argument.clone(), *input)?;
                     Ok(output.instantiate(argument.eval(context)))
                 }
-                e => Err(format!("Expected Pi, got: {}", e)),
+                e => Err(((gamma, context), format!("Expected Pi, got: {}", e))),
             }
         }
-        e => Err(format!("Cannot infer type of: {}", e)),
+        e => Err(((gamma, context), format!("Cannot infer type of: {}", e))),
     }
 }
 
@@ -196,10 +205,11 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
             )
         }
         (E::Constructor(name, body), V::Sum((constructors, telescope))) => {
-            let constructor = *constructors
-                .get(&name)
-                .ok_or_else(|| format!("Invalid constructor: `{}`", name))?
-                .clone();
+            let constructor = match constructors
+                .get(&name) {
+                Some(cons) => *cons.clone(),
+                None => return Err(((gamma, context), format!("Invalid constructor: `{}`", name))),
+            };
             // FIXME: this is a workaround for recursive types
             check(
                 index,
@@ -225,9 +235,11 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
         (E::Split(mut branches), V::Pi(sum, closure)) => match *sum {
             V::Sum((sum_branches, telescope)) => {
                 for (name, branch) in sum_branches.into_iter() {
-                    let pattern_match = *branches
-                        .remove(&name)
-                        .ok_or_else(|| format!("Missing clause for `{}`", name))?;
+                    let pattern_match = match branches
+                        .remove(&name) {
+                        Some(go) => *go,
+                        None => return Err(((gamma, context), format!("Missing clause for `{}`", name))),
+                    };
                     check(
                         index,
                         (Cow::Borrowed(&gamma), context.clone()),
@@ -244,21 +256,31 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
                     Ok((gamma, context))
                 } else {
                     let clauses: Vec<_> = branches.keys().map(|br| br.as_str()).collect();
-                    Err(format!("Unexpected clauses: {}", clauses.join(" | ")))
+                    Err((
+                        (gamma, context),
+                        format!("Unexpected clauses: {}", clauses.join(" | ")),
+                    ))
                 }
             }
-            not_sum_so_fall_through => check_infer(
+            not_sum_so_fall_through => match check_infer(
                 index,
                 (Cow::Borrowed(&gamma), context.clone()),
                 E::Split(branches),
             )?
             .eq_normal(index, V::Pi(Box::new(not_sum_so_fall_through), closure))
-            .map(|()| (gamma, context)),
+            {
+                Ok(()) => Ok((gamma, context)),
+                Err(java) => Err(((gamma, context), java)),
+            },
         },
         (expression, value) => {
-            check_infer(index, (Cow::Borrowed(&gamma), context.clone()), expression)?
+            let go = (gamma, context);
+            match check_infer(index, (Cow::Borrowed(&gamma), context.clone()), expression)?
                 .eq_normal(index, value)
-                .map(|()| (gamma, context))
+            {
+                Ok(()) => Ok(go),
+                Err(java) => Err((go, java)),
+            }
         }
     }
 }
@@ -276,7 +298,7 @@ fn check_sum_type(index: u32, (gamma, context): TCS, constructors: Branch) -> TC
 }
 
 /// `checkMain` in Mini-TT.
-pub fn check_main<'a>(expression: Expression) -> TCM<TCS<'a>> {
+pub fn check_main<'a>(expression: Expression) -> TCM<'a, TCS<'a>> {
     check_contextual(default_state(), expression)
 }
 
@@ -291,7 +313,7 @@ pub fn check_infer_contextual(tcs: TCS, expression: Expression) -> TCM<Value> {
 }
 
 /// Similar to `checkMain` in Mini-TT, but for a declaration.
-pub fn check_declaration_main<'a>(declaration: Declaration) -> TCM<Gamma<'a>> {
+pub fn check_declaration_main<'a>(declaration: Declaration) -> TCM<'a, Gamma<'a>> {
     check_declaration(0, default_state(), declaration)
 }
 
