@@ -81,7 +81,13 @@ statically-typed. Very flexible.
   + [X] Completion script generation
     + Get the script: `minittc completion zsh/bash/powershell/fish/elvish`
     + Thanks to [clap][clap]!
-  + [ ] REPL
+  + REPL
+    + [X] Load file
+    + [X] Infer type
+    + [X] Add single declaration
+    + [X] Show context/gamma
+    + [X] Help
+    + [ ] Completion
   + [ ] Language server
   + Publish?
     + By `cargo install --path . --bin minittc --all-features`

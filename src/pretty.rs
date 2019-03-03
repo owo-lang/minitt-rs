@@ -359,9 +359,24 @@ impl Display for NormalExpression {
 }
 
 /// Actually it's for NeutralTelescope
-impl Display for GenericTelescope<NormalExpression> {
+impl<Value: Clone + Display> Display for GenericTelescope<Value> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        f.write_str("<context>")
+        match self {
+            GenericTelescope::Nil => Ok(()),
+            GenericTelescope::UpDec(previous, declaration) => {
+                declaration.fmt(f)?;
+                f.write_str(";\n")?;
+                previous.fmt(f)
+            }
+            GenericTelescope::UpVar(previous, pattern, value) => {
+                f.write_str("var ")?;
+                pattern.fmt(f)?;
+                f.write_str(": ")?;
+                value.fmt(f)?;
+                f.write_str(";\n")?;
+                previous.fmt(f)
+            }
+        }
     }
 }
 

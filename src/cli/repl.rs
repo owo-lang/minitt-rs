@@ -104,7 +104,9 @@ fn show_telescope(tcs: &TCS) {
     let (_, context) = &tcs;
     match context.as_ref() {
         GenericTelescope::Nil => println!("Current Telescope is empty."),
-        context => println!("Current Telescope:"),
+        context => {
+            println!("Current Telescope:\n{}", context);
+        }
     }
 }
 
