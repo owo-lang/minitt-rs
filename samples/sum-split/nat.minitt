@@ -3,20 +3,20 @@ rec nat : U = sum { Zero 1 | Suc nat };
 
 let one : nat = Zero 0;
 
--- let two : nat = Suc one;
+let two : nat = Suc one;
 
--- let test_case_split: nat -> U = split
---  { Zero _ => 1
---  | Suc  _ => 1
---  };
+let test_case_split: nat -> U = split
+ { Zero _ => 1
+ | Suc  _ => 1
+ };
 
--- let zero_anyway: \Pi n: nat. test_case_split n = split
---  { Zero _ => 0
---  | Suc  _ => 0
---  };
--- -- Dependent function!
+let zero_anyway: \Pi n: nat. test_case_split n = split
+ { Zero _ => 0
+ | Suc  _ => 0
+ };
+-- Dependent function!
 
--- let pred: \Pi n: nat. nat = split
---  { Zero _ => Zero 0
---  | Suc  n => n
---  };
+let pred: \Pi n: nat. nat = split
+ { Zero _ => Zero 0
+ | Suc  n => n
+ };

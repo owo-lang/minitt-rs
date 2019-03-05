@@ -1,5 +1,3 @@
-use std::rc::Rc;
-
 use crate::syntax::*;
 
 impl Pattern {
@@ -34,7 +32,7 @@ impl Pattern {
                     ))
                 }
             }
-            Pattern::Unit => Err(format!("Cannot project unit pattern")),
+            Pattern::Unit => Err("Cannot project unit pattern".to_string()),
         }
     }
 }
@@ -42,13 +40,27 @@ impl Pattern {
 impl TelescopeRaw {
     /// `getRho` in Mini-TT.
     pub fn resolve(&self, name: &str) -> Result<Value, String> {
+        use crate::syntax::Declaration::*;
         use crate::syntax::GenericTelescope::*;
         match self {
             Nil => Err(format!("Unresolved reference: `{}`", name)),
-            UpDec(context, Declaration::Simple(pattern, _, expression))
-            | UpDec(context, Declaration::Recursive(pattern, _, expression)) => {
+            UpDec(context, Simple(pattern, _, expression)) => {
                 if pattern.contains(name) {
                     pattern.project(name, expression.clone().eval(context.clone()))
+                } else {
+                    context.resolve(name)
+                }
+            }
+            UpDec(context, Recursive(pattern, signature, expression)) => {
+                if pattern.contains(name) {
+                    let declaration =
+                        Recursive(pattern.clone(), signature.clone(), expression.clone());
+                    pattern.project(
+                        name,
+                        expression
+                            .clone()
+                            .eval(up_dec_rc(context.clone(), declaration)),
+                    )
                 } else {
                     context.resolve(name)
                 }
@@ -68,10 +80,9 @@ impl Closure {
     /// `*` in Mini-TT.<br/>
     /// Instantiate a closure with `val`.
     pub fn instantiate(self, value: Value) -> Value {
-        use crate::syntax::GenericTelescope as Telescope;
         match self {
             Closure::Abstraction(pattern, expression, context) => {
-                expression.eval(Rc::new(Telescope::UpVar(*context, pattern, value)))
+                expression.eval(up_var_rc(*context, pattern, value))
             }
             Closure::Value(value) => *value,
             Closure::Choice(closure, name) => {

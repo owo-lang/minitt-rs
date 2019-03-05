@@ -2,6 +2,9 @@
 
 # 0.1.8
 
++ Fix the sum type scoping problem mentioned in 0.1.6
++ Improve type-checking error message
+
 # 0.1.7
 
 + Use `structopt` for command line parsing
