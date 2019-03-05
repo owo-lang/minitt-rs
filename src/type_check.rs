@@ -176,7 +176,8 @@ pub fn check_declaration(
                 &pattern,
                 signature.clone(),
                 generated.clone(),
-            )?;
+            )
+            .map_err(|err| try_locate!(err, pattern))?;
             let fake_context = up_var_rc(context.clone(), pattern.clone(), generated);
             check(
                 index + 1,
@@ -191,6 +192,7 @@ pub fn check_declaration(
             let declaration = Recursive(pattern.clone(), signature_plain, body.clone());
             let body = body.eval(up_dec_rc(context, declaration));
             update_gamma(gamma, &pattern, signature, body)
+                .map_err(|err| try_locate!(err, pattern))
         }
     }
 }
