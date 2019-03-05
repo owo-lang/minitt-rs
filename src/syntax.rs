@@ -26,19 +26,31 @@ pub enum Expression {
 /// Pattern matching branch.
 pub type Branch = BTreeMap<String, Box<Expression>>;
 
-/// `Val` in Mini-TT, value term.
+/// `Val` in Mini-TT, value term.<br/>
+/// Terms are either of canonical form or neutral form.
 #[derive(Debug, Clone)]
 pub enum Value {
+    /// Canonical form: lambda abstraction.
     Lambda(Closure),
+    /// Canonical form: unit instance.
     Unit,
+    /// Canonical form: unit type.
     One,
+    /// Canonical form: type universe.
     Type,
+    /// Canonical form: pi type (type for dependent functions).
     Pi(Box<Self>, Closure),
+    /// Canonical form: sigma type (type for dependent pair).
     Sigma(Box<Self>, Closure),
+    /// Canonical form: Pair value (value for sigma).
     Pair(Box<Self>, Box<Self>),
+    /// Canonical form: call to a constructor.
     Constructor(String, Box<Self>),
+    /// Canonical form: case-split.
     Split(CaseTree),
+    /// Canonical form: sum type.
     Sum(CaseTree),
+    /// Neutral form.
     Neutral(Neutral),
 }
 
@@ -47,10 +59,15 @@ pub enum Value {
 /// Implementing `Eq` because of `NormalExpression`
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum GenericNeutral<Value: Clone> {
+    /// Neutral form: stuck on a free variable.
     Generated(u32),
+    /// Neutral form: stuck on applying on a free variable.
     Application(Box<Self>, Box<Value>),
+    /// Neutral form: stuck on trying to find the first element of a free variable.
     First(Box<Self>),
+    /// Neutral form: stuck on trying to find the second element of a free variable.
     Second(Box<Self>),
+    /// Neutral form: stuck on trying to case-split a free variable.
     Split(GenericCaseTree<Value>, Box<Self>),
 }
 
@@ -60,8 +77,12 @@ pub type Neutral = GenericNeutral<Value>;
 /// `Patt` in Mini-TT.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Pattern {
+    /// Pair pattern. This sounds like trivial and useless, but we can achieve mutual recursion by
+    /// using this pattern.
     Pair(Box<Pattern>, Box<Pattern>),
+    /// Unit pattern, used for introducing anonymous definitions.
     Unit,
+    /// Variable name pattern, the most typical pattern.
     Var(String),
 }
 
@@ -106,6 +127,7 @@ pub enum GenericTelescope<Value: Clone> {
     /// -- Unresolved reference
     /// ```
     UpDec(Rc<Self>, Declaration),
+    /// Usually a local variable, introduced in your telescope
     UpVar(Rc<Self>, Pattern, Value),
 }
 
@@ -148,6 +170,13 @@ pub enum Closure {
     Value(Box<Value>),
     /// `clCmp` in Mini-TT.<br/>
     /// Closure that was inside of a case-split.
+    ///
+    /// For example, in a definition:
+    /// ```ignore
+    /// f = split { TT a => bla };
+    /// ```
+    /// The part `TT a => bla` is a choice closure, where `Box<Self>` refers to the `a => bla` part
+    /// and `TT` is the `String`.
     Choice(Box<Self>, String),
 }
 

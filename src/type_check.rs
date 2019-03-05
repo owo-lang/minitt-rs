@@ -191,8 +191,7 @@ pub fn check_declaration(
             // into the context, self-reference are not gonna get resolved.
             let declaration = Recursive(pattern.clone(), signature_plain, body.clone());
             let body = body.eval(up_dec_rc(context, declaration));
-            update_gamma(gamma, &pattern, signature, body)
-                .map_err(|err| try_locate!(err, pattern))
+            update_gamma(gamma, &pattern, signature, body).map_err(|err| try_locate!(err, pattern))
         }
     }
 }
