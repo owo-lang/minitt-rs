@@ -13,6 +13,7 @@ pub type GammaRaw = BTreeMap<String, Value>;
 pub type Gamma<'a> = Cow<'a, GammaRaw>;
 
 /// Type-Checking Error.
+#[derive(Clone, Debug)]
 pub enum TCE {
     Textual(String),
     Located(String, Pattern),
