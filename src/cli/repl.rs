@@ -1,7 +1,7 @@
 use crate::cli::util::ast;
 use minitt::parser::parse_str_err_printed;
 use minitt::syntax::{Expression, GenericTelescope};
-use minitt::type_check::{check_contextual, check_infer_contextual, default_state, TCS};
+use minitt::type_check::{check_contextual, check_infer_contextual, default_state, TCE, TCS};
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
@@ -65,7 +65,7 @@ fn infer(tcs: TCS, line: &str) {
         .trim_start_matches("ype")
         .trim_start();
     parse_str_err_printed(file)
-        .map_err(|()| "".to_string())
+        .map_err(|()| TCE::Textual("".to_string()))
         .and_then(|ast| check_infer_contextual(tcs, ast))
         .map(|val| println!("{}", val))
         .unwrap_or_else(|err| eprintln!("{}", err));

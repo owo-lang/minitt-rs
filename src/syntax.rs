@@ -89,7 +89,22 @@ impl Declaration {
 // TODO: replace with Vec<enum {Dec, Var}> maybe?
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum GenericTelescope<Value: Clone> {
+    /// Empty telescope
     Nil,
+    /// In Mini-TT, checked declarations are put here. However, it's not possible to store a
+    /// recursive declaration as an `Expression` (which is a member of `Declaration`) here.
+    ///
+    /// The problem is quite complicated and can be reproduced by checking out 0.1.5 revision and
+    /// type-check this code:
+    ///
+    /// ```ignore
+    /// rec nat : U = sum { Zero 1 | Suc nat };
+    /// -- Inductive definition of nat
+    ///
+    /// let one : nat = Zero 0;
+    /// let two : nat = Suc one;
+    /// -- Unresolved reference
+    /// ```
     UpDec(Rc<Self>, Declaration),
     UpVar(Rc<Self>, Pattern, Value),
 }
