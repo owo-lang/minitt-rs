@@ -30,7 +30,7 @@ pub trait ReadBack: Sized {
             Ok(())
         } else {
             Err(format!(
-                "TypeCheck: {} is not equal to {} up to normal form",
+                "Type-Check: {} is not equal to {} up to normal form.",
                 self_read_back, other_read_back
             ))
         }

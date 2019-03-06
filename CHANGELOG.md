@@ -4,6 +4,7 @@
 
 + Fix the sum type scoping problem mentioned in 0.1.6
 + Improve type-checking error message
++ Add command completion and hint for REPL
 
 # 0.1.7
 

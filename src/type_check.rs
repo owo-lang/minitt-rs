@@ -44,6 +44,7 @@ impl Display for TCE {
         match self {
             TCE::Textual(s) => {
                 f.write_str(s.as_str())?;
+                f.write_str("\n")?;
                 f.write_str("At unknown location.")
             }
             TCE::Located(s, pattern) => {
@@ -74,7 +75,7 @@ pub fn update_gamma<'a>(
                 let second = second.instantiate(val_first);
                 update_gamma(gamma, pattern_second, second, val_second)
             }
-            _ => TCE::default_error(format!("Cannot update Gamma by: {}", pattern)),
+            _ => TCE::default_error(format!("Cannot update Gamma by: `{}`.", pattern)),
         },
         Pattern::Var(name) => {
             let mut gamma = gamma.into_owned();
@@ -95,7 +96,7 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
         Var(name) => gamma
             .get(&name)
             .cloned()
-            .ok_or_else(|| TCE::Textual(format!("Unresolved reference `{}`", name))),
+            .ok_or_else(|| TCE::Textual(format!("Unresolved reference `{}`.", name))),
         Pair(left, right) => {
             let left = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *left)?;
             let right = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *right)?;
@@ -106,11 +107,11 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
         }
         First(pair) => match check_infer(index, (gamma, context), *pair)? {
             Value::Sigma(first, _) => Ok(*first),
-            e => TCE::default_error(format!("Expected Sigma, got: {}", e)),
+            e => TCE::default_error(format!("Expected Sigma, got: `{}`.", e)),
         },
         Second(pair) => match check_infer(index, (gamma, context.clone()), *pair.clone())? {
             Value::Sigma(_, second) => Ok(second.instantiate(pair.eval(context).first())),
-            e => TCE::default_error(format!("Expected Sigma, got: {}", e)),
+            e => TCE::default_error(format!("Expected Sigma, got: `{}`.", e)),
         },
         Application(function, argument) => {
             match check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *function)? {
@@ -118,10 +119,10 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
                     check(index, (gamma, context.clone()), *argument.clone(), *input)?;
                     Ok(output.instantiate(argument.eval(context)))
                 }
-                e => TCE::default_error(format!("Expected Pi, got: {}", e)),
+                e => TCE::default_error(format!("Expected Pi, got: `{}`.", e)),
             }
         }
-        e => TCE::default_error(format!("Cannot infer type of: {}", e)),
+        e => TCE::default_error(format!("Cannot infer type of: `{}`.", e)),
     }
 }
 
@@ -246,7 +247,7 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
         (E::Constructor(name, body), V::Sum((constructors, telescope))) => {
             let constructor = *constructors
                 .get(&name)
-                .ok_or_else(|| TCE::Textual(format!("Invalid constructor: `{}`", name)))?
+                .ok_or_else(|| TCE::Textual(format!("Invalid constructor: `{}`.", name)))?
                 .clone();
             check(index, (gamma, context), *body, constructor.eval(*telescope))
         }
@@ -269,7 +270,7 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
                 for (name, branch) in sum_branches.into_iter() {
                     let pattern_match = *branches
                         .remove(&name)
-                        .ok_or_else(|| TCE::Textual(format!("Missing clause for `{}`", name)))?;
+                        .ok_or_else(|| TCE::Textual(format!("Missing clause for `{}`.", name)))?;
                     check(
                         index,
                         (Cow::Borrowed(&gamma), context.clone()),
@@ -284,7 +285,7 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
                     Ok((gamma, context))
                 } else {
                     let clauses: Vec<_> = branches.keys().map(|br| br.as_str()).collect();
-                    TCE::default_error(format!("Unexpected clauses: {}", clauses.join(" | ")))
+                    TCE::default_error(format!("Unexpected clauses: `{}`.", clauses.join(" | ")))
                 }
             }
             not_sum_so_fall_through => check_infer(
