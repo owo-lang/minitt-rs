@@ -234,9 +234,9 @@ impl<Value: Display + Clone> Display for GenericNeutral<Value> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             GenericNeutral::Generated(index) => {
-                f.write_char('[')?;
+                f.write_char('<')?;
                 index.fmt(f)?;
-                f.write_char(']')
+                f.write_char('>')
             }
             GenericNeutral::Application(function, argument) => {
                 f.write_char('(')?;
@@ -282,9 +282,9 @@ impl Display for NormalExpression {
         use crate::normal::NormalExpression as Expression;
         match self {
             Expression::Lambda(index, expression) => {
-                f.write_str("\u{03BB} [")?;
+                f.write_str("\u{03BB} <")?;
                 index.fmt(f)?;
-                f.write_str("] ")?;
+                f.write_str("> ")?;
                 expression.fmt(f)
             }
             Expression::Pair(first, second) => {
@@ -297,18 +297,18 @@ impl Display for NormalExpression {
             Expression::Unit => f.write_str("0"),
             Expression::One => f.write_str("1"),
             Expression::Pi(input, index, output) => {
-                f.write_str("\u{03A0} [")?;
+                f.write_str("\u{03A0} <")?;
                 index.fmt(f)?;
-                f.write_str("] ")?;
+                f.write_str("> ")?;
                 input.fmt(f)?;
                 f.write_str(". ")?;
                 output.fmt(f)
             }
             Expression::Type => f.write_str("U"),
             Expression::Sigma(first, index, second) => {
-                f.write_str("\u{03A3} [")?;
+                f.write_str("\u{03A3} <")?;
                 index.fmt(f)?;
-                f.write_str("] ")?;
+                f.write_str("> ")?;
                 first.fmt(f)?;
                 f.write_str(". ")?;
                 second.fmt(f)
@@ -328,7 +328,7 @@ impl Display for NormalExpression {
                         started = true;
                     }
                     name.fmt(f)?;
-                    f.write_str(": ")?;
+                    f.write_char(' ')?;
                     clause.fmt(f)?;
                 }
                 f.write_char('}')
@@ -344,15 +344,15 @@ impl Display for NormalExpression {
                         started = true;
                     }
                     name.fmt(f)?;
-                    f.write_str(": ")?;
+                    f.write_char(' ')?;
                     constructor.fmt(f)?;
                 }
                 f.write_char('}')
             }
             Expression::Neutral(neutral) => {
-                f.write_str("#(")?;
+                f.write_str("[")?;
                 neutral.fmt(f)?;
-                f.write_char(')')
+                f.write_char(']')
             }
         }
     }

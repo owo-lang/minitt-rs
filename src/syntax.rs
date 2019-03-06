@@ -5,15 +5,25 @@ use std::rc::Rc;
 /// Expression language for Mini-TT.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Expression {
+    /// `0`
     Unit,
+    /// `1`
     One,
+    /// `U`
     Type,
+    /// Empty file
     Void,
+    /// `bla`
     Var(String),
+    /// `sum { Bla x }`
     Sum(Branch),
+    /// `split { Bla x => y }`
     Split(Branch),
+    /// `\Pi a: b. c`
     Pi(Pattern, Box<Self>, Box<Self>),
+    /// `\Sigma a: b. c`
     Sigma(Pattern, Box<Self>, Box<Self>),
+    /// `\lambda a. c`
     Lambda(Pattern, Box<Self>),
     First(Box<Self>),
     Second(Box<Self>),

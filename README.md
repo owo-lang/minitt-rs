@@ -21,8 +21,9 @@
  [rustyline]: https://docs.rs/rustyline/
 
 Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
-This implementation includes a type-checker, a AST pretty-printer and a command
-line tool which can be used as a file checker and an interactive REPL.
+This implementation includes a type-checker (extended the original one), a AST
+pretty-printer and a command line tool which can be used as a file checker and
+an interactive REPL with completion and type inference.
 Built with latest (when developing this) stable Rust, 2018 edition.
 It can be used as a core language for complicated dependently-typed programming
 languages, or used for testing the correctness of translation algorithms.
