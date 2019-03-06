@@ -1,7 +1,15 @@
 let maybe: U -> U = \lambda t. sum { Just t | Nothing 1 };
 
--- let unwrap_type: \Pi t: U. maybe t -> U = \lambda t. split
---  { Just _ => t
---  | Nothing _ => 1
---  };
--- Can't do this ATM, sorry
+let the: \Pi t: U. (t -> t) = \lambda _. \lambda a. a;
+
+-- let unwrap_type: \Pi t: U. (maybe t) -> U = \lambda t.
+--   the ((maybe t) -> U) split
+--     { Just _ => t
+--     | Nothing _ => 1
+--     };
+
+-- let unwrap: \Pi t: U. \Pi mt: maybe t. unwrap_type t mt = \lambda t.
+--   the (\Pi mt: maybe t. unwrap_type t) split
+--     { Just a => a
+--     | Nothing _ => 0
+--     };

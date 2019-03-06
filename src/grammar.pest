@@ -33,12 +33,13 @@ identifier_raw =
   }
 identifier = { identifier_simple | identifier_raw }
 constructor_name = @{ ASCII_ALPHA_UPPER ~ identifier? }
-pi = _{ "Π" | "\\Pi" }
-sigma = _{ "Σ" | "\\Sigma" }
-lambda = _{ "λ" | "\\lambda" }
-multiplication = _{ "*" | "\\times" | "×" | "✖" }
-double_arrow = _{ "=>" | "⇒" }
-single_arrow = _{ "->" | "→" }
+pi = _{ "\\Pi" | "\u{03A0}" }
+sigma = _{ "\\Sigma" | "\u{03A3}" }
+lambda = _{ "\\lambda" | "\u{03BB}" }
+multiplication = _{ "*" | "\\times" | "\xd7" | "\u{2716}" }
+for_all = _{ "\\forall" | "\u{2200}" }
+double_arrow = _{ "=>" | "\u{21d2}" }
+single_arrow = _{ "->" | "\u{2192}" }
 let_or_rec = { "let" | "rec" }
 one = { "1" }
 unit = { "0" }

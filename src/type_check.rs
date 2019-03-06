@@ -109,6 +109,14 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
             Value::Sigma(first, _) => Ok(*first),
             e => TCE::default_error(format!("Expected Sigma, got: `{}`.", e)),
         },
+        Pi(pattern, input, output) | Sigma(pattern, input, output) => {
+            let (gamma, context) = check_type(index, (gamma, context), *input.clone())?;
+            let input_type = input.eval(context.clone());
+            let generated = generate_value(index);
+            let gamma = update_gamma(gamma, &pattern, input_type, generated.clone())?;
+            check_type(index + 1, (gamma, context), *output)?;
+            Ok(Value::Type)
+        }
         Second(pair) => match check_infer(index, (gamma, context.clone()), *pair.clone())? {
             Value::Sigma(_, second) => Ok(second.instantiate(pair.eval(context).first())),
             e => TCE::default_error(format!("Expected Sigma, got: `{}`.", e)),
@@ -119,7 +127,7 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
                     check(index, (gamma, context.clone()), *argument.clone(), *input)?;
                     Ok(output.instantiate(argument.eval(context)))
                 }
-                e => TCE::default_error(format!("Expected Pi, got: `{}`.", e)),
+                e => TCE::default_error(format!("Expected Pi, got `{}` (argument: `{}`).", e, argument)),
             }
         }
         e => TCE::default_error(format!("Cannot infer type of: `{}`.", e)),

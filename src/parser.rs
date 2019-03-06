@@ -22,7 +22,7 @@ pub fn parse_str(input: &str) -> Result<Expression, String> {
     ))
 }
 
-/// Parse a string into an optional expression and print error
+/// Parse a string into an optional expression and print error to stderr
 #[inline]
 pub fn parse_str_err_printed(code: &str) -> Result<Expression, ()> {
     parse_str(code).map_err(|err| eprintln!("{}", err))

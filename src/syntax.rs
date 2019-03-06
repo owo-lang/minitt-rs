@@ -25,11 +25,17 @@ pub enum Expression {
     Sigma(Pattern, Box<Self>, Box<Self>),
     /// `\lambda a. c`
     Lambda(Pattern, Box<Self>),
+    /// `bla.1`
     First(Box<Self>),
+    /// `bla.2`
     Second(Box<Self>),
+    /// `f a`
     Application(Box<Self>, Box<Self>),
+    /// `a, b`
     Pair(Box<Self>, Box<Self>),
+    /// `Cons a`
     Constructor(String, Box<Self>),
+    /// `let bla` or `rec bla`
     Declaration(Box<Declaration>, Box<Self>),
 }
 
