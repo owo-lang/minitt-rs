@@ -53,7 +53,8 @@ pair_pattern = { atom_pattern ~ "," ~ pattern }
 pattern = { pair_pattern | atom_pattern }
 
 // Extracted helpers
-typed_abstraction = _{ pattern ~ ":" ~ expression ~ "." ~ expression }
+typed_pattern = _{ pattern ~ ":" ~ expression }
+typed_abstraction = _{ typed_pattern ~ "." ~ expression }
 branches = _{ "{" ~ (constructor ~ ("|" ~ constructor)*)? ~ "}" }
 choices = _{ "{" ~ (pattern_match ~ ("|" ~ pattern_match)*)? ~ "}" }
 

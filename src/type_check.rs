@@ -157,6 +157,7 @@ pub fn check_declaration(
     match declaration {
         Declaration {
             pattern,
+            prefix_parameters,
             signature,
             body,
             declaration_type: Simple,
@@ -178,20 +179,15 @@ pub fn check_declaration(
             update_gamma(gamma, &pattern, signature, body.eval(context))
                 .map_err(|err| try_locate!(err, pattern))
         }
-        Declaration {
-            pattern,
-            signature,
-            body,
-            declaration_type: Recursive,
-        } => {
+        declaration => {
+            let pattern = declaration.pattern.clone();
             check_type(
                 index,
                 (Cow::Borrowed(&gamma), context.clone()),
-                signature.clone(),
+                declaration.signature.clone(),
             )
             .map_err(|err| try_locate!(err, pattern))?;
-            let signature_plain = signature.clone();
-            let signature = signature.eval(context.clone());
+            let signature = declaration.signature.clone().eval(context.clone());
             let generated = generate_value(index);
             let fake_gamma = update_gamma(
                 Cow::Borrowed(&gamma),
@@ -204,20 +200,14 @@ pub fn check_declaration(
             check(
                 index + 1,
                 (fake_gamma, fake_context),
-                body.clone(),
+                declaration.body.clone(),
                 signature.clone(),
             )
             .map_err(|err| try_locate!(err, pattern))?;
-            // Just a self-clone
-            // FIXME: if we put a self **before type-checking** (which requires special treatment)
-            // into the context, self-reference are not gonna get resolved.
-            let declaration = Declaration {
-                pattern: pattern.clone(),
-                signature: signature_plain,
-                body: body.clone(),
-                declaration_type: Recursive,
-            };
-            let body = body.eval(up_dec_rc(context, declaration));
+            let body = declaration
+                .body
+                .clone()
+                .eval(up_dec_rc(context, declaration));
             update_gamma(gamma, &pattern, signature, body).map_err(|err| try_locate!(err, pattern))
         }
     }
@@ -403,12 +393,14 @@ mod tests {
     fn simple_check() {
         check_declaration_main(Declaration::simple(
             Pattern::Unit,
+            vec![],
             Expression::Type,
             Expression::One,
         ))
         .unwrap();
         let error_message = check_declaration_main(Declaration::simple(
             Pattern::Unit,
+            vec![],
             Expression::Type,
             Expression::Unit,
         ))
@@ -421,6 +413,7 @@ mod tests {
         let expr = Expression::Declaration(
             Box::new(Declaration::simple(
                 Pattern::Unit,
+                vec![],
                 Expression::One,
                 Expression::Second(Box::new(Expression::Pair(
                     Box::new(Expression::Unit),

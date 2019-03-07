@@ -400,6 +400,7 @@ mod tests {
         let expr = Expression::Declaration(
             Box::new(Declaration::simple(
                 Pattern::Unit,
+                vec![],
                 Expression::One,
                 Expression::Second(Box::new(Expression::Pair(
                     Box::new(Expression::Unit),
@@ -409,6 +410,7 @@ mod tests {
             Box::new(Expression::Declaration(
                 Box::new(Declaration::recursive(
                     Pattern::Var(var.clone()),
+                    vec![],
                     Expression::One,
                     Expression::First(Box::new(Expression::Pair(
                         Box::new(Expression::Unit),

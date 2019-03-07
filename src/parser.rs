@@ -183,6 +183,7 @@ fn declaration_to_expression(the_rule: Tok) -> Expression {
     end_of_rule(&mut inner);
     let declaration = Declaration::new(
         name,
+        vec![],
         signature,
         body,
         if rec {

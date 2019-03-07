@@ -113,6 +113,7 @@ pub enum DeclarationType {
 pub struct Declaration {
     pub pattern: Pattern,
     pub signature: Expression,
+    pub prefix_parameters: Vec<Expression>,
     pub body: Expression,
     pub declaration_type: DeclarationType,
 }
@@ -121,6 +122,7 @@ impl Declaration {
     /// Constructor
     pub fn new(
         pattern: Pattern,
+        prefix_parameters: Vec<Expression>,
         signature: Expression,
         body: Expression,
         declaration_type: DeclarationType,
@@ -128,19 +130,42 @@ impl Declaration {
         Self {
             pattern,
             signature,
+            prefix_parameters,
             body,
             declaration_type,
         }
     }
 
     /// Non-recursive declarations
-    pub fn simple(pattern: Pattern, signature: Expression, body: Expression) -> Self {
-        Self::new(pattern, signature, body, DeclarationType::Simple)
+    pub fn simple(
+        pattern: Pattern,
+        prefix_parameters: Vec<Expression>,
+        signature: Expression,
+        body: Expression,
+    ) -> Self {
+        Self::new(
+            pattern,
+            prefix_parameters,
+            signature,
+            body,
+            DeclarationType::Simple,
+        )
     }
 
     /// Recursive declarations
-    pub fn recursive(pattern: Pattern, signature: Expression, body: Expression) -> Self {
-        Self::new(pattern, signature, body, DeclarationType::Recursive)
+    pub fn recursive(
+        pattern: Pattern,
+        prefix_parameters: Vec<Expression>,
+        signature: Expression,
+        body: Expression,
+    ) -> Self {
+        Self::new(
+            pattern,
+            prefix_parameters,
+            signature,
+            body,
+            DeclarationType::Recursive,
+        )
     }
 }
 
