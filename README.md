@@ -91,7 +91,7 @@ statically-typed. Very flexible.
     + [X] Add single declaration
     + [X] Show context/gamma
     + [X] Help
-    + [X] Completion
+    + [X] Completion (for commands and files)
   + [ ] Language server (?)
   + Publish?
     + By `cargo install --path . --bin minittc --all-features`

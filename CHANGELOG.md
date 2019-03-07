@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.2.0
+
++ REPL file completion
+
 # 0.1.8
 
 + Fix the sum type scoping problem mentioned in 0.1.6
