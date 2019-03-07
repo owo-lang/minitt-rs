@@ -77,7 +77,7 @@ impl Closure {
     /// Instantiate a closure with `val`.
     pub fn instantiate(self, value: Value) -> Value {
         match self {
-            Closure::Abstraction(pattern, expression, context) => {
+            Closure::Abstraction(pattern, _, expression, context) => {
                 expression.eval(up_var_rc(*context, pattern, value))
             }
             Closure::Value(value) => *value,
@@ -167,17 +167,24 @@ impl Expression {
                 .unwrap(),
             E::Sum(constructors) => V::Sum((Box::new(constructors), Box::new(context))),
             E::Split(case_tree) => V::Split((Box::new(case_tree), Box::new(context))),
-            E::Pi(pattern, first, second) => V::Pi(
-                Box::new(first.eval(context.clone())),
-                Closure::Abstraction(pattern, *second, Box::new(context)),
-            ),
-            E::Sigma(pattern, first, second) => V::Sigma(
-                Box::new(first.eval(context.clone())),
-                Closure::Abstraction(pattern, *second, Box::new(context)),
-            ),
-            E::Lambda(pattern, body) => {
-                V::Lambda(Closure::Abstraction(pattern, *body, Box::new(context)))
+            E::Pi(pattern, first, second) => {
+                let first = Box::new(first.eval(context.clone()));
+                let second =
+                    Closure::Abstraction(pattern, Some(first.clone()), *second, Box::new(context));
+                V::Pi(first, second)
             }
+            E::Sigma(pattern, first, second) => {
+                let first = Box::new(first.eval(context.clone()));
+                let second =
+                    Closure::Abstraction(pattern, Some(first.clone()), *second, Box::new(context));
+                V::Sigma(first, second)
+            }
+            E::Lambda(pattern, body) => V::Lambda(Closure::Abstraction(
+                pattern,
+                None,
+                *body,
+                Box::new(context),
+            )),
             E::First(pair) => pair.eval(context).first(),
             E::Second(pair) => pair.eval(context).second(),
             E::Application(function, argument) => {

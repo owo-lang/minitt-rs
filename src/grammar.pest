@@ -46,6 +46,7 @@ unit = { "0" }
 universe = { "U" }
 // void = { EOI }
 meta_var = { "_" }
+extra_parameter = { "(" ~ typed_pattern ~ ")" }
 
 // Patterns
 atom_pattern = { identifier | meta_var | "(" ~ pattern ~ ")" }

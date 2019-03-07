@@ -112,8 +112,8 @@ pub enum DeclarationType {
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Declaration {
     pub pattern: Pattern,
-    pub signature: Expression,
     pub prefix_parameters: Vec<Expression>,
+    pub signature: Expression,
     pub body: Expression,
     pub declaration_type: DeclarationType,
 }
@@ -129,8 +129,8 @@ impl Declaration {
     ) -> Self {
         Self {
             pattern,
-            signature,
             prefix_parameters,
+            signature,
             body,
             declaration_type,
         }
@@ -230,7 +230,9 @@ pub fn nil_rc<Value: Clone>() -> TelescopeRc<Value> {
 pub enum Closure {
     /// `cl` in Mini-TT.<br/>
     /// Closure that does a pattern matching.
-    Abstraction(Pattern, Expression, Box<Telescope>),
+    ///
+    /// Members: pattern, parameter type (optional), body expression and the captured scope.
+    Abstraction(Pattern, Option<Box<Value>>, Expression, Box<Telescope>),
     /// This is not present in Mini-TT.<br/>
     /// Sometimes the closure is already an evaluated value.
     Value(Box<Value>),

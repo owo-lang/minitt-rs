@@ -214,10 +214,14 @@ impl Display for Closure {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             // Don't print the scope
-            Closure::Abstraction(pattern, expression, _) => {
+            Closure::Abstraction(pattern, parameter_type, body, _) => {
                 pattern.fmt(f)?;
+                if let Some(parameter_type) = parameter_type {
+                    f.write_str(": ")?;
+                    parameter_type.fmt(f)?;
+                }
                 f.write_str(". ")?;
-                expression.fmt(f)
+                body.fmt(f)
             }
             Closure::Value(value) => value.fmt(f),
             Closure::Choice(rest, name) => {
