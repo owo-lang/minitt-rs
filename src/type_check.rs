@@ -146,52 +146,41 @@ macro_rules! try_locate {
     };
 }
 
-/*
-match *closure {
-    Closure::Abstraction(pattern, Some(parameter_type), body, telescope) => Ok(Value::Pi(
-        Box::new(parameter_type.clone()),
-        Closure::Abstraction(pattern, Some(parameter_type), body, telescope),
-    )),
-    e => TCE::default_error(format!("Cannot infer type of: `{}`.", e)),
-}
-*/
-
 /// Lift all these `parameters` into the context.<br/>
 /// Returning `TCS` to reuse the variable.
 fn check_lift_parameters(
     index: u32,
-    (gamma, context): TCS,
+    tcs: TCS,
     mut parameters: Vec<Typed>,
     // TODO: `()` placeholds for something used to construct the big Pi-type and a big closure.
 ) -> TCM<((), TCS)> {
-    if parameters.is_empty() {
-        Ok(((), (gamma, context)))
-    } else {
-        let (pattern, expression) = parameters.remove(0);
-        check_type(index, (Cow::Borrowed(&gamma), context.clone()), *expression.clone())?;
-        let generated = generate_value(index);
-        let gamma = update_gamma(gamma, &pattern, expression.eval(context.clone()), generated)?;
+    if let Some((pattern, expression)) = parameters.pop() {
+        let ((), (gamma, context)) = check_lift_parameters(index + 1, tcs, parameters)?;
 
-        check_lift_parameters(index+1, (gamma, context), parameters)
+        check_type(
+            index,
+            (Cow::Borrowed(&gamma), context.clone()),
+            *expression.clone(),
+        )?;
+        let generated = generate_value(index);
+        let gamma = update_gamma(
+            gamma,
+            &pattern,
+            expression.eval(context.clone()),
+            generated.clone(),
+        )?;
+
+        Ok(((), (gamma, up_var_rc(context, pattern, generated))))
+    } else {
+        Ok(((), tcs))
     }
 }
 
 /// `checkD` in Mini-TT.<br/>
 /// Check if a declaration is well-typed and update the context.
-pub fn check_declaration(
-    index: u32,
-    tcs: TCS,
-    declaration: Declaration,
-) -> TCM<Gamma> {
+pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<Gamma> {
     use crate::syntax::DeclarationType::*;
-    let pattern = declaration.pattern.clone();
-    let tcs = check_type(
-        index,
-        tcs,
-        declaration.signature.clone(),
-    )
-    .map_err(|err| try_locate!(err, pattern))?;
-    let (gamma, signature, body) = match declaration {
+    let (gamma, signature, body, pattern) = match declaration {
         Declaration {
             pattern,
             prefix_parameters,
@@ -199,19 +188,20 @@ pub fn check_declaration(
             body,
             declaration_type: Simple,
         } => {
-            let ((), (gamma, context)) = check_lift_parameters(index, tcs, prefix_parameters)?;
+            let ((), tcs) = check_lift_parameters(index, tcs, prefix_parameters)?;
+            let (gamma, context) = check_type(index, tcs, signature.clone())
+                .map_err(|err| try_locate!(err, pattern))?;
             let signature = signature.eval(context.clone());
-            let (gamma, context) = check(
-                index,
-                (gamma, context),
-                body.clone(),
-                signature.clone(),
-            )
-            .map_err(|err| try_locate!(err, pattern))?;
-            (gamma, signature, body.eval(context))
+            let (gamma, context) = check(index, (gamma, context), body.clone(), signature.clone())
+                .map_err(|err| try_locate!(err, pattern))?;
+            (gamma, signature, body.eval(context), pattern)
         }
         declaration => {
-            let ((), (gamma, context)) = check_lift_parameters(index, tcs, declaration.prefix_parameters.clone())?;
+            let pattern = &declaration.pattern;
+            let ((), tcs) =
+                check_lift_parameters(index, tcs, declaration.prefix_parameters.clone())?;
+            let (gamma, context) = check_type(index, tcs, declaration.signature.clone())
+                .map_err(|err| try_locate!(err, pattern))?;
             let pattern = pattern.clone();
             let generated = generate_value(index);
             let signature = declaration.signature.clone().eval(context.clone());
@@ -234,7 +224,7 @@ pub fn check_declaration(
                 .body
                 .clone()
                 .eval(up_dec_rc(context, declaration));
-            (gamma, signature, body)
+            (gamma, signature, body, pattern.clone())
         }
     };
     update_gamma(gamma, &pattern, signature, body).map_err(|err| try_locate!(err, pattern))
@@ -242,15 +232,15 @@ pub fn check_declaration(
 
 /// `checkT` in Mini-TT.<br/>
 /// Check if an expression is a well-typed type expression.
-pub fn check_type(index: u32, (gamma, context): TCS, expression: Expression) -> TCM<TCS> {
+pub fn check_type(index: u32, tcs: TCS, expression: Expression) -> TCM<TCS> {
     use crate::syntax::Expression::*;
     match expression {
-        Sum(constructors) => check_sum_type(index, (gamma, context), constructors),
+        Sum(constructors) => check_sum_type(index, tcs, constructors),
         Pi((pattern, first), second) | Sigma((pattern, first), second) => {
-            check_telescoped(index, (gamma, context), pattern, *first, *second)
+            check_telescoped(index, tcs, pattern, *first, *second)
         }
-        Type | Void | One => Ok((gamma, context)),
-        expression => check(index, (gamma, context), expression, Value::Type),
+        Type | Void | One => Ok(tcs),
+        expression => check(index, tcs, expression, Value::Type),
     }
 }
 

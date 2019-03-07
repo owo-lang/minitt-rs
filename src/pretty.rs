@@ -203,6 +203,13 @@ impl Display for Declaration {
         })?;
         f.write_char(' ')?;
         self.pattern.fmt(f)?;
+        for (pattern, prefix_parameter_type) in self.prefix_parameters.iter() {
+            f.write_str(" (")?;
+            pattern.fmt(f)?;
+            f.write_str(": ")?;
+            prefix_parameter_type.fmt(f)?;
+            f.write_char(')')?;
+        }
         f.write_str(": ")?;
         self.signature.fmt(f)?;
         f.write_str(" = ")?;

@@ -46,7 +46,10 @@ unit = { "0" }
 universe = { "U" }
 // void = { EOI }
 meta_var = { "_" }
-extra_parameter = { "(" ~ typed_pattern ~ ")" }
+
+// Prefixed parameters
+prefix_parameter = { "(" ~ typed_pattern ~ ")" }
+prefix_parameters = { prefix_parameter* }
 
 // Patterns
 atom_pattern = { identifier | meta_var | "(" ~ pattern ~ ")" }
@@ -106,6 +109,7 @@ expression =
 declaration =
  { let_or_rec
  ~ pattern
+ ~ prefix_parameters
  ~ ":" ~ expression
  ~ "=" ~ expression
  ~ ";" ~ expression?

@@ -157,9 +157,25 @@ fn application_to_expression(the_rule: Tok) -> Expression {
 }
 
 /// ```ignore
+/// prefix_parameter = { "(" ~ typed_pattern ~ ")" }
+/// prefix_parameters = { prefix_parameter* }
+/// ```
+fn prefix_parameters_to_vec(the_rule: Tok) -> Vec<Typed> {
+    let mut map: Vec<Typed> = Default::default();
+    for prefix_parameter in the_rule.into_inner() {
+        let mut inner: Tik = prefix_parameter.into_inner();
+        let pattern = next_pattern(&mut inner);
+        let parameter_type = next_expression(&mut inner);
+        map.push((pattern, Box::new(parameter_type)));
+    }
+    map
+}
+
+/// ```ignore
 /// declaration =
 ///  { let_or_rec?
 ///  ~ pattern
+///  ~ prefix_parameters
 ///  ~ ":" ~ expression
 ///  ~ "=" ~ expression
 ///  ~ ";" ~ expression?
@@ -174,6 +190,7 @@ fn declaration_to_expression(the_rule: Tok) -> Expression {
         _ => unreachable!(),
     };
     let name = next_pattern(&mut inner);
+    let prefix_parameters = next_rule!(inner, prefix_parameters, prefix_parameters_to_vec);
     let signature = next_expression(&mut inner);
     let body = next_expression(&mut inner);
     let rest = inner
@@ -181,17 +198,12 @@ fn declaration_to_expression(the_rule: Tok) -> Expression {
         .map(expression_to_expression)
         .unwrap_or(Expression::Void);
     end_of_rule(&mut inner);
-    let declaration = Declaration::new(
-        name,
-        vec![],
-        signature,
-        body,
-        if rec {
-            DeclarationType::Recursive
-        } else {
-            DeclarationType::Simple
-        },
-    );
+    let declaration_type = if rec {
+        DeclarationType::Recursive
+    } else {
+        DeclarationType::Simple
+    };
+    let declaration = Declaration::new(name, prefix_parameters, signature, body, declaration_type);
     Expression::Declaration(Box::new(declaration), Box::new(rest))
 }
 
@@ -403,7 +415,16 @@ mod tests {
         successful_test_case("let sigma_type : \\Sigma x : x_type . y = x, y;");
         successful_test_case("let constructor : C k = C e;");
         successful_test_case("let pi_lambda : \\Pi a : b . c = \\lambda a . expr;");
-        parse_str_err_printed("let function : sum {C e} = split {C _ => e};").unwrap();
         successful_test_case("let pat, pat2 : \\Pi _ : b . c = \\lambda _ . expr;");
+    }
+
+    #[test]
+    fn no_reparse() {
+        successful_no_reparse("let function : sum {C e} = split {C _ => e};");
+        successful_no_reparse("let function (x : a) : bla = rua;");
+    }
+
+    fn successful_no_reparse(code: &str) {
+        println!("{}", parse_str_err_printed(code).unwrap());
     }
 }
