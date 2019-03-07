@@ -116,7 +116,7 @@ impl Display for Expression {
             }
             Expression::Unit => f.write_str("0"),
             Expression::One => f.write_str("1"),
-            Expression::Pi(pattern, input, output) => {
+            Expression::Pi((pattern, input), output) => {
                 f.write_str("\u{03A0} ")?;
                 pattern.fmt(f)?;
                 f.write_str(": ")?;
@@ -125,7 +125,7 @@ impl Display for Expression {
                 output.fmt(f)
             }
             Expression::Type => f.write_str("U"),
-            Expression::Sigma(pattern, first, second) => {
+            Expression::Sigma((pattern, first), second) => {
                 f.write_str("\u{03A3} ")?;
                 pattern.fmt(f)?;
                 f.write_str(": ")?;

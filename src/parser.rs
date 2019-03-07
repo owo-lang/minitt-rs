@@ -103,7 +103,7 @@ fn first_to_expression(the_rule: Tok) -> Expression {
 /// ```
 fn function_type_to_expression(the_rule: Tok) -> Expression {
     let (input, output) = atom_and_expression_to_tuple(the_rule);
-    Expression::Pi(Pattern::Unit, Box::new(input), Box::new(output))
+    Expression::Pi((Pattern::Unit, Box::new(input)), Box::new(output))
 }
 
 /// ```ignore
@@ -112,7 +112,7 @@ fn function_type_to_expression(the_rule: Tok) -> Expression {
 /// ```
 fn pair_type_to_expression(the_rule: Tok) -> Expression {
     let (first, second) = atom_and_expression_to_tuple(the_rule);
-    Expression::Sigma(Pattern::Unit, Box::new(first), Box::new(second))
+    Expression::Sigma((Pattern::Unit, Box::new(first)), Box::new(second))
 }
 
 /// Helper, extracted.
@@ -268,7 +268,7 @@ fn choices_to_tree_map(the_rule: Tok) -> Branch {
 /// ```
 fn pi_type_to_expression(the_rule: Tok) -> Expression {
     let (first_name, first_type, second) = typed_abstraction_to_tuple(the_rule);
-    Expression::Pi(first_name, Box::new(first_type), Box::new(second))
+    Expression::Pi((first_name, Box::new(first_type)), Box::new(second))
 }
 
 /// ```ignore
@@ -277,7 +277,7 @@ fn pi_type_to_expression(the_rule: Tok) -> Expression {
 /// ```
 fn sigma_type_to_expression(the_rule: Tok) -> Expression {
     let (input_name, input_type, output) = typed_abstraction_to_tuple(the_rule);
-    Expression::Sigma(input_name, Box::new(input_type), Box::new(output))
+    Expression::Sigma((input_name, Box::new(input_type)), Box::new(output))
 }
 
 /// ```ignore

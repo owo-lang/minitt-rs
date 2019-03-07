@@ -167,13 +167,13 @@ impl Expression {
                 .unwrap(),
             E::Sum(constructors) => V::Sum((Box::new(constructors), Box::new(context))),
             E::Split(case_tree) => V::Split((Box::new(case_tree), Box::new(context))),
-            E::Pi(pattern, first, second) => {
+            E::Pi((pattern, first), second) => {
                 let first = Box::new(first.eval(context.clone()));
                 let second =
                     Closure::Abstraction(pattern, Some(first.clone()), *second, Box::new(context));
                 V::Pi(first, second)
             }
-            E::Sigma(pattern, first, second) => {
+            E::Sigma((pattern, first), second) => {
                 let first = Box::new(first.eval(context.clone()));
                 let second =
                     Closure::Abstraction(pattern, Some(first.clone()), *second, Box::new(context));

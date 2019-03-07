@@ -65,12 +65,12 @@ pub fn update_gamma<'a>(
     gamma: Gamma<'a>,
     pattern: &Pattern,
     type_val: Value,
-    val: Value,
+    generated_val: Value,
 ) -> TCM<Gamma<'a>> {
     match pattern {
         Pattern::Pair(pattern_first, pattern_second) => match type_val {
             Value::Sigma(first, second) => {
-                let (val_first, val_second) = val.destruct();
+                let (val_first, val_second) = generated_val.destruct();
                 let gamma = update_gamma(gamma, pattern_first, *first, val_first.clone())?;
                 let second = second.instantiate(val_first);
                 update_gamma(gamma, pattern_second, second, val_second)
@@ -109,7 +109,7 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
             Value::Sigma(first, _) => Ok(*first),
             e => TCE::default_error(format!("Expected Sigma, got: `{}`.", e)),
         },
-        Pi(pattern, input, output) | Sigma(pattern, input, output) => {
+        Pi((pattern, input), output) | Sigma((pattern, input), output) => {
             let (gamma, context) = check_type(index, (gamma, context), *input.clone())?;
             let input_type = input.eval(context.clone());
             let generated = generate_value(index);
@@ -146,15 +146,52 @@ macro_rules! try_locate {
     };
 }
 
+/*
+match *closure {
+    Closure::Abstraction(pattern, Some(parameter_type), body, telescope) => Ok(Value::Pi(
+        Box::new(parameter_type.clone()),
+        Closure::Abstraction(pattern, Some(parameter_type), body, telescope),
+    )),
+    e => TCE::default_error(format!("Cannot infer type of: `{}`.", e)),
+}
+*/
+
+/// Lift all these `parameters` into the context.<br/>
+/// Returning `TCS` to reuse the variable.
+fn check_lift_parameters(
+    index: u32,
+    (gamma, context): TCS,
+    mut parameters: Vec<Typed>,
+    // TODO: `()` placeholds for something used to construct the big Pi-type and a big closure.
+) -> TCM<((), TCS)> {
+    if parameters.is_empty() {
+        Ok(((), (gamma, context)))
+    } else {
+        let (pattern, expression) = parameters.remove(0);
+        check_type(index, (Cow::Borrowed(&gamma), context.clone()), *expression.clone())?;
+        let generated = generate_value(index);
+        let gamma = update_gamma(gamma, &pattern, expression.eval(context.clone()), generated)?;
+
+        check_lift_parameters(index+1, (gamma, context), parameters)
+    }
+}
+
 /// `checkD` in Mini-TT.<br/>
 /// Check if a declaration is well-typed and update the context.
 pub fn check_declaration(
     index: u32,
-    (gamma, context): TCS,
+    tcs: TCS,
     declaration: Declaration,
 ) -> TCM<Gamma> {
     use crate::syntax::DeclarationType::*;
-    match declaration {
+    let pattern = declaration.pattern.clone();
+    let tcs = check_type(
+        index,
+        tcs,
+        declaration.signature.clone(),
+    )
+    .map_err(|err| try_locate!(err, pattern))?;
+    let (gamma, signature, body) = match declaration {
         Declaration {
             pattern,
             prefix_parameters,
@@ -162,33 +199,22 @@ pub fn check_declaration(
             body,
             declaration_type: Simple,
         } => {
-            check_type(
-                index,
-                (Cow::Borrowed(&gamma), context.clone()),
-                signature.clone(),
-            )
-            .map_err(|err| try_locate!(err, pattern))?;
+            let ((), (gamma, context)) = check_lift_parameters(index, tcs, prefix_parameters)?;
             let signature = signature.eval(context.clone());
-            check(
+            let (gamma, context) = check(
                 index,
-                (Cow::Borrowed(&gamma), context.clone()),
+                (gamma, context),
                 body.clone(),
                 signature.clone(),
             )
             .map_err(|err| try_locate!(err, pattern))?;
-            update_gamma(gamma, &pattern, signature, body.eval(context))
-                .map_err(|err| try_locate!(err, pattern))
+            (gamma, signature, body.eval(context))
         }
         declaration => {
-            let pattern = declaration.pattern.clone();
-            check_type(
-                index,
-                (Cow::Borrowed(&gamma), context.clone()),
-                declaration.signature.clone(),
-            )
-            .map_err(|err| try_locate!(err, pattern))?;
-            let signature = declaration.signature.clone().eval(context.clone());
+            let ((), (gamma, context)) = check_lift_parameters(index, tcs, declaration.prefix_parameters.clone())?;
+            let pattern = pattern.clone();
             let generated = generate_value(index);
+            let signature = declaration.signature.clone().eval(context.clone());
             let fake_gamma = update_gamma(
                 Cow::Borrowed(&gamma),
                 &pattern,
@@ -208,9 +234,10 @@ pub fn check_declaration(
                 .body
                 .clone()
                 .eval(up_dec_rc(context, declaration));
-            update_gamma(gamma, &pattern, signature, body).map_err(|err| try_locate!(err, pattern))
+            (gamma, signature, body)
         }
-    }
+    };
+    update_gamma(gamma, &pattern, signature, body).map_err(|err| try_locate!(err, pattern))
 }
 
 /// `checkT` in Mini-TT.<br/>
@@ -219,7 +246,7 @@ pub fn check_type(index: u32, (gamma, context): TCS, expression: Expression) -> 
     use crate::syntax::Expression::*;
     match expression {
         Sum(constructors) => check_sum_type(index, (gamma, context), constructors),
-        Pi(pattern, first, second) | Sigma(pattern, first, second) => {
+        Pi((pattern, first), second) | Sigma((pattern, first), second) => {
             check_telescoped(index, (gamma, context), pattern, *first, *second)
         }
         Type | Void | One => Ok((gamma, context)),
@@ -268,7 +295,8 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
             check(index, (gamma, context), *body, constructor.eval(*telescope))
         }
         (E::Sum(constructors), V::Type) => check_sum_type(index, (gamma, context), constructors),
-        (E::Sigma(pattern, first, second), V::Type) | (E::Pi(pattern, first, second), V::Type) => {
+        (E::Sigma((pattern, first), second), V::Type)
+        | (E::Pi((pattern, first), second), V::Type) => {
             check_telescoped(index, (gamma, context), pattern, *first, *second)
         }
         (E::Declaration(declaration, rest), rest_type) => {

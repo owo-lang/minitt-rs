@@ -20,9 +20,9 @@ pub enum Expression {
     /// `split { Bla x => y }`
     Split(Branch),
     /// `\Pi a: b. c`
-    Pi(Pattern, Box<Self>, Box<Self>),
+    Pi(Typed, Box<Self>),
     /// `\Sigma a: b. c`
-    Sigma(Pattern, Box<Self>, Box<Self>),
+    Sigma(Typed, Box<Self>),
     /// `\lambda a. c`
     Lambda(Pattern, Box<Self>),
     /// `bla.1`
@@ -41,6 +41,9 @@ pub enum Expression {
 
 /// Pattern matching branch.
 pub type Branch = BTreeMap<String, Box<Expression>>;
+
+/// Pattern with type explicitly specified
+pub type Typed = (Pattern, Box<Expression>);
 
 /// `Val` in Mini-TT, value term.<br/>
 /// Terms are either of canonical form or neutral form.
@@ -112,7 +115,7 @@ pub enum DeclarationType {
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub struct Declaration {
     pub pattern: Pattern,
-    pub prefix_parameters: Vec<Expression>,
+    pub prefix_parameters: Vec<Typed>,
     pub signature: Expression,
     pub body: Expression,
     pub declaration_type: DeclarationType,
@@ -122,7 +125,7 @@ impl Declaration {
     /// Constructor
     pub fn new(
         pattern: Pattern,
-        prefix_parameters: Vec<Expression>,
+        prefix_parameters: Vec<Typed>,
         signature: Expression,
         body: Expression,
         declaration_type: DeclarationType,
@@ -139,7 +142,7 @@ impl Declaration {
     /// Non-recursive declarations
     pub fn simple(
         pattern: Pattern,
-        prefix_parameters: Vec<Expression>,
+        prefix_parameters: Vec<Typed>,
         signature: Expression,
         body: Expression,
     ) -> Self {
@@ -155,7 +158,7 @@ impl Declaration {
     /// Recursive declarations
     pub fn recursive(
         pattern: Pattern,
-        prefix_parameters: Vec<Expression>,
+        prefix_parameters: Vec<Typed>,
         signature: Expression,
         body: Expression,
     ) -> Self {
