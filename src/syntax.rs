@@ -102,20 +102,45 @@ pub enum Pattern {
     Var(String),
 }
 
+#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+pub enum DeclarationType {
+    Simple,
+    Recursive,
+}
+
 /// `Decl` in Mini-TT.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub enum Declaration {
-    Simple(Pattern, Expression, Expression),
-    Recursive(Pattern, Expression, Expression),
+pub struct Declaration {
+    pub pattern: Pattern,
+    pub signature: Expression,
+    pub body: Expression,
+    pub declaration_type: DeclarationType,
 }
 
 impl Declaration {
-    pub fn pattern(&self) -> &Pattern {
-        use Declaration::*;
-        match self {
-            Simple(pattern, _, _) => pattern,
-            Recursive(pattern, _, _) => pattern,
+    /// Constructor
+    pub fn new(
+        pattern: Pattern,
+        signature: Expression,
+        body: Expression,
+        declaration_type: DeclarationType,
+    ) -> Self {
+        Self {
+            pattern,
+            signature,
+            body,
+            declaration_type,
         }
+    }
+
+    /// Non-recursive declarations
+    pub fn simple(pattern: Pattern, signature: Expression, body: Expression) -> Self {
+        Self::new(pattern, signature, body, DeclarationType::Simple)
+    }
+
+    /// Recursive declarations
+    pub fn recursive(pattern: Pattern, signature: Expression, body: Expression) -> Self {
+        Self::new(pattern, signature, body, DeclarationType::Recursive)
     }
 }
 

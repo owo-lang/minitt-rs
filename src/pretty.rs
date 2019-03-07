@@ -197,17 +197,16 @@ impl Display for Pattern {
 
 impl Display for Declaration {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        let (definer, pattern, signature, body) = match self {
-            Declaration::Simple(pattern, signature, body) => ("let", pattern, signature, body),
-            Declaration::Recursive(pattern, signature, body) => ("rec", pattern, signature, body),
-        };
-        f.write_str(definer)?;
+        f.write_str(match self.declaration_type {
+            DeclarationType::Simple => "let",
+            DeclarationType::Recursive => "rec",
+        })?;
         f.write_char(' ')?;
-        pattern.fmt(f)?;
+        self.pattern.fmt(f)?;
         f.write_str(": ")?;
-        signature.fmt(f)?;
+        self.signature.fmt(f)?;
         f.write_str(" = ")?;
-        body.fmt(f)
+        self.body.fmt(f)
     }
 }
 
@@ -399,7 +398,7 @@ mod tests {
     fn simple_decl() {
         let var = "a".to_string();
         let expr = Expression::Declaration(
-            Box::new(Declaration::Simple(
+            Box::new(Declaration::simple(
                 Pattern::Unit,
                 Expression::One,
                 Expression::Second(Box::new(Expression::Pair(
@@ -408,7 +407,7 @@ mod tests {
                 ))),
             )),
             Box::new(Expression::Declaration(
-                Box::new(Declaration::Recursive(
+                Box::new(Declaration::recursive(
                     Pattern::Var(var.clone()),
                     Expression::One,
                     Expression::First(Box::new(Expression::Pair(

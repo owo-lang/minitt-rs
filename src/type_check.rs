@@ -113,7 +113,7 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
             let (gamma, context) = check_type(index, (gamma, context), *input.clone())?;
             let input_type = input.eval(context.clone());
             let generated = generate_value(index);
-            let gamma = update_gamma(gamma, &pattern, input_type, generated.clone())?;
+            let gamma = update_gamma(gamma, &pattern, input_type, generated)?;
             check_type(index + 1, (gamma, context), *output)?;
             Ok(Value::Type)
         }
@@ -127,7 +127,10 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
                     check(index, (gamma, context.clone()), *argument.clone(), *input)?;
                     Ok(output.instantiate(argument.eval(context)))
                 }
-                e => TCE::default_error(format!("Expected Pi, got `{}` (argument: `{}`).", e, argument)),
+                e => TCE::default_error(format!(
+                    "Expected Pi, got `{}` (argument: `{}`).",
+                    e, argument
+                )),
             }
         }
         e => TCE::default_error(format!("Cannot infer type of: `{}`.", e)),
@@ -150,9 +153,14 @@ pub fn check_declaration(
     (gamma, context): TCS,
     declaration: Declaration,
 ) -> TCM<Gamma> {
-    use crate::syntax::Declaration::*;
+    use crate::syntax::DeclarationType::*;
     match declaration {
-        Simple(pattern, signature, body) => {
+        Declaration {
+            pattern,
+            signature,
+            body,
+            declaration_type: Simple,
+        } => {
             check_type(
                 index,
                 (Cow::Borrowed(&gamma), context.clone()),
@@ -170,7 +178,12 @@ pub fn check_declaration(
             update_gamma(gamma, &pattern, signature, body.eval(context))
                 .map_err(|err| try_locate!(err, pattern))
         }
-        Recursive(pattern, signature, body) => {
+        Declaration {
+            pattern,
+            signature,
+            body,
+            declaration_type: Recursive,
+        } => {
             check_type(
                 index,
                 (Cow::Borrowed(&gamma), context.clone()),
@@ -198,7 +211,12 @@ pub fn check_declaration(
             // Just a self-clone
             // FIXME: if we put a self **before type-checking** (which requires special treatment)
             // into the context, self-reference are not gonna get resolved.
-            let declaration = Recursive(pattern.clone(), signature_plain, body.clone());
+            let declaration = Declaration {
+                pattern: pattern.clone(),
+                signature: signature_plain,
+                body: body.clone(),
+                declaration_type: Recursive,
+            };
             let body = body.eval(up_dec_rc(context, declaration));
             update_gamma(gamma, &pattern, signature, body).map_err(|err| try_locate!(err, pattern))
         }
@@ -383,13 +401,13 @@ mod tests {
 
     #[test]
     fn simple_check() {
-        check_declaration_main(Declaration::Simple(
+        check_declaration_main(Declaration::simple(
             Pattern::Unit,
             Expression::Type,
             Expression::One,
         ))
         .unwrap();
-        let error_message = check_declaration_main(Declaration::Simple(
+        let error_message = check_declaration_main(Declaration::simple(
             Pattern::Unit,
             Expression::Type,
             Expression::Unit,
@@ -401,7 +419,7 @@ mod tests {
     #[test]
     fn check_pair() {
         let expr = Expression::Declaration(
-            Box::new(Declaration::Simple(
+            Box::new(Declaration::simple(
                 Pattern::Unit,
                 Expression::One,
                 Expression::Second(Box::new(Expression::Pair(

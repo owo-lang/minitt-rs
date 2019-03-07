@@ -40,26 +40,22 @@ impl Pattern {
 impl TelescopeRaw {
     /// `getRho` in Mini-TT.
     pub fn resolve(&self, name: &str) -> Result<Value, String> {
-        use crate::syntax::Declaration::*;
+        use crate::syntax::DeclarationType::*;
         use crate::syntax::GenericTelescope::*;
         match self {
             Nil => Err(format!("Unresolved reference: `{}`", name)),
-            UpDec(context, Simple(pattern, _, expression)) => {
+            UpDec(context, declaration) => {
+                let pattern = &declaration.pattern;
                 if pattern.contains(name) {
-                    pattern.project(name, expression.clone().eval(context.clone()))
-                } else {
-                    context.resolve(name)
-                }
-            }
-            UpDec(context, Recursive(pattern, signature, expression)) => {
-                if pattern.contains(name) {
-                    let declaration =
-                        Recursive(pattern.clone(), signature.clone(), expression.clone());
                     pattern.project(
                         name,
-                        expression
+                        declaration
+                            .body
                             .clone()
-                            .eval(up_dec_rc(context.clone(), declaration)),
+                            .eval(match declaration.declaration_type {
+                                Simple => context.clone(),
+                                Recursive => up_dec_rc(context.clone(), declaration.clone()),
+                            }),
                     )
                 } else {
                     context.resolve(name)
