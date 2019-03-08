@@ -148,86 +148,109 @@ macro_rules! try_locate {
 
 /// Lift all these `parameters` into the context.<br/>
 /// Returning `TCS` to reuse the variable.
-fn check_lift_parameters(
+///
+/// `check_body` is supposed to return `signature`, `body` and `tcs`.
+fn check_lift_parameters<'a>(
     index: u32,
-    tcs: TCS,
+    tcs: TCS<'a>,
     mut parameters: Vec<Typed>,
-    // TODO: `()` placeholds for something used to construct the big Pi-type and a big closure.
-) -> TCM<((), TCS)> {
-    if let Some((pattern, expression)) = parameters.pop() {
-        let ((), (gamma, context)) = check_lift_parameters(index + 1, tcs, parameters)?;
-
-        check_type(
-            index,
-            (Cow::Borrowed(&gamma), context.clone()),
-            *expression.clone(),
-        )?;
-        let generated = generate_value(index);
-        let gamma = update_gamma(
-            gamma,
-            &pattern,
-            expression.eval(context.clone()),
-            generated.clone(),
-        )?;
-
-        Ok(((), (gamma, up_var_rc(context, pattern, generated))))
-    } else {
-        Ok(((), tcs))
+    check_body: impl FnOnce(TCS<'a>) -> TCM<(Expression, Expression, TCS<'a>)>,
+) -> TCM<(Expression, Expression, TCS<'a>)> {
+    if parameters.is_empty() {
+        return check_body(tcs);
     }
+    let (pattern, expression) = parameters.remove(0);
+    let (gamma, context) = check_type(index, tcs, *expression.clone())?;
+    let generated = generate_value(index);
+    let gamma = update_gamma(
+        gamma,
+        &pattern,
+        expression.clone().eval(context.clone()),
+        generated.clone(),
+    )?;
+
+    let tcs = (
+        gamma,
+        up_var_rc(context.clone(), pattern.clone(), generated),
+    );
+    let (signature, body, (gamma, context)) =
+        check_lift_parameters(index + 1, tcs, parameters, check_body)?;
+
+    Ok((
+        Expression::Pi(
+            (pattern.clone(), Box::new(*expression)),
+            Box::new(signature),
+        ),
+        Expression::Lambda(pattern, Box::new(body)),
+        (gamma, context),
+    ))
 }
 
 /// `checkD` in Mini-TT.<br/>
 /// Check if a declaration is well-typed and update the context.
-pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<Gamma> {
+pub fn check_declaration(index: u32, (gamma, context): TCS, declaration: Declaration) -> TCM<Gamma> {
     use crate::syntax::DeclarationType::*;
-    let (gamma, signature, body, pattern) = match declaration {
+    let tcs = (Cow::Borrowed(&*gamma), context.clone());
+    let (pattern, signature, body) = match declaration {
         Declaration {
             pattern,
             prefix_parameters,
             signature,
             body,
             declaration_type: Simple,
-        } => {
-            let ((), tcs) = check_lift_parameters(index, tcs, prefix_parameters)?;
+        } => check_lift_parameters(index, tcs, prefix_parameters, |tcs| {
             let (gamma, context) = check_type(index, tcs, signature.clone())
                 .map_err(|err| try_locate!(err, pattern))?;
-            let signature = signature.eval(context.clone());
-            let (gamma, context) = check(index, (gamma, context), body.clone(), signature.clone())
-                .map_err(|err| try_locate!(err, pattern))?;
-            (gamma, signature, body.eval(context), pattern)
-        }
+            let tcs = check(
+                index,
+                (gamma, context.clone()),
+                body.clone(),
+                signature.clone().eval(context),
+            )
+            .map_err(|err| try_locate!(err, pattern))?;
+            Ok((signature, body, tcs))
+        })
+        .map(|(signature, body, _)| (pattern, signature, body))?,
         declaration => {
-            let pattern = &declaration.pattern;
-            let ((), tcs) =
-                check_lift_parameters(index, tcs, declaration.prefix_parameters.clone())?;
-            let (gamma, context) = check_type(index, tcs, declaration.signature.clone())
+            let pattern = declaration.pattern.clone();
+            check_lift_parameters(index, tcs, declaration.prefix_parameters.clone(), |tcs| {
+                let (gamma, context) = check_type(index, tcs, declaration.signature.clone())
+                    .map_err(|err| try_locate!(err, pattern))?;
+                let pattern = pattern.clone();
+                let generated = generate_value(index);
+                let signature = declaration.signature.clone().eval(context.clone());
+                let fake_gamma = update_gamma(
+                    Cow::Borrowed(&gamma),
+                    &pattern,
+                    signature.clone(),
+                    generated.clone(),
+                )
                 .map_err(|err| try_locate!(err, pattern))?;
-            let pattern = pattern.clone();
-            let generated = generate_value(index);
-            let signature = declaration.signature.clone().eval(context.clone());
-            let fake_gamma = update_gamma(
-                Cow::Borrowed(&gamma),
-                &pattern,
-                signature.clone(),
-                generated.clone(),
-            )
-            .map_err(|err| try_locate!(err, pattern))?;
-            let fake_context = up_var_rc(context.clone(), pattern.clone(), generated);
-            check(
-                index + 1,
-                (fake_gamma, fake_context),
-                declaration.body.clone(),
-                signature.clone(),
-            )
-            .map_err(|err| try_locate!(err, pattern))?;
-            let body = declaration
-                .body
-                .clone()
-                .eval(up_dec_rc(context, declaration));
-            (gamma, signature, body, pattern.clone())
+                let fake_context = up_var_rc(context.clone(), pattern.clone(), generated);
+                check(
+                    index + 1,
+                    (fake_gamma, fake_context),
+                    declaration.body.clone(),
+                    signature,
+                )
+                .map_err(|err| try_locate!(err, pattern))?;
+                Ok((
+                    declaration.signature.clone(),
+                    declaration.body.clone(),
+                    (gamma, up_dec_rc(context, declaration)),
+                ))
+            })
+            .map(|(signature, body, _)| (pattern, signature, body))?
         }
     };
-    update_gamma(gamma, &pattern, signature, body).map_err(|err| try_locate!(err, pattern))
+
+    update_gamma(
+        gamma,
+        &pattern,
+        signature.eval(context.clone()),
+        body.eval(context.clone()),
+    )
+    .map_err(|err| try_locate!(err, pattern))
 }
 
 /// `checkT` in Mini-TT.<br/>

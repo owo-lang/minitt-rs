@@ -1,8 +1,9 @@
 # Change Log
 
-# 0.2.0
+# 0.1.9
 
 + REPL file completion
++ Support syntax like `let a (b : U): c = bla b;`
 
 # 0.1.8
 
