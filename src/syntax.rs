@@ -48,6 +48,18 @@ pub struct AnonymousValue {
     pub internal: Box<Value>,
 }
 
+impl AnonymousValue {
+    pub fn new(value: Value) -> AnonymousValue {
+        AnonymousValue {
+            internal: Box::new(value),
+        }
+    }
+
+    pub fn some(value: Value) -> Option<AnonymousValue> {
+        Some(Self::new(value))
+    }
+}
+
 impl Eq for AnonymousValue {}
 impl PartialEq<AnonymousValue> for AnonymousValue {
     fn eq(&self, _other: &AnonymousValue) -> bool {

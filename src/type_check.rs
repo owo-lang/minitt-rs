@@ -121,8 +121,17 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
             Value::Sigma(_, second) => Ok(second.instantiate(pair.eval(context).first())),
             e => TCE::default_error(format!("Expected Sigma, got: `{}`.", e)),
         },
-        Application(function, argument) => {
-            match check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *function)? {
+        Application(function, argument) => match *function {
+            Lambda(pattern, Some(parameter_type), return_value) => {
+                let parameter_type = *parameter_type.internal;
+                let tcs = (Cow::Borrowed(&*gamma), context.clone());
+                check(index, tcs, *argument, parameter_type.clone())?;
+                let generated = generate_value(index + 1);
+                let gamma = update_gamma(gamma, &pattern, parameter_type, generated.clone())?;
+                let context = up_var_rc(context, pattern, generated);
+                check_infer(index + 1, (gamma, context), *return_value)
+            }
+            f => match check_infer(index, (Cow::Borrowed(&gamma), context.clone()), f)? {
                 Value::Pi(input, output) => {
                     check(index, (gamma, context.clone()), *argument.clone(), *input)?;
                     Ok(output.instantiate(argument.eval(context)))
@@ -131,8 +140,8 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
                     "Expected Pi, got `{}` (argument: `{}`).",
                     e, argument
                 )),
-            }
-        }
+            },
+        },
         e => TCE::default_error(format!("Cannot infer type of: `{}`.", e)),
     }
 }
@@ -177,8 +186,7 @@ fn check_lift_parameters<'a>(
             (pattern.clone(), Box::new(*expression)),
             Box::new(signature),
         ),
-        // TODO
-        Expression::Lambda(pattern, None, Box::new(body)),
+        Expression::Lambda(pattern, AnonymousValue::some(type_val), Box::new(body)),
         (gamma, context),
     ))
 }
@@ -258,6 +266,19 @@ pub fn check_declaration(
 ) -> TCM<Gamma> {
     use crate::syntax::DeclarationType::*;
     let tcs = (Cow::Borrowed(&*gamma), context.clone());
+    if declaration.prefix_parameters.is_empty() {
+        let tcs = (gamma, context);
+        return match &declaration.declaration_type {
+            Simple => check_simple_declaration(
+                index,
+                tcs,
+                declaration.pattern,
+                declaration.signature,
+                declaration.body,
+            ),
+            Recursive => check_recursive_declaration(index, tcs, declaration),
+        };
+    }
     let (pattern, signature, body) = match declaration {
         Declaration {
             pattern,
