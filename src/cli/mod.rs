@@ -39,7 +39,9 @@ pub fn main() {
         .unwrap_or_else(|| default_state());
 
     // REPL
-    if args.interactive {
+    if args.interactive_plain {
+        repl::repl_plain(checked)
+    } else if args.interactive {
         repl::repl(checked)
     }
 }

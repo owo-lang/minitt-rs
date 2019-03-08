@@ -17,6 +17,9 @@ pub struct CliOptions {
     /// Interactive mode, aka REPL
     #[structopt(alias = "repl", short = "i", long)]
     pub interactive: bool,
+    /// Interactive mode without completion/hints/colored output
+    #[structopt(alias = "repl-plain", short = "j", long)]
+    pub interactive_plain: bool,
     /// Prints errors only
     #[structopt(short = "q", long)]
     pub quiet: bool,

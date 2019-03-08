@@ -7,6 +7,7 @@ use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
 use rustyline::hint::Hinter;
 use rustyline::{CompletionType, Config, Editor, Helper};
+use std::io::{stdin, stdout, Write};
 
 struct MiniHelper {
     all_cmd: Vec<String>,
@@ -69,7 +70,41 @@ const LOAD_PFX: &'static str = ":load ";
 /// Used for REPL command
 const TYPE_PFX: &'static str = ":type ";
 
+fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>> {
+    if line == QUIT_CMD {
+        None
+    } else if line == GAMMA_CMD {
+        show_gamma(&tcs);
+        Some(tcs)
+    } else if line == CTX_CMD {
+        show_telescope(&tcs);
+        Some(tcs)
+    } else if line == HELP_CMD {
+        help(current_mode);
+        Some(tcs)
+    } else if line.starts_with(LOAD_PFX) {
+        let file = line.trim_start_matches(":load").trim_start();
+        Some(match ast(file) {
+            Some(ast) => update_tcs(tcs, ast),
+            None => tcs,
+        })
+    } else if line.starts_with(TYPE_PFX) {
+        infer(tcs.clone(), line);
+        Some(tcs)
+    } else if line.starts_with(':') {
+        println!("Unrecognized command: {}", line);
+        println!("Maybe you want to get some `:help`?");
+        Some(tcs)
+    } else {
+        Some(match parse_str_err_printed(line).ok() {
+            Some(expr) => update_tcs(tcs, expr),
+            None => tcs,
+        })
+    }
+}
+
 pub fn repl(mut tcs: TCS) {
+    repl_welcome_message("RICH");
     let all_cmd: Vec<_> = vec![QUIT_CMD, GAMMA_CMD, CTX_CMD, HELP_CMD, LOAD_CMD, TYPE_CMD]
         .iter()
         .map(|s| s.to_string())
@@ -90,30 +125,10 @@ pub fn repl(mut tcs: TCS) {
             Ok(line) => {
                 let line = line.trim();
                 r.add_history_entry(line.as_ref());
-                if line == QUIT_CMD {
-                    break;
-                } else if line == GAMMA_CMD {
-                    show_gamma(&tcs);
-                } else if line == CTX_CMD {
-                    show_telescope(&tcs);
-                } else if line == HELP_CMD {
-                    help();
-                } else if line.starts_with(LOAD_PFX) {
-                    let file = line.trim_start_matches(":load").trim_start();
-                    tcs = match ast(file) {
-                        Some(ast) => update_tcs(tcs, ast),
-                        None => tcs,
-                    };
-                } else if line.starts_with(TYPE_PFX) {
-                    infer(tcs.clone(), line);
-                } else if line.starts_with(':') {
-                    println!("Unrecognized command: {}", line);
-                    println!("Maybe you want to get some `:help`?");
+                if let Some(ok) = repl_work(tcs, "RICH", line) {
+                    tcs = ok;
                 } else {
-                    tcs = match parse_str_err_printed(line).ok() {
-                        Some(expr) => update_tcs(tcs, expr),
-                        None => tcs,
-                    };
+                    break;
                 };
             }
             Err(ReadlineError::Interrupted) => {
@@ -133,6 +148,22 @@ pub fn repl(mut tcs: TCS) {
     // Write history?
 }
 
+pub fn repl_plain(mut tcs: TCS) {
+    repl_welcome_message("PLAIN");
+    let stdin = stdin();
+    loop {
+        print!("{}", PROMPT);
+        stdout().flush().expect("Cannot flush stdout!");
+        let mut line = String::new();
+        stdin.read_line(&mut line).expect("Cannot flush stdout!");
+        if let Some(ok) = repl_work(tcs, "PLAIN", line.trim()) {
+            tcs = ok;
+        } else {
+            break;
+        };
+    }
+}
+
 fn infer(tcs: TCS, line: &str) {
     let file = line.trim_start_matches(":type").trim_start();
     parse_str_err_printed(file)
@@ -142,9 +173,27 @@ fn infer(tcs: TCS, line: &str) {
         .unwrap_or_else(|err| eprintln!("{}", err));
 }
 
-fn help() {
+fn repl_welcome_message(current_mode: &str) {
     println!(
         "Interactive minittc {}\n\
+         Source code: https://github.com/owo-lang/minitt-rs\n\
+         Issue tracker: https://github.com/owo-lang/minitt-rs/issues/new\n\n\
+
+         The REPL has two modes: the RICH mode and the PLAIN mode.\n\
+         Completion, history command, hints and (in the future) colored output are available in the \
+         rich mode, but does not work entirely under Windows PowerShell ISE and Mintty \
+         (Cygwin, MinGW and (possibly, depends on your installation) git-bash).\n\
+         You are using the {} mode.\n\
+         ",
+        env!("CARGO_PKG_VERSION"),
+        current_mode
+    );
+}
+
+fn help(current_mode: &str) {
+    repl_welcome_message(current_mode);
+    println!(
+        "\
          Commands:\n\
          {:<16} {}\n\
          {:<16} {}\n\
@@ -152,7 +201,6 @@ fn help() {
          {:<16} {}\n\
          {:<16} {}\n\
          ",
-        env!("CARGO_PKG_VERSION"),
         QUIT_CMD,
         "Quit the REPL.",
         GAMMA_CMD,

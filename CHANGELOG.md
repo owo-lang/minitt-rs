@@ -4,6 +4,8 @@
 
 + REPL file completion
 + Support syntax like `let a (b : U): c = bla b;`
+  + Notice: this breaks mutual recursion for some sense
++ Support plain REPL
 
 # 0.1.8
 

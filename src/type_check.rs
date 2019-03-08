@@ -188,7 +188,11 @@ fn check_lift_parameters<'a>(
 
 /// `checkD` in Mini-TT.<br/>
 /// Check if a declaration is well-typed and update the context.
-pub fn check_declaration(index: u32, (gamma, context): TCS, declaration: Declaration) -> TCM<Gamma> {
+pub fn check_declaration(
+    index: u32,
+    (gamma, context): TCS,
+    declaration: Declaration,
+) -> TCM<Gamma> {
     use crate::syntax::DeclarationType::*;
     let tcs = (Cow::Borrowed(&*gamma), context.clone());
     let (pattern, signature, body) = match declaration {
