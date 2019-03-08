@@ -186,7 +186,73 @@ fn check_lift_parameters<'a>(
     ))
 }
 
-/// `checkD` in Mini-TT.<br/>
+/// Extracted from `checkD` in Mini-TT.<br/>
+/// This part deals with recursive declarations, but without prefixed parameters.
+pub fn check_recursive_declaration(
+    index: u32,
+    (gamma, context): TCS,
+    declaration: Declaration,
+) -> TCM<Gamma> {
+    let pattern = declaration.pattern.clone();
+    check_type(
+        index,
+        (Cow::Borrowed(&gamma), context.clone()),
+        declaration.signature.clone(),
+    )
+    .map_err(|err| try_locate!(err, pattern))?;
+    let signature = declaration.signature.clone().eval(context.clone());
+    let generated = generate_value(index);
+    let fake_gamma = update_gamma(
+        Cow::Borrowed(&gamma),
+        &pattern,
+        signature.clone(),
+        generated.clone(),
+    )
+    .map_err(|err| try_locate!(err, pattern))?;
+    let fake_context = up_var_rc(context.clone(), pattern.clone(), generated);
+    check(
+        index + 1,
+        (fake_gamma, fake_context),
+        declaration.body.clone(),
+        signature.clone(),
+    )
+    .map_err(|err| try_locate!(err, pattern))?;
+    let body = declaration
+        .body
+        .clone()
+        .eval(up_dec_rc(context, declaration));
+    update_gamma(gamma, &pattern, signature, body).map_err(|err| try_locate!(err, pattern))
+}
+
+/// Extracted from `checkD` in Mini-TT.<br/>
+/// This part deals with non-recursive declarations, but without prefixed parameters.
+pub fn check_simple_declaration(
+    index: u32,
+    (gamma, context): TCS,
+    pattern: Pattern,
+    signature: Expression,
+    body: Expression,
+) -> TCM<Gamma> {
+    check_type(
+        index,
+        (Cow::Borrowed(&gamma), context.clone()),
+        signature.clone(),
+    )
+    .map_err(|err| try_locate!(err, pattern))?;
+    let signature = signature.eval(context.clone());
+    check(
+        index,
+        (Cow::Borrowed(&gamma), context.clone()),
+        body.clone(),
+        signature.clone(),
+    )
+    .map_err(|err| try_locate!(err, pattern))?;
+    update_gamma(gamma, &pattern, signature, body.eval(context))
+        .map_err(|err| try_locate!(err, pattern))
+}
+
+/// Originally `checkD` in Mini-TT, but now it's not because this implementation supports
+/// prefixed parameters :)<br/>
 /// Check if a declaration is well-typed and update the context.
 pub fn check_declaration(
     index: u32,

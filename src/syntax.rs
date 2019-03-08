@@ -105,6 +105,7 @@ pub enum Pattern {
     Var(String),
 }
 
+/// Whether a type is recursive or not.
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum DeclarationType {
     Simple,
