@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 /// `Exp` in Mini-TT.
 /// Expression language for Mini-TT.
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Expression {
     /// `0`
     Unit,
@@ -23,8 +23,10 @@ pub enum Expression {
     Pi(Typed, Box<Self>),
     /// `\Sigma a: b. c`
     Sigma(Typed, Box<Self>),
-    /// `\lambda a. c`
-    Lambda(Pattern, Box<Self>),
+    /// `\lambda a. c`, the optional value is the type of the argument.<br/>
+    /// This cannot be specified during parsing because it's used for generated intermediate values
+    /// during type-checking.
+    Lambda(Pattern, Option<AnonymousValue>, Box<Self>),
     /// `bla.1`
     First(Box<Self>),
     /// `bla.2`
@@ -37,6 +39,20 @@ pub enum Expression {
     Constructor(String, Box<Self>),
     /// `let bla` or `rec bla`
     Declaration(Box<Declaration>, Box<Self>),
+}
+
+/// Just a wrapper for a value but does not do `Eq` comparison.
+/// This is an implementation detail and should not be noticed much when reading the source code.
+#[derive(Debug, Clone)]
+pub struct AnonymousValue {
+    pub internal: Box<Value>,
+}
+
+impl Eq for AnonymousValue {}
+impl PartialEq<AnonymousValue> for AnonymousValue {
+    fn eq(&self, _other: &AnonymousValue) -> bool {
+        true
+    }
 }
 
 /// Pattern matching branch.
@@ -113,7 +129,7 @@ pub enum DeclarationType {
 }
 
 /// `Decl` in Mini-TT.
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Declaration {
     pub pattern: Pattern,
     pub prefix_parameters: Vec<Typed>,

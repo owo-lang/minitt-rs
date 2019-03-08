@@ -268,7 +268,7 @@ fn choices_to_tree_map(the_rule: Tok) -> Branch {
         let expression = next_expression(&mut inner);
         map.insert(
             constructor_name,
-            Box::new(Expression::Lambda(pattern, Box::new(expression))),
+            Box::new(Expression::Lambda(pattern, None, Box::new(expression))),
         );
     }
     map
@@ -346,7 +346,7 @@ fn lambda_expression_to_expression(the_rule: Tok) -> Expression {
     let parameter = next_pattern(&mut inner);
     let body = next_expression(&mut inner);
     end_of_rule(&mut inner);
-    Expression::Lambda(parameter, Box::new(body))
+    Expression::Lambda(parameter, None, Box::new(body))
 }
 
 /// Constructor as an expression

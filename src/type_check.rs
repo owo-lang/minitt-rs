@@ -162,12 +162,8 @@ fn check_lift_parameters<'a>(
     let (pattern, expression) = parameters.remove(0);
     let (gamma, context) = check_type(index, tcs, *expression.clone())?;
     let generated = generate_value(index);
-    let gamma = update_gamma(
-        gamma,
-        &pattern,
-        expression.clone().eval(context.clone()),
-        generated.clone(),
-    )?;
+    let type_val = expression.clone().eval(context.clone());
+    let gamma = update_gamma(gamma, &pattern, type_val.clone(), generated.clone())?;
 
     let tcs = (
         gamma,
@@ -181,7 +177,8 @@ fn check_lift_parameters<'a>(
             (pattern.clone(), Box::new(*expression)),
             Box::new(signature),
         ),
-        Expression::Lambda(pattern, Box::new(body)),
+        // TODO
+        Expression::Lambda(pattern, None, Box::new(body)),
         (gamma, context),
     ))
 }
@@ -346,7 +343,7 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
         (E::Unit, V::One) | (E::Type, V::Type) | (E::One, V::Type) => Ok((gamma, context)),
         // There's nothing left to check.
         (E::Void, _) => Ok((gamma, context)),
-        (E::Lambda(pattern, body), V::Pi(signature, closure)) => {
+        (E::Lambda(pattern, _, body), V::Pi(signature, closure)) => {
             let generated = generate_value(index);
             let gamma = update_gamma(gamma, &pattern, *signature, generated.clone())?;
             check(

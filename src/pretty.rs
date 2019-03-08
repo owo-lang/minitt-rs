@@ -101,9 +101,13 @@ impl Display for Expression {
                 argument.fmt(f)?;
                 f.write_char(')')
             }
-            Expression::Lambda(pattern, body) => {
+            Expression::Lambda(pattern, parameter_type, body) => {
                 f.write_str("\u{03BB} ")?;
                 pattern.fmt(f)?;
+                if let Some(parameter_type) = parameter_type {
+                    f.write_str(": ")?;
+                    parameter_type.internal.fmt(f)?;
+                }
                 f.write_str(". ")?;
                 body.fmt(f)
             }

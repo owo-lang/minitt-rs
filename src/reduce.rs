@@ -179,9 +179,9 @@ impl Expression {
                     Closure::Abstraction(pattern, Some(first.clone()), *second, Box::new(context));
                 V::Sigma(first, second)
             }
-            E::Lambda(pattern, body) => V::Lambda(Closure::Abstraction(
+            E::Lambda(pattern, parameter_type, body) => V::Lambda(Closure::Abstraction(
                 pattern,
-                None,
+                parameter_type.map(|t| t.internal),
                 *body,
                 Box::new(context),
             )),
