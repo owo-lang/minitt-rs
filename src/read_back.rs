@@ -21,6 +21,11 @@ pub trait ReadBack: Sized {
     /// Interface for `rbV`, `rbN` and `rbRho` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm;
 
+    /// Sometimes you don't want to pass an argument, and let me do this for you :)
+    fn read_back_please(self) -> Self::NormalForm {
+        self.read_back(0)
+    }
+
     /// `eqNf` in Mini-TT.<br/>
     /// Whether two structures are equivalent up to normal form.
     fn eq_normal(self, index: u32, other: Self) -> Result<(), String> {

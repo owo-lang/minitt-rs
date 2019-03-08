@@ -2,6 +2,8 @@
 
 # 0.1.10
 
++ REPL support `:eval`, `:infer` and `:normalize`
+
 # 0.1.9
 
 + REPL file completion

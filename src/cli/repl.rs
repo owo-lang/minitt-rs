@@ -1,12 +1,14 @@
 use crate::cli::util::ast;
 use minitt::parser::parse_str_err_printed;
-use minitt::syntax::{Expression, GenericTelescope};
+use minitt::read_back::ReadBack;
+use minitt::syntax::{Expression, GenericTelescope, Telescope, Value};
 use minitt::type_check::{check_contextual, check_infer_contextual, default_state, TCE, TCS};
 use rustyline::completion::{Completer, FilenameCompleter, Pair};
 use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
 use rustyline::hint::Hinter;
 use rustyline::{CompletionType, Config, Editor, Helper};
+use std::fmt::Display;
 use std::io::{stdin, stdout, Write};
 
 struct MiniHelper {
@@ -64,11 +66,17 @@ const CTX_CMD: &'static str = ":context";
 const HELP_CMD: &'static str = ":help";
 const LOAD_CMD: &'static str = ":load";
 const TYPE_CMD: &'static str = ":type";
+const INFER_CMD: &'static str = ":infer";
+const EVAL_CMD: &'static str = ":eval";
+const NORMALIZE_CMD: &'static str = ":normalize";
 
 /// Used for REPL command
 const LOAD_PFX: &'static str = ":load ";
 /// Used for REPL command
 const TYPE_PFX: &'static str = ":type ";
+const INFER_PFX: &'static str = ":infer ";
+const EVAL_PFX: &'static str = ":eval ";
+const NORMALIZE_PFX: &'static str = ":normalize ";
 
 fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>> {
     if line == QUIT_CMD {
@@ -83,13 +91,24 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>
         help(current_mode);
         Some(tcs)
     } else if line.starts_with(LOAD_PFX) {
-        let file = line.trim_start_matches(":load").trim_start();
+        let file = line.trim_start_matches(LOAD_CMD).trim_start();
         Some(match ast(file) {
             Some(ast) => update_tcs(tcs, ast),
             None => tcs,
         })
     } else if line.starts_with(TYPE_PFX) {
-        infer(tcs.clone(), line);
+        infer_normalize(tcs.clone(), line.trim_start_matches(TYPE_CMD).trim_start());
+        Some(tcs)
+    } else if line.starts_with(INFER_PFX) {
+        infer(tcs.clone(), line.trim_start_matches(INFER_CMD).trim_start());
+        Some(tcs)
+    } else if line.starts_with(NORMALIZE_PFX) {
+        let line = line.trim_start_matches(NORMALIZE_CMD).trim_start();
+        normalize(tcs.1.clone(), line);
+        Some(tcs)
+    } else if line.starts_with(EVAL_PFX) {
+        let line = line.trim_start_matches(EVAL_CMD).trim_start();
+        eval(tcs.1.clone(), line);
         Some(tcs)
     } else if line.starts_with(':') {
         println!("Unrecognized command: {}", line);
@@ -105,10 +124,20 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>
 
 pub fn repl(mut tcs: TCS) {
     repl_welcome_message("RICH");
-    let all_cmd: Vec<_> = vec![QUIT_CMD, GAMMA_CMD, CTX_CMD, HELP_CMD, LOAD_CMD, TYPE_CMD]
-        .iter()
-        .map(|s| s.to_string())
-        .collect();
+    let all_cmd: Vec<_> = vec![
+        QUIT_CMD,
+        GAMMA_CMD,
+        CTX_CMD,
+        HELP_CMD,
+        LOAD_CMD,
+        TYPE_CMD,
+        INFER_CMD,
+        NORMALIZE_CMD,
+        EVAL_CMD,
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
     let mut r = Editor::with_config(
         Config::builder()
             .history_ignore_space(true)
@@ -164,12 +193,35 @@ pub fn repl_plain(mut tcs: TCS) {
     }
 }
 
+fn infer_normalize(tcs: TCS, line: &str) {
+    infer_impl(tcs, line, |value| value.read_back_please())
+}
+
 fn infer(tcs: TCS, line: &str) {
-    let file = line.trim_start_matches(":type").trim_start();
-    parse_str_err_printed(file)
+    infer_impl(tcs, line, |value| value);
+}
+
+fn infer_impl<T: Display>(tcs: TCS, line: &str, map: impl FnOnce(Value) -> T) {
+    parse_str_err_printed(line)
         .map_err(|()| TCE::Textual("".to_string()))
         .and_then(|ast| check_infer_contextual(tcs, ast))
-        .map(|val| println!("{}", val))
+        .map(|val| println!("{}", map(val)))
+        .unwrap_or_else(|err| eprintln!("{}", err));
+}
+
+fn eval(ctx: Telescope, line: &str) {
+    eval_impl(ctx, line, |value| value);
+}
+
+fn normalize(ctx: Telescope, line: &str) {
+    eval_impl(ctx, line, |value| value.read_back_please());
+}
+
+fn eval_impl<T: Display>(ctx: Telescope, line: &str, map: impl FnOnce(Value) -> T) {
+    parse_str_err_printed(line)
+        .map_err(|()| TCE::Textual("".to_string()))
+        .map(|ast| ast.eval(ctx))
+        .map(|val| println!("{}", map(val)))
         .unwrap_or_else(|err| eprintln!("{}", err));
 }
 
@@ -195,11 +247,14 @@ fn help(current_mode: &str) {
     println!(
         "\
          Commands:\n\
-         {:<16} {}\n\
-         {:<16} {}\n\
-         {:<16} {}\n\
-         {:<16} {}\n\
-         {:<16} {}\n\
+         {:<20} {}\n\
+         {:<20} {}\n\
+         {:<20} {}\n\
+         {:<20} {}\n\
+         {:<20} {}\n\
+         {:<20} {}\n\
+         {:<20} {}\n\
+         {:<20} {}\n\
          ",
         QUIT_CMD,
         "Quit the REPL.",
@@ -209,8 +264,14 @@ fn help(current_mode: &str) {
         "Show current value context.",
         ":load <FILE>",
         "Load an external file.",
+        ":infer <EXPR>",
+        "Try to infer the type of the given expression.",
         ":type <EXPR>",
-        "Try to infer the type of an expression.",
+        "Try to infer and normalize the type of the given expression.",
+        ":eval <EXPR>",
+        "Try to evaluate the given expression.",
+        ":normalize <EXPR>",
+        "Try to evaluate and normalize the type of the given expression.",
     );
 }
 
