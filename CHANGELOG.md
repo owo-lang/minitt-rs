@@ -1,5 +1,7 @@
 # Change Log
 
+# 0.2.2
+
 # 0.2.1
 
 + Make bunch of function public so people can see them in docs.rs
