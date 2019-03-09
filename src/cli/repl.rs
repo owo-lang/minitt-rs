@@ -9,7 +9,6 @@ use rustyline::highlight::Highlighter;
 use rustyline::hint::Hinter;
 use rustyline::{CompletionType, Config, Editor, Helper};
 use std::borrow::Cow;
-use std::fmt::Display;
 use std::io::{stdin, stdout, Write};
 
 struct MiniHelper {
@@ -63,12 +62,15 @@ impl Helper for MiniHelper {}
 const PROMPT: &'static str = "=> ";
 const QUIT_CMD: &'static str = ":quit";
 const GAMMA_CMD: &'static str = ":gamma";
+const DEBUG_CMD: &'static str = ":debug";
 const CTX_CMD: &'static str = ":context";
 const HELP_CMD: &'static str = ":help";
 const LOAD_CMD: &'static str = ":load";
 const TYPE_CMD: &'static str = ":type";
 const INFER_CMD: &'static str = ":infer";
+const INFER_DBG_CMD: &'static str = ":infer-debug";
 const EVAL_CMD: &'static str = ":eval";
+const EVAL_DBG_CMD: &'static str = ":eval-debug";
 const NORMALIZE_CMD: &'static str = ":normalize";
 
 /// Used for REPL command
@@ -76,7 +78,9 @@ const LOAD_PFX: &'static str = ":load ";
 /// Used for REPL command
 const TYPE_PFX: &'static str = ":type ";
 const INFER_PFX: &'static str = ":infer ";
+const INFER_DBG_PFX: &'static str = ":infer-debug ";
 const EVAL_PFX: &'static str = ":eval ";
+const EVAL_DBG_PFX: &'static str = ":eval-debug ";
 const NORMALIZE_PFX: &'static str = ":normalize ";
 
 fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>> {
@@ -87,6 +91,9 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>
         Some(tcs)
     } else if line == CTX_CMD {
         show_telescope(&tcs);
+        Some(tcs)
+    } else if line == DEBUG_CMD {
+        debug(&tcs.1);
         Some(tcs)
     } else if line == HELP_CMD {
         help(current_mode);
@@ -105,10 +112,14 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>
     } else if line.starts_with(INFER_PFX) {
         let (gamma, context) = tcs;
         let borrowed_tcs = (Cow::Borrowed(&*gamma), context.clone());
-        infer(
-            borrowed_tcs,
-            line.trim_start_matches(INFER_CMD).trim_start(),
-        );
+        let line = line.trim_start_matches(INFER_CMD).trim_start();
+        infer(borrowed_tcs, line);
+        Some((gamma, context))
+    } else if line.starts_with(INFER_DBG_PFX) {
+        let (gamma, context) = tcs;
+        let borrowed_tcs = (Cow::Borrowed(&*gamma), context.clone());
+        let line = line.trim_start_matches(INFER_DBG_CMD).trim_start();
+        debug_infer(borrowed_tcs, line);
         Some((gamma, context))
     } else if line.starts_with(NORMALIZE_PFX) {
         let line = line.trim_start_matches(NORMALIZE_CMD).trim_start();
@@ -117,6 +128,10 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>
     } else if line.starts_with(EVAL_PFX) {
         let line = line.trim_start_matches(EVAL_CMD).trim_start();
         eval(tcs.1.clone(), line);
+        Some(tcs)
+    } else if line.starts_with(EVAL_DBG_PFX) {
+        let line = line.trim_start_matches(EVAL_DBG_CMD).trim_start();
+        debug_eval(tcs.1.clone(), line);
         Some(tcs)
     } else if line.starts_with(':') {
         println!("Unrecognized command: {}", line);
@@ -135,13 +150,16 @@ pub fn repl(mut tcs: TCS) {
     let all_cmd: Vec<_> = vec![
         QUIT_CMD,
         GAMMA_CMD,
+        DEBUG_CMD,
         CTX_CMD,
         HELP_CMD,
         LOAD_CMD,
         TYPE_CMD,
         INFER_CMD,
+        INFER_DBG_CMD,
         NORMALIZE_CMD,
         EVAL_CMD,
+        EVAL_DBG_CMD,
     ]
     .iter()
     .map(|s| s.to_string())
@@ -202,35 +220,57 @@ pub fn repl_plain(mut tcs: TCS) {
 }
 
 fn infer_normalize(tcs: TCS, line: &str) {
-    infer_impl(tcs, line, |value| value.read_back_please())
+    infer_impl(tcs, line, |value| println!("{}", value.read_back_please()));
 }
 
 fn infer(tcs: TCS, line: &str) {
-    infer_impl(tcs, line, |value| value);
+    infer_impl(tcs, line, |value| println!("{}", value));
 }
 
-fn infer_impl<T: Display>(tcs: TCS, line: &str, map: impl FnOnce(Value) -> T) {
+fn infer_impl(tcs: TCS, line: &str, map: impl FnOnce(Value) -> ()) {
     parse_str_err_printed(line)
         .map_err(|()| TCE::Textual("".to_string()))
         .and_then(|ast| check_infer_contextual(tcs, ast))
-        .map(|val| println!("{}", map(val)))
-        .unwrap_or_else(|err| eprintln!("{}", err));
+        .map(map)
+        .unwrap_or_else(|err| eprintln!("{}", err))
 }
 
 fn eval(ctx: Telescope, line: &str) {
-    eval_impl(ctx, line, |value| value);
+    eval_impl(ctx, line, |value| println!("{}", value));
 }
 
 fn normalize(ctx: Telescope, line: &str) {
-    eval_impl(ctx, line, |value| value.read_back_please());
+    eval_impl(ctx, line, |value| println!("{}", value.read_back_please()));
 }
 
-fn eval_impl<T: Display>(ctx: Telescope, line: &str, map: impl FnOnce(Value) -> T) {
+fn eval_impl(ctx: Telescope, line: &str, map: impl FnOnce(Value) -> ()) {
     parse_str_err_printed(line)
         .map_err(|()| TCE::Textual("".to_string()))
         .map(|ast| ast.eval(ctx))
-        .map(|val| println!("{}", map(val)))
-        .unwrap_or_else(|err| eprintln!("{}", err));
+        .map(map)
+        .unwrap_or_else(|err| eprintln!("{}", err))
+}
+
+fn debug(ctx: &Telescope) {
+    match &**ctx {
+        GenericTelescope::Nil => {}
+        GenericTelescope::UpDec(ctx, declaration) => {
+            println!("{:?}", declaration);
+            debug(ctx);
+        }
+        GenericTelescope::UpVar(ctx, pattern, value) => {
+            println!("var: {} = {:?}", pattern, value);
+            debug(ctx);
+        }
+    }
+}
+
+fn debug_eval(ctx: Telescope, line: &str) {
+    eval_impl(ctx, line, |value| println!("{:?}", value));
+}
+
+fn debug_infer(tcs: TCS, line: &str) {
+    infer_impl(tcs, line, |value| println!("{:?}", value));
 }
 
 fn repl_welcome_message(current_mode: &str) {
@@ -263,6 +303,9 @@ fn help(current_mode: &str) {
          {:<20} {}\n\
          {:<20} {}\n\
          {:<20} {}\n\
+         {:<20} {}\n\
+         {:<20} {}\n\
+         {:<20} {}\n\
          ",
         QUIT_CMD,
         "Quit the REPL.",
@@ -270,14 +313,20 @@ fn help(current_mode: &str) {
         "Show current typing context.",
         CTX_CMD,
         "Show current value context.",
+        DEBUG_CMD,
+        "Show debug-printed value context.",
         ":load <FILE>",
         "Load an external file.",
         ":infer <EXPR>",
         "Try to infer the type of the given expression.",
+        ":infer-debug <EXPR>",
+        "Try to infer the type of the given expression and debug-print it.",
         ":type <EXPR>",
         "Try to infer and normalize the type of the given expression.",
         ":eval <EXPR>",
         "Try to evaluate the given expression.",
+        ":eval-debug <EXPR>",
+        "Try to evaluate the given expression and debug-print it.",
         ":normalize <EXPR>",
         "Try to evaluate and normalize the type of the given expression.",
     );

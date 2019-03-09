@@ -7,13 +7,16 @@ let unwrap_type (t : U): (maybe t) -> U = split
   | Nothing _ => 1
   };
 
--- let unwrap: \Pi t: U. \Pi mt: maybe t. unwrap_type t mt = \lambda t.
---   the (\Pi mt: maybe t. unwrap_type t) split
+-- let unwrap_bad: \Pi t: U. \Pi mt: maybe t. (unwrap_type t) mt = \lambda t.
+--   the (\Pi mt: maybe t. (unwrap_type t) mt) split
 --     { Just a => a
 --     | Nothing _ => 0
 --     };
 
--- let unwrap (t : U) (mt: maybe t): unwrap_type t mt = split
---   { Just a => a
---   | Nothing _ => 0
---   };
+-- The above definition won't work, because Mini-TT model is so stupid. Look at
+-- this cubicaltt-like replacement:
+
+let unwrap (t : U) (mt: maybe t): (unwrap_type t) mt = split
+  { Just a => a
+  | Nothing _ => 0
+  };
