@@ -13,10 +13,15 @@ let unwrap_type (t : U): (maybe t) -> U = split
 --     | Nothing _ => 0
 --     };
 
--- The above definition won't work, because Mini-TT model is so stupid. Look at
--- this cubicaltt-like replacement:
+-- The above definition won't work, because Mini-TT model is so stupid:
+-- when it type-checks a declaration, it checks several hard-coded patterns of
+-- well-typed expressions. When non of the rules matches, it tries to infer the
+-- expression's type and compare with the signature.
 
-let unwrap (t : U) (mt: maybe t): (unwrap_type t) mt = split
+-- And, as you can imagine, it cannot infer `split`'s type signature obviously.
+-- Look at this cubicaltt-like replacement:
+
+let unwrap (t : U): \Pi mt: maybe t. (unwrap_type t) mt = split
   { Just a => a
   | Nothing _ => 0
   };
