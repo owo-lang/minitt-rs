@@ -2,6 +2,8 @@
 
 # 0.2.2
 
++ Use statically-typed errors instead of strings
+
 # 0.2.1
 
 + Make bunch of function public so people can see them in docs.rs

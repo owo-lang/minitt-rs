@@ -26,7 +26,7 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
         }
         First(pair) => match check_infer(index, (gamma, context), *pair)? {
             Value::Sigma(first, _) => Ok(*first),
-            e => TCE::default_error(format!("Expected Sigma, got: `{}`.", e)),
+            e => Err(TCE::WantSigmaBut(e)),
         },
         Pi((pattern, input), output) | Sigma((pattern, input), output) => {
             let (gamma, context) = check_type(index, (gamma, context), *input.clone())?;
@@ -38,7 +38,7 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
         }
         Second(pair) => match check_infer(index, (gamma, context.clone()), *pair.clone())? {
             Value::Sigma(_, second) => Ok(second.instantiate(pair.eval(context).first())),
-            e => TCE::default_error(format!("Expected Sigma, got: `{}`.", e)),
+            e => Err(TCE::WantSigmaBut(e)),
         },
         Application(function, argument) => match *function {
             Lambda(pattern, Some(parameter_type), return_value) => {
@@ -55,10 +55,7 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
                     check(index, (gamma, context.clone()), *argument.clone(), *input)?;
                     Ok(output.instantiate(argument.eval(context)))
                 }
-                e => TCE::default_error(format!(
-                    "Expected Pi, got `{}` (argument: `{}`).",
-                    e, argument
-                )),
+                e => Err(TCE::WantPiBut(e, argument)),
             },
         },
         e => Err(TCE::CannotInfer(e)),

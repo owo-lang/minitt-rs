@@ -21,6 +21,9 @@ pub enum TCE {
     InvalidConstructor(String),
     MissingCase(String),
     UnexpectedCases(String),
+    WantSigmaBut(Value),
+    /// We can get the argument of application here, to better report error
+    WantPiBut(Value, Expression),
     /// First argument is inferred value, second is expected
     InferredDoesNotMatchExpected(NormalExpression, NormalExpression),
     Located(Box<TCE>, Pattern),
@@ -68,6 +71,18 @@ impl Display for TCE {
             TCE::InvalidConstructor(name) => {
                 f.write_str("Invalid constructor: `")?;
                 f.write_str(name.as_str())?;
+                f.write_str("`.")
+            }
+            TCE::WantSigmaBut(expression) => {
+                f.write_str("Expected \u{03A3} type, instead got: `")?;
+                expression.fmt(f)?;
+                f.write_str("`.")
+            }
+            TCE::WantPiBut(expression, argument) => {
+                f.write_str("Expected \u{03A0} type, instead got: `")?;
+                expression.fmt(f)?;
+                f.write_str("`\nWhen checking the application whose argument is `")?;
+                argument.fmt(f)?;
                 f.write_str("`.")
             }
             TCE::MissingCase(name) => {
