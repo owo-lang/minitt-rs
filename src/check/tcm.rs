@@ -2,6 +2,8 @@ use crate::ast::{nil_rc, Closure, Pattern, Telescope, Value};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Error, Formatter};
+use crate::check::normal::NormalExpression;
+use core::fmt::{Write, Pointer};
 
 /// Type-Checking context. Name as key, type of the declaration as value.
 pub type GammaRaw = BTreeMap<String, Value>;
@@ -14,7 +16,10 @@ pub type Gamma<'a> = Cow<'a, GammaRaw>;
 #[derive(Clone, Debug)]
 pub enum TCE {
     Textual(String),
-    Located(String, Pattern),
+    UpdateGammaFailed(Pattern),
+    /// First argument is inferred value, second is expected
+    InferredDoesNotMatchExpected(NormalExpression, NormalExpression),
+    Located(Box<TCE>, Pattern),
 }
 
 /// `G` in Mini-TT.<br/>
@@ -40,15 +45,22 @@ impl TCE {
 impl Display for TCE {
     fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         match self {
-            TCE::Textual(s) => {
-                f.write_str(s.as_str())?;
-                f.write_str("\n")?;
-                f.write_str("At unknown location.")
+            TCE::Textual(s) => f.write_str(s.as_str()),
+            TCE::UpdateGammaFailed(pattern) => {
+                f.write_str("Cannot update Gamma by: `")?;
+                pattern.fmt(f)?;
+                f.write_str("`.")
             }
-            TCE::Located(s, pattern) => {
-                f.write_str(s.as_str())?;
-                f.write_str("\n")?;
-                f.write_str("When checking the declaration of `")?;
+            TCE::InferredDoesNotMatchExpected(inferred, expected) => {
+                f.write_str("Type mismatch: expected `")?;
+                expected.fmt(f)?;
+                f.write_str("`, got (inferred): `")?;
+                inferred.fmt(f)?;
+                f.write_str("`.")
+            }
+            TCE::Located(wrapped, pattern) => {
+                wrapped.fmt(f)?;
+                f.write_str("\nWhen checking the declaration of `")?;
                 pattern.fmt(f)?;
                 f.write_str("`.")
             }
@@ -68,7 +80,7 @@ macro_rules! update_gamma {
                     second,
                     $clone,
                 ),
-                _ => TCE::default_error(format!("Cannot update Gamma by: `{}`.", $pattern)),
+                _ => TCE::UpdateGammaFailed($pattern.clone()),
             },
             Pattern::Var(name) => update_gamma_by_var($gamma, $type_val, name),
             Pattern::Unit => Ok($gamma),

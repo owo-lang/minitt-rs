@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::ast::{up_var_rc, Branch, Closure, Expression, Pattern, Value};
+use crate::ast::{up_var_rc, Branch, Closure, Expression, Pattern, Telescope, Value};
 use crate::check::decl::check_declaration;
 use crate::check::read_back::{generate_value, ReadBack};
 use crate::check::tcm::{update_gamma, update_gamma_borrow, TCE, TCM, TCS};
@@ -164,21 +164,24 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
                     TCE::default_error(format!("Unexpected clauses: `{}`.", clauses.join(" | ")))
                 }
             }
-            not_sum_so_fall_through => check_infer(
+            not_sum_so_fall_through => check_normal(
                 index,
                 (Cow::Borrowed(&gamma), context.clone()),
                 E::Split(branches),
-            )?
-            .eq_normal(index, V::Pi(Box::new(not_sum_so_fall_through), closure))
-            .map_err(TCE::Textual)
-            .map(|()| (gamma, context)),
+                V::Pi(Box::new(not_sum_so_fall_through), closure),
+            ),
         },
-        (expression, value) => {
-            check_infer(index, (Cow::Borrowed(&gamma), context.clone()), expression)?
-                .eq_normal(index, value)
-                .map_err(TCE::Textual)
-                .map(|()| (gamma, context))
-        }
+        (expression, value) => check_normal(index, (gamma, context), expression, value),
+    }
+}
+
+fn check_normal(index: u32, (gamma, context): TCS, body: Expression, signature: Value) -> TCM<TCS> {
+    let inferred = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), body)?;
+    let (inferred_normal, expected_normal) = ReadBack::normal(index, inferred, signature);
+    if inferred_normal == expected_normal {
+        Ok((gamma, context))
+    } else {
+        Err(TCE::InferredDoesNotMatchExpected(inferred_normal, expected_normal))
     }
 }
 

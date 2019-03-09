@@ -8,8 +8,8 @@ use crate::check::tcm::{update_gamma_borrow, update_gamma_lazy, Gamma, TCE, TCM,
 macro_rules! try_locate {
     ($err:expr, $pattern:expr) => {
         match $err {
-            TCE::Textual(s) => TCE::Located(s, $pattern.clone()),
-            e => e,
+            TCE::Located(_, _) => $err,
+            e => TCE::Located(Box::new(e), $pattern.clone()),
         }
     };
 }

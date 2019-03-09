@@ -26,19 +26,12 @@ pub trait ReadBack: Sized {
         self.read_back(0)
     }
 
-    /// `eqNf` in Mini-TT.<br/>
+    /// `eqNf` in Mini-TT, but returning normal forms for error reporting.<br/>
     /// Whether two structures are equivalent up to normal form.
-    fn eq_normal(self, index: u32, other: Self) -> Result<(), String> {
-        let self_read_back = self.read_back(index);
+    fn normal(index: u32, me: Self, other: Self) -> (Self::NormalForm, Self::NormalForm) {
+        let me_read_back = me.read_back(index);
         let other_read_back = other.read_back(index);
-        if self_read_back == other_read_back {
-            Ok(())
-        } else {
-            Err(format!(
-                "Type-Check: {} is not equal to {} up to normal form.",
-                self_read_back, other_read_back
-            ))
-        }
+        (me_read_back, other_read_back)
     }
 }
 
