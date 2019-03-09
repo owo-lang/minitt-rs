@@ -1,7 +1,7 @@
-use std::fmt::{Display, Formatter, Error};
-use crate::syntax::{nil_rc, Telescope, Pattern, Value};
-use std::collections::BTreeMap;
+use crate::syntax::{nil_rc, Pattern, Telescope, Value};
 use std::borrow::Cow;
+use std::collections::BTreeMap;
+use std::fmt::{Display, Error, Formatter};
 
 /// Type-Checking context. Name as key, type of the declaration as value.
 pub type GammaRaw = BTreeMap<String, Value>;

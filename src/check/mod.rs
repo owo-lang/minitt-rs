@@ -20,4 +20,11 @@ pub mod read_back;
 /// Type-Checking Monad: context, state and error.
 ///
 /// Typing context (`Gamma`) and its updater, the type-checking error and its pretty-printer
+///
+/// Depends on module `syntax`.
 pub mod tcm;
+
+/// Declaration checker: for prefix parameters, simple declarations and recursive declarations.
+///
+/// Depends on modules `syntax` and `tcm`.
+pub mod decl;
