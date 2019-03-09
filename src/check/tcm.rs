@@ -1,9 +1,8 @@
-use crate::ast::{nil_rc, Closure, Pattern, Telescope, Value};
+use crate::ast::{nil_rc, Closure, Expression, Pattern, Telescope, Value};
+use crate::check::normal::NormalExpression;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Error, Formatter};
-use crate::check::normal::NormalExpression;
-use core::fmt::{Write, Pointer};
 
 /// Type-Checking context. Name as key, type of the declaration as value.
 pub type GammaRaw = BTreeMap<String, Value>;
@@ -17,6 +16,11 @@ pub type Gamma<'a> = Cow<'a, GammaRaw>;
 pub enum TCE {
     Textual(String),
     UpdateGammaFailed(Pattern),
+    CannotInfer(Expression),
+    UnresolvedName(String),
+    InvalidConstructor(String),
+    MissingCase(String),
+    UnexpectedCases(String),
     /// First argument is inferred value, second is expected
     InferredDoesNotMatchExpected(NormalExpression, NormalExpression),
     Located(Box<TCE>, Pattern),
@@ -51,6 +55,31 @@ impl Display for TCE {
                 pattern.fmt(f)?;
                 f.write_str("`.")
             }
+            TCE::CannotInfer(expression) => {
+                f.write_str("Cannot infer type of: `")?;
+                expression.fmt(f)?;
+                f.write_str("`.")
+            }
+            TCE::UnresolvedName(name) => {
+                f.write_str("Unresolved reference: `")?;
+                f.write_str(name.as_str())?;
+                f.write_str("`.")
+            }
+            TCE::InvalidConstructor(name) => {
+                f.write_str("Invalid constructor: `")?;
+                f.write_str(name.as_str())?;
+                f.write_str("`.")
+            }
+            TCE::MissingCase(name) => {
+                f.write_str("Missing case-split: `")?;
+                f.write_str(name.as_str())?;
+                f.write_str("`.")
+            }
+            TCE::UnexpectedCases(joined_name) => {
+                f.write_str("Unexpected case-split: `")?;
+                f.write_str(joined_name.as_str())?;
+                f.write_str("`.")
+            }
             TCE::InferredDoesNotMatchExpected(inferred, expected) => {
                 f.write_str("Type mismatch: expected `")?;
                 expected.fmt(f)?;
@@ -80,7 +109,7 @@ macro_rules! update_gamma {
                     second,
                     $clone,
                 ),
-                _ => TCE::UpdateGammaFailed($pattern.clone()),
+                _ => Err(TCE::UpdateGammaFailed($pattern.clone())),
             },
             Pattern::Var(name) => update_gamma_by_var($gamma, $type_val, name),
             Pattern::Unit => Ok($gamma),

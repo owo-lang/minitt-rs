@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::ast::{up_var_rc, Branch, Closure, Expression, Pattern, Telescope, Value};
+use crate::ast::{up_var_rc, Branch, Closure, Expression, Pattern, Value};
 use crate::check::decl::check_declaration;
 use crate::check::read_back::{generate_value, ReadBack};
 use crate::check::tcm::{update_gamma, update_gamma_borrow, TCE, TCM, TCS};
@@ -15,7 +15,7 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
         Var(name) => gamma
             .get(&name)
             .cloned()
-            .ok_or_else(|| TCE::Textual(format!("Unresolved reference `{}`.", name))),
+            .ok_or_else(|| TCE::UnresolvedName(name)),
         Pair(left, right) => {
             let left = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *left)?;
             let right = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *right)?;
@@ -61,7 +61,7 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
                 )),
             },
         },
-        e => TCE::default_error(format!("Cannot infer type of: `{}`.", e)),
+        e => Err(TCE::CannotInfer(e)),
     }
 }
 
@@ -115,7 +115,7 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
         (E::Constructor(name, body), V::Sum((constructors, telescope))) => {
             let constructor = *constructors
                 .get(&name)
-                .ok_or_else(|| TCE::Textual(format!("Invalid constructor: `{}`.", name)))?
+                .ok_or_else(|| TCE::InvalidConstructor(name))?
                 .clone();
             check(index, (gamma, context), *body, constructor.eval(*telescope))
         }
@@ -144,9 +144,10 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
         (E::Split(mut branches), V::Pi(sum, closure)) => match *sum {
             V::Sum((sum_branches, telescope)) => {
                 for (name, branch) in sum_branches.into_iter() {
-                    let pattern_match = *branches
-                        .remove(&name)
-                        .ok_or_else(|| TCE::Textual(format!("Missing clause for `{}`.", name)))?;
+                    let pattern_match = match branches.remove(&name) {
+                        Some(pattern_match) => *pattern_match,
+                        None => return Err(TCE::MissingCase(name)),
+                    };
                     check(
                         index,
                         (Cow::Borrowed(&gamma), context.clone()),
@@ -161,12 +162,12 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
                     Ok((gamma, context))
                 } else {
                     let clauses: Vec<_> = branches.keys().map(|br| br.as_str()).collect();
-                    TCE::default_error(format!("Unexpected clauses: `{}`.", clauses.join(" | ")))
+                    Err(TCE::UnexpectedCases(clauses.join(" | ")))
                 }
             }
             not_sum_so_fall_through => check_normal(
                 index,
-                (Cow::Borrowed(&gamma), context.clone()),
+                (gamma, context),
                 E::Split(branches),
                 V::Pi(Box::new(not_sum_so_fall_through), closure),
             ),
@@ -181,7 +182,10 @@ fn check_normal(index: u32, (gamma, context): TCS, body: Expression, signature: 
     if inferred_normal == expected_normal {
         Ok((gamma, context))
     } else {
-        Err(TCE::InferredDoesNotMatchExpected(inferred_normal, expected_normal))
+        Err(TCE::InferredDoesNotMatchExpected(
+            inferred_normal,
+            expected_normal,
+        ))
     }
 }
 
