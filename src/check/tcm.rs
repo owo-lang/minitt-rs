@@ -1,4 +1,4 @@
-use crate::syntax::{nil_rc, Pattern, Telescope, Value};
+use crate::ast::{nil_rc, Pattern, Telescope, Value};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Error, Formatter};

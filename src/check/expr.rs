@@ -1,13 +1,13 @@
+use crate::ast::{up_dec_rc, up_var_rc, Branch, Closure, Expression, Pattern, Value};
 use crate::check::decl::check_declaration;
 use crate::check::read_back::{generate_value, ReadBack};
 use crate::check::tcm::{update_gamma, TCE, TCM, TCS};
-use crate::syntax::{up_dec_rc, up_var_rc, Branch, Closure, Expression, Pattern, Value};
 use std::borrow::Cow;
 
 /// `checkI` in Mini-TT.<br/>
 /// Type inference rule. More inferences are added here (maybe it's useful?).
 pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) -> TCM<Value> {
-    use crate::syntax::Expression::*;
+    use crate::ast::Expression::*;
     match expression {
         Unit => Ok(Value::One),
         Type | Void | One => Ok(Value::Type),
@@ -67,7 +67,7 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
 /// `checkT` in Mini-TT.<br/>
 /// Check if an expression is a well-typed type expression.
 pub fn check_type(index: u32, tcs: TCS, expression: Expression) -> TCM<TCS> {
-    use crate::syntax::Expression::*;
+    use crate::ast::Expression::*;
     match expression {
         Sum(constructors) => check_sum_type(index, tcs, constructors),
         Pi((pattern, first), second) | Sigma((pattern, first), second) => {
@@ -81,8 +81,8 @@ pub fn check_type(index: u32, tcs: TCS, expression: Expression) -> TCM<TCS> {
 /// `check` in Mini-TT.<br/>
 /// However, telescope and gamma are preserved for REPL use.
 pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: Value) -> TCM<TCS> {
-    use crate::syntax::Expression as E;
-    use crate::syntax::Value as V;
+    use crate::ast::Expression as E;
+    use crate::ast::Value as V;
     match (expression, value) {
         (E::Unit, V::One) | (E::Type, V::Type) | (E::One, V::Type) => Ok((gamma, context)),
         // There's nothing left to check.

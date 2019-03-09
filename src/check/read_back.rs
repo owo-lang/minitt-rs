@@ -1,11 +1,11 @@
+use crate::ast::*;
 use crate::check::normal::*;
-use crate::syntax::*;
 use std::fmt::Display;
 use std::rc::Rc;
 
 /// `genV` in Mini-TT.
 pub fn generate_value(id: u32) -> Value {
-    use crate::syntax::GenericNeutral as Neutral;
+    use crate::ast::GenericNeutral as Neutral;
     Value::Neutral(Neutral::Generated(id))
 }
 
@@ -101,7 +101,7 @@ impl ReadBack for &TelescopeRaw {
     //noinspection RsBorrowChecker
     /// `rbRho` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm {
-        use crate::syntax::GenericTelescope::*;
+        use crate::ast::GenericTelescope::*;
         match self {
             Nil => Rc::new(Nil),
             UpDec(context, declaration) => {
@@ -121,7 +121,7 @@ impl ReadBack for Neutral {
 
     /// `rbN` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm {
-        use crate::syntax::GenericNeutral::*;
+        use crate::ast::GenericNeutral::*;
         match self {
             Generated(index) => Generated(index),
             Application(function, argument) => Application(

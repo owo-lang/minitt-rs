@@ -1,4 +1,4 @@
-use crate::syntax::*;
+use crate::ast::*;
 
 impl Pattern {
     /// `inPat` in Mini-TT.
@@ -40,8 +40,8 @@ impl Pattern {
 impl TelescopeRaw {
     /// `getRho` in Mini-TT.
     pub fn resolve(&self, name: &str) -> Result<Value, String> {
-        use crate::syntax::DeclarationType::*;
-        use crate::syntax::GenericTelescope::*;
+        use crate::ast::DeclarationType::*;
+        use crate::ast::GenericTelescope::*;
         match self {
             Nil => Err(format!("Unresolved reference: `{}`", name)),
             UpDec(context, declaration) => {
@@ -92,7 +92,7 @@ impl Value {
     /// `vfst` in Mini-TT.<br/>
     /// Run `.1` on a Pair.
     pub fn first(self) -> Value {
-        use crate::syntax::GenericNeutral as Neutral;
+        use crate::ast::GenericNeutral as Neutral;
         match self {
             Value::Pair(first, _) => *first,
             Value::Neutral(neutral) => Value::Neutral(Neutral::First(Box::new(neutral))),
@@ -103,7 +103,7 @@ impl Value {
     /// `vsnd` in Mini-TT.<br/>
     /// Run `.2` on a Pair.
     pub fn second(self) -> Value {
-        use crate::syntax::GenericNeutral as Neutral;
+        use crate::ast::GenericNeutral as Neutral;
         match self {
             Value::Pair(_, second) => *second,
             Value::Neutral(neutral) => Value::Neutral(Neutral::Second(Box::new(neutral))),
@@ -114,7 +114,7 @@ impl Value {
     /// Combination of `vsnd` and `vfst` in Mini-TT.<br/>
     /// Run `.2` on a Pair.
     pub fn destruct(self) -> (Value, Value) {
-        use crate::syntax::GenericNeutral as Neutral;
+        use crate::ast::GenericNeutral as Neutral;
         match self {
             Value::Pair(first, second) => (*first, *second),
             Value::Neutral(neutral) => (
@@ -127,7 +127,7 @@ impl Value {
 
     /// `app` in Mini-TT.
     pub fn apply(self, argument: Value) -> Value {
-        use crate::syntax::GenericNeutral as Neutral;
+        use crate::ast::GenericNeutral as Neutral;
         match self {
             Value::Lambda(closure) => closure.instantiate(argument),
             Value::Split((case_tree, context)) => match argument {
@@ -155,8 +155,8 @@ impl Expression {
     /// Evaluate an [`Expression`] to a [`Value`] under a [`Telescope`],
     /// panic if not well-typed.
     pub fn eval(self, context: Telescope) -> Value {
-        use crate::syntax::Expression as E;
-        use crate::syntax::Value as V;
+        use crate::ast::Expression as E;
+        use crate::ast::Value as V;
         match self {
             E::Unit => V::Unit,
             E::One => V::One,

@@ -16,7 +16,7 @@ pub fn main() {
     let checked = args
         .file
         .clone()
-        .and_then(|s| util::ast(s.as_str()))
+        .and_then(|s| util::parse_file(s.as_str()))
         .map(|ast| {
             if !args.quiet {
                 println!("Parse successful.");

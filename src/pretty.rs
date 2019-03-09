@@ -1,5 +1,5 @@
+use crate::ast::*;
 use crate::check::normal::*;
-use crate::syntax::*;
 use core::fmt::Write;
 use std::fmt::{Display, Error as FmtError, Formatter};
 
@@ -397,9 +397,9 @@ impl<Value: Clone + Display> Display for GenericTelescope<Value> {
 
 #[cfg(test)]
 mod tests {
-    use crate::syntax::Declaration;
-    use crate::syntax::Expression;
-    use crate::syntax::Pattern;
+    use crate::ast::Declaration;
+    use crate::ast::Expression;
+    use crate::ast::Pattern;
 
     #[test]
     fn simple_expr() {

@@ -1,9 +1,9 @@
+use crate::ast::{
+    up_dec_rc, up_var_rc, AnonymousValue, Declaration, Expression, Pattern, Telescope, Typed,
+};
 use crate::check::expr::{check, check_type};
 use crate::check::read_back::generate_value;
 use crate::check::tcm::{update_gamma, Gamma, TCE, TCM, TCS};
-use crate::syntax::{
-    up_dec_rc, up_var_rc, AnonymousValue, Declaration, Expression, Pattern, Telescope, Typed,
-};
 use std::borrow::Cow;
 
 macro_rules! try_locate {
@@ -121,7 +121,7 @@ pub fn check_declaration(
     (gamma, context): TCS,
     declaration: Declaration,
 ) -> TCM<(Gamma, Option<Telescope>)> {
-    use crate::syntax::DeclarationType::*;
+    use crate::ast::DeclarationType::*;
     let tcs = (Cow::Borrowed(&*gamma), context.clone());
     if declaration.prefix_parameters.is_empty() {
         let tcs = (gamma, context);

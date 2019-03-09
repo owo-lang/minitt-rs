@@ -3,6 +3,8 @@
 # 0.2.1
 
 + Make bunch of function public so people can see them in docs.rs
++ Move everything from `type_check.rs` to a `check` module
++ Rename `syntax.rs` to `ast.rs`, `reduce.rs` to `eval.rs`
 
 # 0.2.0
 

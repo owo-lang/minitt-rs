@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use crate::syntax::*;
+use crate::ast::*;
 
 /// `NRho` in Mini-TT, normal form telescopes (contexts).
 pub type NormalTelescope = Rc<GenericTelescope<NormalExpression>>;

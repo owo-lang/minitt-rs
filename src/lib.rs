@@ -3,6 +3,12 @@ Reading the [README](https://github.com/owo-lang/minitt-rs/blob/master/README.md
 before reading the documentation.
 */
 
+/// Syntax: term, expression, context.
+///
+/// Methods are defined in `reduce`/`read_back` modules but their documents are here.
+///
+/// No dependency.
+pub mod ast;
 /// Reduction: eval and eval's friends.
 ///
 /// Functions in this module are put into `impl` blocks, their docs can be found in:
@@ -14,13 +20,7 @@ before reading the documentation.
 /// + [Methods of `Expression`](../syntax/enum.Expression.html#methods)
 ///
 /// Depends on module `syntax`.
-pub mod reduce;
-/// Syntax: term, expression, context.
-///
-/// Methods are defined in `reduce`/`read_back` modules but their documents are here.
-///
-/// No dependency.
-pub mod syntax;
+pub mod eval;
 
 /// Type checking: everything related to type-checking, including:<br/>
 /// + Normal form and read-back functions

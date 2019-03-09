@@ -1,4 +1,4 @@
-use crate::syntax::*;
+use crate::ast::*;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;

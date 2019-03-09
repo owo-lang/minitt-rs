@@ -1,9 +1,9 @@
-use crate::cli::util::ast;
+use crate::cli::util::parse_file;
+use minitt::ast::{Expression, GenericTelescope, Telescope, Value};
 use minitt::check::read_back::ReadBack;
 use minitt::check::tcm::{default_state, TCE, TCS};
 use minitt::check::{check_contextual, check_infer_contextual};
 use minitt::parser::parse_str_err_printed;
-use minitt::syntax::{Expression, GenericTelescope, Telescope, Value};
 use rustyline::completion::{Completer, FilenameCompleter, Pair};
 use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
@@ -101,7 +101,7 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>
         Some(tcs)
     } else if line.starts_with(LOAD_PFX) {
         let file = line.trim_start_matches(LOAD_CMD).trim_start();
-        Some(match ast(file) {
+        Some(match parse_file(file) {
             Some(ast) => update_tcs(tcs, ast),
             None => tcs,
         })

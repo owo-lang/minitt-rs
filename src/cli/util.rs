@@ -1,5 +1,5 @@
+use minitt::ast::Expression;
 use minitt::parser::parse_str_err_printed;
-use minitt::syntax::Expression;
 use std::io::Read;
 use std::{fs, io, str};
 
@@ -11,7 +11,7 @@ fn read_file(file_arg: &str) -> io::Result<Vec<u8>> {
     Ok(file_content)
 }
 
-pub fn ast(file_arg: &str) -> Option<Expression> {
+pub fn parse_file(file_arg: &str) -> Option<Expression> {
     // If cannot read input, return.
     let file_content = match read_file(file_arg) {
         Ok(c) => c,
