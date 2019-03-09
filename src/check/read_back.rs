@@ -1,4 +1,4 @@
-use crate::normal::*;
+use crate::check::normal::*;
 use crate::syntax::*;
 use std::fmt::Display;
 use std::rc::Rc;

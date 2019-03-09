@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use crate::read_back::*;
+use crate::check::read_back::*;
 use crate::syntax::*;
 use std::borrow::Cow;
 use std::fmt::{Display, Error, Formatter};

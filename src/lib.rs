@@ -22,26 +22,14 @@ pub mod reduce;
 /// No dependency.
 pub mod syntax;
 
-/// Normal form: when we read back, we get a normal form expression.
+/// Type checking: everything related to type-checking, including:<br/>
+/// + Normal form and read-back functions
+/// + The four type checking functions -- `checkI`, `checkD`, `check` and `checkT`.
+/// + (extended) (sub)typing rules
 ///
 /// Depends on module `syntax`.
-pub mod normal;
-/// Read back: read back functions.
-///
-/// Converting terms to normal forms with de-bruijn indices so
-/// we do not need to deal with alpha conversions.
-///
-/// Functions in this module are put into `impl for` blocks, their docs can be found in:
-///
-/// + [`ReadBack` of `Value`](../syntax/enum.Value.html#impl-ReadBack)
-/// + [`ReadBack` of `Telescope`](../syntax/enum.Telescope.html#impl-ReadBack)
-/// + [`ReadBack` of `Closure`](../syntax/enum.Closure.html#impl-ReadBack)
-///
-/// Depends on modules `syntax` and `normal`.
-pub mod read_back;
+pub mod check;
 
-/// Type checking: the four type checking functions -- `checkI`, `checkD`, `check` and `checkT`.
-///
 /// Depends on modules `syntax`, `normal`, `reduce` and `read_back`.
 pub mod type_check;
 
