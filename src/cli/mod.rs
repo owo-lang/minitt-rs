@@ -8,7 +8,8 @@ mod util;
 mod repl;
 
 pub fn main() {
-    use minitt::type_check::{check_main, default_state};
+    use minitt::check::check_main;
+    use minitt::check::tcm::default_state;
     let args = args::pre();
 
     // Parse

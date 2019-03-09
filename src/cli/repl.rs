@@ -1,8 +1,9 @@
 use crate::cli::util::ast;
 use minitt::check::read_back::ReadBack;
+use minitt::check::tcm::{default_state, TCE, TCS};
+use minitt::check::{check_contextual, check_infer_contextual};
 use minitt::parser::parse_str_err_printed;
 use minitt::syntax::{Expression, GenericTelescope, Telescope, Value};
-use minitt::type_check::{check_contextual, check_infer_contextual, default_state, TCE, TCS};
 use rustyline::completion::{Completer, FilenameCompleter, Pair};
 use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;

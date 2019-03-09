@@ -30,9 +30,6 @@ pub mod syntax;
 /// Depends on module `syntax`.
 pub mod check;
 
-/// Depends on modules `syntax`, `normal`, `reduce` and `read_back`.
-pub mod type_check;
-
 /// Pretty print utilities
 #[cfg(feature = "pretty")]
 pub mod pretty;

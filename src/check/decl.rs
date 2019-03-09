@@ -1,9 +1,9 @@
+use crate::check::expr::{check, check_type};
 use crate::check::read_back::generate_value;
 use crate::check::tcm::{update_gamma, Gamma, TCE, TCM, TCS};
 use crate::syntax::{
     up_dec_rc, up_var_rc, AnonymousValue, Declaration, Expression, Pattern, Telescope, Typed,
 };
-use crate::type_check::{check, check_type};
 use std::borrow::Cow;
 
 macro_rules! try_locate {

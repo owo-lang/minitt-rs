@@ -1,7 +1,7 @@
-use crate::check::decl::*;
-use crate::check::read_back::*;
-use crate::check::tcm::*;
-use crate::syntax::*;
+use crate::check::decl::check_declaration;
+use crate::check::read_back::{generate_value, ReadBack};
+use crate::check::tcm::{update_gamma, TCE, TCM, TCS};
+use crate::syntax::{up_dec_rc, up_var_rc, Branch, Closure, Expression, Pattern, Value};
 use std::borrow::Cow;
 
 /// `checkI` in Mini-TT.<br/>
@@ -183,26 +183,6 @@ pub fn check_sum_type(index: u32, (gamma, context): TCS, constructors: Branch) -
     Ok((gamma, context))
 }
 
-/// `checkMain` in Mini-TT.
-pub fn check_main<'a>(expression: Expression) -> TCM<TCS<'a>> {
-    check_contextual(default_state(), expression)
-}
-
-/// For REPL: check an expression under an existing context
-pub fn check_contextual(tcs: TCS, expression: Expression) -> TCM<TCS> {
-    check(0, tcs, expression, Value::One)
-}
-
-/// For REPL: infer the type of an expression under an existing context
-pub fn check_infer_contextual(tcs: TCS, expression: Expression) -> TCM<Value> {
-    check_infer(0, tcs, expression)
-}
-
-/// Similar to `checkMain` in Mini-TT, but for a declaration.
-pub fn check_declaration_main<'a>(declaration: Declaration) -> TCM<(Gamma<'a>, Option<Telescope>)> {
-    check_declaration(0, default_state(), declaration)
-}
-
 /// To reuse code that checks if a sigma or a pi type is well-typed between `check_type` and `check`
 pub fn check_telescoped(
     index: u32,
@@ -228,49 +208,4 @@ pub fn check_telescoped(
         (gamma, up_var_rc(context, pattern, generated)),
         second,
     )
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::syntax::Declaration;
-    use crate::syntax::Expression;
-    use crate::syntax::Pattern;
-    use crate::type_check::check_declaration_main;
-    use crate::type_check::check_main;
-
-    #[test]
-    fn simple_check() {
-        check_declaration_main(Declaration::simple(
-            Pattern::Unit,
-            vec![],
-            Expression::Type,
-            Expression::One,
-        ))
-        .unwrap();
-        let error_message = check_declaration_main(Declaration::simple(
-            Pattern::Unit,
-            vec![],
-            Expression::Type,
-            Expression::Unit,
-        ))
-        .unwrap_err();
-        println!("{}", error_message);
-    }
-
-    #[test]
-    fn check_pair() {
-        let expr = Expression::Declaration(
-            Box::new(Declaration::simple(
-                Pattern::Unit,
-                vec![],
-                Expression::One,
-                Expression::Second(Box::new(Expression::Pair(
-                    Box::new(Expression::Unit),
-                    Box::new(Expression::Unit),
-                ))),
-            )),
-            Box::new(Expression::Void),
-        );
-        check_main(expr).unwrap();
-    }
 }
