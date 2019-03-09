@@ -140,33 +140,13 @@ impl Display for Expression {
             }
             Expression::Split(branches) => {
                 f.write_str("split {")?;
-                let mut started = false;
-                for (name, clause) in branches.iter() {
-                    if started {
-                        f.write_str(" | ")?;
-                    } else {
-                        started = true;
-                    }
-                    name.fmt(f)?;
-                    f.write_char(' ')?;
-                    clause.fmt(f)?;
-                }
+                fmt_branch(branches, f)?;
                 f.write_char('}')
             }
             // Don't print the context
             Expression::Sum(constructors) => {
                 f.write_str("sum {")?;
-                let mut started = false;
-                for (name, constructor) in constructors.iter() {
-                    if started {
-                        f.write_str(" | ")?;
-                    } else {
-                        started = true;
-                    }
-                    name.fmt(f)?;
-                    f.write_char(' ')?;
-                    constructor.fmt(f)?;
-                }
+                fmt_branch(constructors, f)?;
                 f.write_char('}')
             }
             Expression::Declaration(declaration, rest) => {
@@ -177,6 +157,21 @@ impl Display for Expression {
             Expression::Void => Ok(()),
         }
     }
+}
+
+fn fmt_branch(branch: &Branch, f: &mut Formatter) -> Result<(), FmtError> {
+    let mut started = false;
+    for (name, clause) in branch.iter() {
+        if started {
+            f.write_str(" | ")?;
+        } else {
+            started = true;
+        }
+        name.fmt(f)?;
+        f.write_char(' ')?;
+        clause.fmt(f)?;
+    }
+    Ok(())
 }
 
 impl Display for Pattern {

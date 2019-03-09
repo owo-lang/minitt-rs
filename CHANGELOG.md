@@ -3,6 +3,7 @@
 # 0.1.10
 
 + REPL support `:eval`, `:infer` and `:normalize`
++ Bunch of improvements on the pretty printer
 
 # 0.1.9
 

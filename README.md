@@ -21,7 +21,7 @@
  [rustyline]: https://docs.rs/rustyline/
 
 Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
-This implementation includes a type-checker (extended the original one), a AST
+This implementation includes a type-checker (extended the origin), an AST
 pretty-printer and a command line tool which can be used as a file checker and
 an interactive REPL with completion and type inference.
 Built with latest (when developing this) stable Rust, 2018 edition.
@@ -87,11 +87,15 @@ statically-typed. Very flexible.
     + Get the script: `minittc completion zsh/bash/powershell/fish/elvish`
   + REPL (using [rustyline][rustyline])
     + [X] Load file
-    + [X] Infer type
+    + [X] Infer (and normalize) type
+    + [X] Eval (and normalize) expressions (may panic if ill-typed)
     + [X] Add single declaration
     + [X] Show context/gamma
     + [X] Help
-    + [X] Completion (for commands and files)
+    + [X] Completion
+      + [X] Commands
+      + [X] Files
+      + [ ] In-scope variables
   + [ ] Language server (?)
   + Publish?
     + By `cargo install --path . --bin minittc --all-features`
