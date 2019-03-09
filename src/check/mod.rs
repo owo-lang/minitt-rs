@@ -16,3 +16,8 @@ pub mod normal;
 ///
 /// Depends on modules `syntax` and `normal`.
 pub mod read_back;
+
+/// Type-Checking Monad: context, state and error.
+///
+/// Typing context (`Gamma`) and its updater, the type-checking error and its pretty-printer
+pub mod tcm;
