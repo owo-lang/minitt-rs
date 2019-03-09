@@ -174,10 +174,7 @@ fn check_lift_parameters<'a>(
     let type_val = expression.clone().eval(context.clone());
     let gamma = update_gamma(gamma, &pattern, type_val.clone(), generated.clone())?;
 
-    let tcs = (
-        gamma,
-        up_var_rc(context.clone(), pattern.clone(), generated),
-    );
+    let tcs = (gamma, up_var_rc(context, pattern.clone(), generated));
     let (signature, body, (gamma, context)) =
         check_lift_parameters(index + 1, tcs, parameters, check_body)?;
 
@@ -263,7 +260,7 @@ pub fn check_declaration(
     index: u32,
     (gamma, context): TCS,
     declaration: Declaration,
-) -> TCM<Gamma> {
+) -> TCM<(Gamma, Option<Telescope>)> {
     use crate::syntax::DeclarationType::*;
     let tcs = (Cow::Borrowed(&*gamma), context.clone());
     if declaration.prefix_parameters.is_empty() {
@@ -277,7 +274,8 @@ pub fn check_declaration(
                 declaration.body,
             ),
             Recursive => check_recursive_declaration(index, tcs, declaration),
-        };
+        }
+        .map(|gamma| (gamma, None));
     }
     let (pattern, signature, body) = match declaration {
         Declaration {
@@ -332,12 +330,14 @@ pub fn check_declaration(
         }
     };
 
+    let body = body.eval(context.clone());
     update_gamma(
         gamma,
         &pattern,
         signature.eval(context.clone()),
-        body.eval(context.clone()),
+        body.clone(),
     )
+    .map(|gamma| (gamma, Some(up_var_rc(context, pattern.clone(), body))))
     .map_err(|err| try_locate!(err, pattern))
 }
 
@@ -401,13 +401,10 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
             check_telescoped(index, (gamma, context), pattern, *first, *second)
         }
         (E::Declaration(declaration, rest), rest_type) => {
-            let gamma = check_declaration(index, (gamma, context.clone()), *declaration.clone())?;
-            check(
-                index,
-                (gamma, up_dec_rc(context, *declaration)),
-                *rest,
-                rest_type,
-            )
+            let (gamma, optional_context) =
+                check_declaration(index, (gamma, context.clone()), *declaration.clone())?;
+            let real_context = optional_context.unwrap_or_else(|| up_dec_rc(context, *declaration));
+            check(index, (gamma, real_context), *rest, rest_type)
         }
         // I really wish to have box pattern here :(
         (E::Split(mut branches), V::Pi(sum, closure)) => match *sum {
@@ -479,7 +476,7 @@ pub fn check_infer_contextual(tcs: TCS, expression: Expression) -> TCM<Value> {
 }
 
 /// Similar to `checkMain` in Mini-TT, but for a declaration.
-pub fn check_declaration_main<'a>(declaration: Declaration) -> TCM<Gamma<'a>> {
+pub fn check_declaration_main<'a>(declaration: Declaration) -> TCM<(Gamma<'a>, Option<Telescope>)> {
     check_declaration(0, default_state(), declaration)
 }
 

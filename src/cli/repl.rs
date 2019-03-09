@@ -8,6 +8,7 @@ use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
 use rustyline::hint::Hinter;
 use rustyline::{CompletionType, Config, Editor, Helper};
+use std::borrow::Cow;
 use std::fmt::Display;
 use std::io::{stdin, stdout, Write};
 
@@ -97,11 +98,18 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>
             None => tcs,
         })
     } else if line.starts_with(TYPE_PFX) {
-        infer_normalize(tcs.clone(), line.trim_start_matches(TYPE_CMD).trim_start());
-        Some(tcs)
+        let (gamma, context) = tcs;
+        let borrowed_tcs = (Cow::Borrowed(&*gamma), context.clone());
+        infer_normalize(borrowed_tcs, line.trim_start_matches(TYPE_CMD).trim_start());
+        Some((gamma, context))
     } else if line.starts_with(INFER_PFX) {
-        infer(tcs.clone(), line.trim_start_matches(INFER_CMD).trim_start());
-        Some(tcs)
+        let (gamma, context) = tcs;
+        let borrowed_tcs = (Cow::Borrowed(&*gamma), context.clone());
+        infer(
+            borrowed_tcs,
+            line.trim_start_matches(INFER_CMD).trim_start(),
+        );
+        Some((gamma, context))
     } else if line.starts_with(NORMALIZE_PFX) {
         let line = line.trim_start_matches(NORMALIZE_CMD).trim_start();
         normalize(tcs.1.clone(), line);

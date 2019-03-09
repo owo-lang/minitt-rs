@@ -8,7 +8,7 @@ impl Display for Value {
         match self {
             Value::Lambda(closure) => {
                 f.write_str("\u{03BB} ")?;
-                closure.fmt(f)
+                closure.fmt_with_type(f, None)
             }
             Value::Pair(first, second) => {
                 f.write_char('(')?;
@@ -21,16 +21,12 @@ impl Display for Value {
             Value::One => f.write_str("1"),
             Value::Pi(input, output) => {
                 f.write_str("\u{03A0} ")?;
-                input.fmt(f)?;
-                f.write_str(". ")?;
-                output.fmt(f)
+                output.fmt_with_type(f, Some(&**input))
             }
             Value::Type => f.write_str("U"),
             Value::Sigma(first, second) => {
                 f.write_str("\u{03A3} ")?;
-                first.fmt(f)?;
-                f.write_str(". ")?;
-                second.fmt(f)
+                second.fmt_with_type(f, Some(&**first))
             }
             Value::Constructor(name, arguments) => {
                 name.fmt(f)?;
@@ -70,9 +66,9 @@ impl Display for Value {
                 f.write_char('}')
             }
             Value::Neutral(neutral) => {
-                f.write_str("#(")?;
+                f.write_str("[")?;
                 neutral.fmt(f)?;
-                f.write_char(')')
+                f.write_char(']')
             }
         }
     }
@@ -225,11 +221,21 @@ impl Display for Closure {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             // Don't print the scope
-            Closure::Abstraction(pattern, parameter_type, body, _) => {
+            Closure::Abstraction(_, pt, _, _) => self.fmt_with_type(f, pt.as_ref().map(|t| &**t)),
+            e => e.fmt_with_type(f, None),
+        }
+    }
+}
+
+impl Closure {
+    /// Actual implementation of `fmt` for `Closure`
+    pub fn fmt_with_type(&self, f: &mut Formatter, t: Option<&Value>) -> Result<(), FmtError> {
+        match self {
+            Closure::Abstraction(pattern, _, body, _) => {
                 pattern.fmt(f)?;
-                if let Some(parameter_type) = parameter_type {
+                if let Some(t) = t {
                     f.write_str(": ")?;
-                    parameter_type.fmt(f)?;
+                    t.fmt(f)?;
                 }
                 f.write_str(". ")?;
                 body.fmt(f)
