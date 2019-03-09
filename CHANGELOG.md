@@ -1,9 +1,11 @@
 # Change Log
 
-# 0.1.10
+# 0.2.0
 
 + REPL support `:eval`, `:infer` and `:normalize`
 + Bunch of improvements on the pretty printer
++ Debugging features of the REPL: `:eval-debug`, `:debug` and `:infer-debug`
++ Make the feature introduced in 0.1.9 correct
 
 # 0.1.9
 
