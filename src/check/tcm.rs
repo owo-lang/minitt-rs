@@ -56,6 +56,26 @@ impl Display for TCE {
     }
 }
 
+macro_rules! update_gamma {
+    ($gamma:expr, $pattern:expr, $type_val:expr, $clone:expr) => {
+        match $pattern {
+            Pattern::Pair(pattern_first, pattern_second) => match $type_val {
+                Value::Sigma(first, second) => update_gamma_by_pair(
+                    $gamma,
+                    pattern_first,
+                    pattern_second,
+                    *first,
+                    second,
+                    $clone,
+                ),
+                _ => TCE::default_error(format!("Cannot update Gamma by: `{}`.", $pattern)),
+            },
+            Pattern::Var(name) => update_gamma_by_var($gamma, $type_val, name),
+            Pattern::Unit => Ok($gamma),
+        }
+    };
+}
+
 /// Move version of `upG` in Mini-TT.<br/>
 /// `Gamma |- p : t = u => Gamma’`<br/><br/>
 /// `Cow` is used to simulate immutability.
@@ -63,23 +83,29 @@ pub fn update_gamma<'a>(
     gamma: Gamma<'a>,
     pattern: &Pattern,
     type_val: Value,
-    generated_val: Value,
+    body: Value,
 ) -> TCM<Gamma<'a>> {
-    match pattern {
-        Pattern::Pair(pattern_first, pattern_second) => match type_val {
-            Value::Sigma(first, second) => update_gamma_by_pair(
-                gamma,
-                pattern_first,
-                pattern_second,
-                *first,
-                second,
-                generated_val,
-            ),
-            _ => TCE::default_error(format!("Cannot update Gamma by: `{}`.", pattern)),
-        },
-        Pattern::Var(name) => update_gamma_by_var(gamma, type_val, name),
-        Pattern::Unit => Ok(gamma),
-    }
+    update_gamma!(gamma, pattern, type_val, body)
+}
+
+/// Borrow version of `upG` in Mini-TT.
+pub fn update_gamma_borrow<'a>(
+    gamma: Gamma<'a>,
+    pattern: &Pattern,
+    type_val: Value,
+    body: &Value,
+) -> TCM<Gamma<'a>> {
+    update_gamma!(gamma, pattern, type_val, body.clone())
+}
+
+/// Lazy version of `upG` in Mini-TT.
+pub fn update_gamma_lazy<'a>(
+    gamma: Gamma<'a>,
+    pattern: &Pattern,
+    type_val: Value,
+    body: impl FnOnce() -> Value,
+) -> TCM<Gamma<'a>> {
+    update_gamma!(gamma, pattern, type_val, body())
 }
 
 fn update_gamma_by_pair<'a>(
@@ -96,38 +122,8 @@ fn update_gamma_by_pair<'a>(
     update_gamma(gamma, pattern_second, second, val_second)
 }
 
-fn update_gamma_by_var<'a>(
-    gamma: Gamma<'a>,
-    type_val: Value,
-    name: &String,
-) -> TCM<Gamma<'a>> {
+fn update_gamma_by_var<'a>(gamma: Gamma<'a>, type_val: Value, name: &String) -> TCM<Gamma<'a>> {
     let mut gamma = gamma.into_owned();
     gamma.insert(name.clone(), type_val);
     Ok(Cow::Owned(gamma))
-}
-
-/// Borrow version of `upG` in Mini-TT.<br/>
-/// `Gamma |- p : t = u => Gamma’`<br/><br/>
-/// `Cow` is used to simulate immutability.
-pub fn update_gamma_borrow<'a>(
-    gamma: Gamma<'a>,
-    pattern: &Pattern,
-    type_val: Value,
-    generated_val: &Value,
-) -> TCM<Gamma<'a>> {
-    match pattern {
-        Pattern::Pair(pattern_first, pattern_second) => match type_val {
-            Value::Sigma(first, second) => update_gamma_by_pair(
-                gamma,
-                pattern_first,
-                pattern_second,
-                *first,
-                second,
-                generated_val.clone(),
-            ),
-            _ => TCE::default_error(format!("Cannot update Gamma by: `{}`.", pattern)),
-        },
-        Pattern::Var(name) => update_gamma_by_var(gamma, type_val, name),
-        Pattern::Unit => Ok(gamma),
-    }
 }

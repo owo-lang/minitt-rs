@@ -3,7 +3,7 @@ use crate::ast::{
 };
 use crate::check::expr::{check, check_type};
 use crate::check::read_back::generate_value;
-use crate::check::tcm::{update_gamma, update_gamma_borrow, Gamma, TCE, TCM, TCS};
+use crate::check::tcm::{update_gamma_borrow, update_gamma_lazy, Gamma, TCE, TCM, TCS};
 use std::borrow::Cow;
 
 macro_rules! try_locate {
@@ -64,11 +64,11 @@ pub fn check_recursive_declaration(
     .map_err(|err| try_locate!(err, pattern))?;
     let signature = declaration.signature.clone().eval(context.clone());
     let generated = generate_value(index);
-    let fake_gamma = update_gamma(
+    let fake_gamma = update_gamma_borrow(
         Cow::Borrowed(&gamma),
         &pattern,
         signature.clone(),
-        generated.clone(),
+        &generated,
     )
     .map_err(|err| try_locate!(err, pattern))?;
     let fake_context = up_var_rc(context.clone(), pattern.clone(), generated);
@@ -79,11 +79,13 @@ pub fn check_recursive_declaration(
         signature.clone(),
     )
     .map_err(|err| try_locate!(err, pattern))?;
-    let body = declaration
-        .body
-        .clone()
-        .eval(up_dec_rc(context, declaration));
-    update_gamma(gamma, &pattern, signature, body).map_err(|err| try_locate!(err, pattern))
+    update_gamma_lazy(gamma, &pattern, signature, || {
+        declaration
+            .body
+            .clone()
+            .eval(up_dec_rc(context, declaration))
+    })
+    .map_err(|err| try_locate!(err, pattern))
 }
 
 /// Extracted from `checkD` in Mini-TT.<br/>
@@ -109,7 +111,7 @@ pub fn check_simple_declaration(
         signature.clone(),
     )
     .map_err(|err| try_locate!(err, pattern))?;
-    update_gamma(gamma, &pattern, signature, body.eval(context))
+    update_gamma_lazy(gamma, &pattern, signature, || body.eval(context))
         .map_err(|err| try_locate!(err, pattern))
 }
 
@@ -165,11 +167,11 @@ pub fn check_declaration(
                 let pattern = pattern.clone();
                 let generated = generate_value(index);
                 let signature = declaration.signature.clone().eval(context.clone());
-                let fake_gamma = update_gamma(
+                let fake_gamma = update_gamma_borrow(
                     Cow::Borrowed(&gamma),
                     &pattern,
                     signature.clone(),
-                    generated.clone(),
+                    &generated,
                 )
                 .map_err(|err| try_locate!(err, pattern))?;
                 let fake_context = up_var_rc(context.clone(), pattern.clone(), generated);
@@ -191,12 +193,7 @@ pub fn check_declaration(
     };
 
     let body = body.eval(context.clone());
-    update_gamma(
-        gamma,
-        &pattern,
-        signature.eval(context.clone()),
-        body.clone(),
-    )
-    .map(|gamma| (gamma, Some(up_var_rc(context, pattern.clone(), body))))
-    .map_err(|err| try_locate!(err, pattern))
+    update_gamma_borrow(gamma, &pattern, signature.eval(context.clone()), &body)
+        .map(|gamma| (gamma, Some(up_var_rc(context, pattern.clone(), body))))
+        .map_err(|err| try_locate!(err, pattern))
 }
