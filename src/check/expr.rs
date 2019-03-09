@@ -1,7 +1,7 @@
 use crate::ast::{up_dec_rc, up_var_rc, Branch, Closure, Expression, Pattern, Value};
 use crate::check::decl::check_declaration;
 use crate::check::read_back::{generate_value, ReadBack};
-use crate::check::tcm::{update_gamma, TCE, TCM, TCS};
+use crate::check::tcm::{update_gamma, update_gamma_borrow, TCE, TCM, TCS};
 use std::borrow::Cow;
 
 /// `checkI` in Mini-TT.<br/>
@@ -45,7 +45,7 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
                 let tcs = (Cow::Borrowed(&*gamma), context.clone());
                 check(index, tcs, *argument, parameter_type.clone())?;
                 let generated = generate_value(index + 1);
-                let gamma = update_gamma(gamma, &pattern, parameter_type, generated.clone())?;
+                let gamma = update_gamma_borrow(gamma, &pattern, parameter_type, &generated)?;
                 let context = up_var_rc(context, pattern, generated);
                 check_infer(index + 1, (gamma, context), *return_value)
             }
@@ -89,7 +89,7 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
         (E::Void, _) => Ok((gamma, context)),
         (E::Lambda(pattern, _, body), V::Pi(signature, closure)) => {
             let generated = generate_value(index);
-            let gamma = update_gamma(gamma, &pattern, *signature, generated.clone())?;
+            let gamma = update_gamma_borrow(gamma, &pattern, *signature, &generated)?;
             check(
                 index + 1,
                 (gamma, up_var_rc(context, pattern, generated.clone())),
@@ -128,6 +128,17 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
                 check_declaration(index, (gamma, context.clone()), *declaration.clone())?;
             let real_context = optional_context.unwrap_or_else(|| up_dec_rc(context, *declaration));
             check(index, (gamma, real_context), *rest, rest_type)
+        }
+        (E::Constant(pattern, body, rest), rest_type) => {
+            let signature = check_infer(
+                index,
+                (Cow::Borrowed(&gamma), context.clone()),
+                *body.clone(),
+            )?;
+            let body_val = body.eval(context.clone());
+            let gamma = update_gamma_borrow(gamma, &pattern, signature, &body_val)?;
+            let context = up_var_rc(context, pattern, body_val);
+            check(index, (gamma, context), *rest, rest_type)
         }
         // I really wish to have box pattern here :(
         (E::Split(mut branches), V::Pi(sum, closure)) => match *sum {

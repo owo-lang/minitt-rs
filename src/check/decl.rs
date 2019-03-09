@@ -3,7 +3,7 @@ use crate::ast::{
 };
 use crate::check::expr::{check, check_type};
 use crate::check::read_back::generate_value;
-use crate::check::tcm::{update_gamma, Gamma, TCE, TCM, TCS};
+use crate::check::tcm::{update_gamma, update_gamma_borrow, Gamma, TCE, TCM, TCS};
 use std::borrow::Cow;
 
 macro_rules! try_locate {
@@ -32,7 +32,7 @@ fn check_lift_parameters<'a>(
     let (gamma, context) = check_type(index, tcs, *expression.clone())?;
     let generated = generate_value(index);
     let type_val = expression.clone().eval(context.clone());
-    let gamma = update_gamma(gamma, &pattern, type_val.clone(), generated.clone())?;
+    let gamma = update_gamma_borrow(gamma, &pattern, type_val.clone(), &generated)?;
 
     let tcs = (gamma, up_var_rc(context, pattern.clone(), generated));
     let (signature, body, (gamma, context)) =

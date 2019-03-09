@@ -154,6 +154,14 @@ impl Display for Expression {
                 f.write_str(";\n")?;
                 rest.fmt(f)
             }
+            Expression::Constant(pattern, body, rest) => {
+                f.write_str("const ")?;
+                pattern.fmt(f)?;
+                f.write_str(" = ")?;
+                body.fmt(f)?;
+                f.write_str(";\n")?;
+                rest.fmt(f)
+            }
             Expression::Void => Ok(()),
         }
     }

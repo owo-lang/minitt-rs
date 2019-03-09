@@ -196,6 +196,11 @@ impl Expression {
             ),
             E::Constructor(name, body) => V::Constructor(name, Box::new(body.eval(context))),
             E::Declaration(declaration, rest) => rest.eval(up_dec_rc(context, *declaration)),
+            E::Constant(pattern, expression, rest) => rest.eval(up_var_rc(
+                context.clone(),
+                pattern,
+                expression.eval(context),
+            )),
             e => panic!("Cannot eval: {}", e),
         }
     }

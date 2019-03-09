@@ -37,6 +37,9 @@ pub enum Expression {
     Pair(Box<Self>, Box<Self>),
     /// `Cons a`
     Constructor(String, Box<Self>),
+    /// `const bla`, this is an extension: a declaration whose type-signature is inferred.
+    /// This is very similar to a `Declaration`.
+    Constant(Pattern, Box<Self>, Box<Self>),
     /// `let bla` or `rec bla`
     Declaration(Box<Declaration>, Box<Self>),
 }

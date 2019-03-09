@@ -1,4 +1,4 @@
-use crate::ast::{nil_rc, Pattern, Telescope, Value};
+use crate::ast::{nil_rc, Closure, Pattern, Telescope, Value};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Error, Formatter};
@@ -56,7 +56,7 @@ impl Display for TCE {
     }
 }
 
-/// `upG` in Mini-TT.<br/>
+/// Move version of `upG` in Mini-TT.<br/>
 /// `Gamma |- p : t = u => Gamma’`<br/><br/>
 /// `Cow` is used to simulate immutability.
 pub fn update_gamma<'a>(
@@ -67,19 +67,67 @@ pub fn update_gamma<'a>(
 ) -> TCM<Gamma<'a>> {
     match pattern {
         Pattern::Pair(pattern_first, pattern_second) => match type_val {
-            Value::Sigma(first, second) => {
-                let (val_first, val_second) = generated_val.destruct();
-                let gamma = update_gamma(gamma, pattern_first, *first, val_first.clone())?;
-                let second = second.instantiate(val_first);
-                update_gamma(gamma, pattern_second, second, val_second)
-            }
+            Value::Sigma(first, second) => update_gamma_by_pair(
+                gamma,
+                pattern_first,
+                pattern_second,
+                *first,
+                second,
+                generated_val,
+            ),
             _ => TCE::default_error(format!("Cannot update Gamma by: `{}`.", pattern)),
         },
-        Pattern::Var(name) => {
-            let mut gamma = gamma.into_owned();
-            gamma.insert(name.clone(), type_val);
-            Ok(Cow::Owned(gamma))
-        }
+        Pattern::Var(name) => update_gamma_by_var(gamma, type_val, name),
+        Pattern::Unit => Ok(gamma),
+    }
+}
+
+fn update_gamma_by_pair<'a>(
+    gamma: Gamma<'a>,
+    pattern_first: &Box<Pattern>,
+    pattern_second: &Box<Pattern>,
+    first: Value,
+    second: Closure,
+    generated_val: Value,
+) -> TCM<Gamma<'a>> {
+    let (val_first, val_second) = generated_val.destruct();
+    let gamma = update_gamma(gamma, pattern_first, first, val_first.clone())?;
+    let second = second.instantiate(val_first);
+    update_gamma(gamma, pattern_second, second, val_second)
+}
+
+fn update_gamma_by_var<'a>(
+    gamma: Gamma<'a>,
+    type_val: Value,
+    name: &String,
+) -> TCM<Gamma<'a>> {
+    let mut gamma = gamma.into_owned();
+    gamma.insert(name.clone(), type_val);
+    Ok(Cow::Owned(gamma))
+}
+
+/// Borrow version of `upG` in Mini-TT.<br/>
+/// `Gamma |- p : t = u => Gamma’`<br/><br/>
+/// `Cow` is used to simulate immutability.
+pub fn update_gamma_borrow<'a>(
+    gamma: Gamma<'a>,
+    pattern: &Pattern,
+    type_val: Value,
+    generated_val: &Value,
+) -> TCM<Gamma<'a>> {
+    match pattern {
+        Pattern::Pair(pattern_first, pattern_second) => match type_val {
+            Value::Sigma(first, second) => update_gamma_by_pair(
+                gamma,
+                pattern_first,
+                pattern_second,
+                *first,
+                second,
+                generated_val.clone(),
+            ),
+            _ => TCE::default_error(format!("Cannot update Gamma by: `{}`.", pattern)),
+        },
+        Pattern::Var(name) => update_gamma_by_var(gamma, type_val, name),
         Pattern::Unit => Ok(gamma),
     }
 }
