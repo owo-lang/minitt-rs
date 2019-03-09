@@ -55,7 +55,7 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
                     check(index, (gamma, context.clone()), *argument.clone(), *input)?;
                     Ok(output.instantiate(argument.eval(context)))
                 }
-                e => Err(TCE::WantPiBut(e, argument)),
+                e => Err(TCE::WantPiBut(e, *argument)),
             },
         },
         e => Err(TCE::CannotInfer(e)),

@@ -3,6 +3,7 @@
 # 0.2.2
 
 + Use statically-typed errors instead of strings
++ Add `const` syntactic sugar (#4)
 
 # 0.2.1
 
@@ -16,12 +17,12 @@
 + REPL support `:eval`, `:infer` and `:normalize`
 + Bunch of improvements on the pretty printer
 + Debugging features of the REPL: `:eval-debug`, `:debug` and `:infer-debug`
-+ Make the feature introduced in 0.1.9 correct
++ Make the feature introduced in 0.1.9 correct (#1)
 
 # 0.1.9
 
 + REPL file completion
-+ Support syntax like `let a (b : U): c = bla b;`
++ Support syntax like `let a (b : U): c = bla b;` (#1)
   + Notice: this breaks mutual recursion for some sense
 + Support plain REPL
 
