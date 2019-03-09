@@ -1,5 +1,7 @@
 # Change Log
 
+# 0.2.1
+
 # 0.2.0
 
 + REPL support `:eval`, `:infer` and `:normalize`
