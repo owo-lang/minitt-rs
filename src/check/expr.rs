@@ -1,8 +1,9 @@
-use crate::ast::{up_dec_rc, up_var_rc, Branch, Closure, Expression, Pattern, Value};
+use std::borrow::Cow;
+
+use crate::ast::{up_var_rc, Branch, Closure, Expression, Pattern, Value};
 use crate::check::decl::check_declaration;
 use crate::check::read_back::{generate_value, ReadBack};
 use crate::check::tcm::{update_gamma, update_gamma_borrow, TCE, TCM, TCS};
-use std::borrow::Cow;
 
 /// `checkI` in Mini-TT.<br/>
 /// Type inference rule. More inferences are added here (maybe it's useful?).
@@ -124,10 +125,9 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
             check_telescoped(index, (gamma, context), pattern, *first, *second)
         }
         (E::Declaration(declaration, rest), rest_type) => {
-            let (gamma, optional_context) =
-                check_declaration(index, (gamma, context.clone()), *declaration.clone())?;
-            let real_context = optional_context.unwrap_or_else(|| up_dec_rc(context, *declaration));
-            check(index, (gamma, real_context), *rest, rest_type)
+            let (gamma, context) =
+                check_declaration(index, (gamma, context.clone()), *declaration)?;
+            check(index, (gamma, context), *rest, rest_type)
         }
         (E::Constant(pattern, body, rest), rest_type) => {
             let signature = check_infer(

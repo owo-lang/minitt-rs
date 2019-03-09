@@ -34,10 +34,10 @@ pub mod expr;
 /// Depends on modules `syntax`, `expr` and `tcm`.
 pub mod decl;
 
-use crate::ast::{Declaration, Expression, Telescope, Value};
+use crate::ast::{Declaration, Expression, Value};
 use crate::check::decl::check_declaration;
 use crate::check::expr::{check, check_infer};
-use crate::check::tcm::{default_state, Gamma, TCM, TCS};
+use crate::check::tcm::{default_state, TCM, TCS};
 
 /// `checkMain` in Mini-TT.
 pub fn check_main<'a>(expression: Expression) -> TCM<TCS<'a>> {
@@ -55,7 +55,7 @@ pub fn check_infer_contextual(tcs: TCS, expression: Expression) -> TCM<Value> {
 }
 
 /// Similar to `checkMain` in Mini-TT, but for a declaration.
-pub fn check_declaration_main<'a>(declaration: Declaration) -> TCM<(Gamma<'a>, Option<Telescope>)> {
+pub fn check_declaration_main<'a>(declaration: Declaration) -> TCM<TCS<'a>> {
     check_declaration(0, default_state(), declaration)
 }
 

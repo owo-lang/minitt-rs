@@ -1,10 +1,9 @@
-use crate::ast::{
-    up_dec_rc, up_var_rc, AnonymousValue, Declaration, Expression, Pattern, Telescope, Typed,
-};
+use std::borrow::Cow;
+
+use crate::ast::{up_dec_rc, up_var_rc, AnonymousValue, Declaration, Expression, Pattern, Typed};
 use crate::check::expr::{check, check_type};
 use crate::check::read_back::generate_value;
 use crate::check::tcm::{update_gamma_borrow, update_gamma_lazy, Gamma, TCE, TCM, TCS};
-use std::borrow::Cow;
 
 macro_rules! try_locate {
     ($err:expr, $pattern:expr) => {
@@ -15,16 +14,18 @@ macro_rules! try_locate {
     };
 }
 
+pub type LiftState<'a> = (Expression, Expression, TCS<'a>);
+
 /// Lift all these `parameters` into the context.<br/>
 /// Returning `TCS` to reuse the variable.
 ///
 /// `check_body` is supposed to return `signature`, `body` and `tcs`.
-fn check_lift_parameters<'a>(
+pub fn check_lift_parameters<'a>(
     index: u32,
     tcs: TCS<'a>,
     mut parameters: Vec<Typed>,
-    check_body: impl FnOnce(TCS<'a>) -> TCM<(Expression, Expression, TCS<'a>)>,
-) -> TCM<(Expression, Expression, TCS<'a>)> {
+    check_body: impl FnOnce(TCS<'a>) -> TCM<LiftState<'a>>,
+) -> TCM<LiftState<'a>> {
     if parameters.is_empty() {
         return check_body(tcs);
     }
@@ -118,26 +119,22 @@ pub fn check_simple_declaration(
 /// Originally `checkD` in Mini-TT, but now it's not because this implementation supports
 /// prefixed parameters :)<br/>
 /// Check if a declaration is well-typed and update the context.
-pub fn check_declaration(
-    index: u32,
-    (gamma, context): TCS,
-    declaration: Declaration,
-) -> TCM<(Gamma, Option<Telescope>)> {
+pub fn check_declaration(index: u32, (gamma, context): TCS, declaration: Declaration) -> TCM<TCS> {
     use crate::ast::DeclarationType::*;
     let tcs = (Cow::Borrowed(&*gamma), context.clone());
     if declaration.prefix_parameters.is_empty() {
-        let tcs = (gamma, context);
+        let tcs = (gamma, context.clone());
         return match &declaration.declaration_type {
             Simple => check_simple_declaration(
                 index,
                 tcs,
-                declaration.pattern,
-                declaration.signature,
-                declaration.body,
+                declaration.pattern.clone(),
+                declaration.signature.clone(),
+                declaration.body.clone(),
             ),
-            Recursive => check_recursive_declaration(index, tcs, declaration),
+            Recursive => check_recursive_declaration(index, tcs, declaration.clone()),
         }
-        .map(|gamma| (gamma, None));
+        .map(|gamma| (gamma, up_dec_rc(context, declaration)));
     }
     let (pattern, signature, body) = match declaration {
         Declaration {
@@ -194,6 +191,6 @@ pub fn check_declaration(
 
     let body = body.eval(context.clone());
     update_gamma_borrow(gamma, &pattern, signature.eval(context.clone()), &body)
-        .map(|gamma| (gamma, Some(up_var_rc(context, pattern.clone(), body))))
+        .map(|gamma| (gamma, up_var_rc(context, pattern.clone(), body)))
         .map_err(|err| try_locate!(err, pattern))
 }
