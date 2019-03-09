@@ -449,7 +449,7 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
 }
 
 /// To reuse code that checks if a sum type is well-typed between `check_type` and `check`
-fn check_sum_type(index: u32, (gamma, context): TCS, constructors: Branch) -> TCM<TCS> {
+pub fn check_sum_type(index: u32, (gamma, context): TCS, constructors: Branch) -> TCM<TCS> {
     for constructor in constructors.values().cloned() {
         check_type(
             index,
@@ -481,7 +481,7 @@ pub fn check_declaration_main<'a>(declaration: Declaration) -> TCM<(Gamma<'a>, O
 }
 
 /// To reuse code that checks if a sigma or a pi type is well-typed between `check_type` and `check`
-fn check_telescoped(
+pub fn check_telescoped(
     index: u32,
     (gamma, context): TCS,
     pattern: Pattern,

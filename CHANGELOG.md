@@ -2,6 +2,8 @@
 
 # 0.2.1
 
++ Make bunch of function public so people can see them in docs.rs
+
 # 0.2.0
 
 + REPL support `:eval`, `:infer` and `:normalize`
