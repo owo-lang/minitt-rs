@@ -4,6 +4,8 @@
 
 + Use statically-typed errors instead of strings
 + Add `const` syntactic sugar (#4)
++ Support optional value for sum and split
++ Infer `sum` type
 
 # 0.2.1
 

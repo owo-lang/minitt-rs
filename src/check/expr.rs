@@ -28,6 +28,12 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
             Value::Sigma(first, _) => Ok(*first),
             e => Err(TCE::WantSigmaBut(e)),
         },
+        Sum(branches) => {
+            for (_name, branch) in branches.into_iter() {
+                check_type(index, (Cow::Borrowed(&gamma), context.clone()), *branch)?;
+            }
+            Ok(Value::Type)
+        }
         Pi((pattern, input), output) | Sigma((pattern, input), output) => {
             let (gamma, context) = check_type(index, (gamma, context), *input.clone())?;
             let input_type = input.eval(context.clone());
