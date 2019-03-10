@@ -19,6 +19,7 @@
  [clap]: https://clap.rs/
  [pest]: https://pest.rs/
  [rustyline]: https://docs.rs/rustyline/
+ [icon]: https://raw.githubusercontent.com/owo-lang/intellij-minitt/master/res/META-INF/pluginIcon.svg?sanitize=true
 
 Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
 This implementation includes a type-checker (extended the origin), an AST
@@ -58,6 +59,8 @@ statically-typed. Very flexible.
 
 ## Resources
 
+![][icon]
+
 + [Mini-TT Paper](http://www.cse.chalmers.se/~bengt/papers/GKminiTT.pdf)
 + [Code Samples](./samples), tested on CI
 + [Doc.rs][doc-rs] documentation
@@ -81,11 +84,14 @@ statically-typed. Very flexible.
   + (Typed-)Holes?
     + [ ] For completion / context lookup
     + [ ] For type-directed development
+  + [X] `const` declarations, where the type is inferred
+  + [X] Prefixing declarations with parameters, like `let a (b: c): d = f b;`
 + An executable for CLI usages (`minittc`) (using [clap][clap])
   + [X] File checker
   + [X] Completion script generation
     + Get the script: `minittc completion zsh/bash/powershell/fish/elvish`
-  + REPL (using [rustyline][rustyline])
+  + REPL (a fancy one based on [rustyline][rustyline] and a plain
+    one based on stdio)
     + [X] Load file
     + [X] Infer (and normalize) type
     + [X] Eval (and normalize) expressions (may panic if ill-typed)
