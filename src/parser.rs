@@ -271,22 +271,26 @@ pub fn branches_to_tree_map(the_rule: Tok) -> Branch {
     for constructor in the_rule.into_inner() {
         let mut inner: Tik = constructor.into_inner();
         let constructor_name = next_constructor_name(&mut inner);
-        let expression = next_expression(&mut inner);
+        let expression = inner
+            .next()
+            .map(expression_to_expression)
+            .unwrap_or(Expression::One);
         map.insert(constructor_name, Box::new(expression));
+        end_of_rule(&mut inner);
     }
     map
 }
 
 /// ```ignore
 /// choices = _{ "{" ~ (pattern_match ~ ("|" ~ pattern_match)*)? ~ "}" }
-/// pattern_match = { constructor_name ~ pattern ~ "=>" ~ expression }
+/// pattern_match = { constructor_name ~ maybe_pattern ~ "=>" ~ expression }
 /// ```
 pub fn choices_to_tree_map(the_rule: Tok) -> Branch {
     let mut map: Branch = Default::default();
     for pattern_match in the_rule.into_inner() {
         let mut inner: Tik = pattern_match.into_inner();
         let constructor_name = next_constructor_name(&mut inner);
-        let pattern = next_pattern(&mut inner);
+        let pattern = next_rule!(inner, maybe_pattern, maybe_pattern_to_pattern);
         let expression = next_expression(&mut inner);
         map.insert(
             constructor_name,
@@ -384,9 +388,25 @@ pub fn constructor_to_expression(the_rule: Tok) -> Expression {
 pub fn constructor_to_tuple(the_rule: Tok) -> (String, Expression) {
     let mut inner: Tik = the_rule.into_inner();
     let constructor = next_constructor_name(&mut inner);
-    let argument = next_expression(&mut inner);
+    let argument = inner
+        .next()
+        .map(expression_to_expression)
+        .unwrap_or(Expression::Unit);
     end_of_rule(&mut inner);
     (constructor, argument)
+}
+
+/// ```ignore
+/// maybe_pattern = { pattern? }
+/// ```
+pub fn maybe_pattern_to_pattern(the_rule: Tok) -> Pattern {
+    let mut inner: Tik = the_rule.into_inner();
+    let pattern = inner
+        .next()
+        .map(pattern_to_pattern)
+        .unwrap_or(Pattern::Unit);
+    end_of_rule(&mut inner);
+    pattern
 }
 
 /// ```ignore

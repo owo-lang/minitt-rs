@@ -1,11 +1,11 @@
-let bool: U = sum { True 1 | False 1 };
+let bool: U = sum { True | False };
 -- Each constructor have only one argument
 -- Capitalized names are constructors so constructor calls are lexically
 -- recognizable
 
 let not: bool -> bool = split
- { True  n => False n
- | False n => True  n
+ { True => False
+ | False => True
  };
 -- Pattern matching
 
@@ -13,7 +13,7 @@ let boolean_id: bool -> bool = \lambda n . n;
 -- Simple functions can be defined with lambdas
 
 let and: bool -> bool -> bool = split
- { True n => boolean_id
- | False n => \lambda _. False n
+ { True => boolean_id
+ | False => \lambda _. False
  };
 -- Nested functions

@@ -57,6 +57,7 @@ prefix_parameters = { prefix_parameter* }
 atom_pattern = { identifier | meta_var | "(" ~ pattern ~ ")" }
 pair_pattern = { atom_pattern ~ "," ~ pattern }
 pattern = { pair_pattern | atom_pattern }
+maybe_pattern = { pattern? }
 
 // Extracted helpers
 typed_pattern = _{ pattern ~ ":" ~ expression }
@@ -67,8 +68,13 @@ choices = _{ "{" ~ (pattern_match ~ ("|" ~ pattern_match)*)? ~ "}" }
 // Atomic expressions
 pi_type = { pi ~ typed_abstraction }
 lambda_expression = { lambda ~ pattern ~ "." ~ expression }
-constructor = { constructor_name ~ expression }
-pattern_match = { constructor_name ~ pattern ~ double_arrow ~ expression }
+constructor = { constructor_name ~ expression? }
+pattern_match =
+ { constructor_name
+ ~ maybe_pattern
+ ~ double_arrow
+ ~ expression
+ }
 sigma_type = { sigma ~ typed_abstraction }
 split = { "split" ~ choices }
 sum = { "sum" ~ branches }
