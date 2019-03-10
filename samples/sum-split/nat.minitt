@@ -1,7 +1,7 @@
 rec nat : U = sum { Zero | Suc nat };
 -- Inductive definition of nat
 
-let one : nat = Zero 0;
+let one : nat = Zero;
 
 let two : nat = Suc one;
 

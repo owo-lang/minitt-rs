@@ -1,5 +1,7 @@
 # Change Log
 
+# 0.2.3
+
 # 0.2.2
 
 + Use statically-typed errors instead of strings
