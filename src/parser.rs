@@ -64,6 +64,7 @@ fn end_of_rule(inner: &mut Tik) {
 /// ```ignore
 /// expression =
 ///  { declaration
+///  | const_declaration
 ///  | application
 ///  | function_type
 ///  | pair_type
@@ -77,6 +78,7 @@ pub fn expression_to_expression(rules: Tok) -> Expression {
     let the_rule: Tok = rules.into_inner().next().unwrap();
     match the_rule.as_rule() {
         Rule::declaration => declaration_to_expression(the_rule),
+        Rule::const_declaration => const_declaration_to_expression(the_rule),
         Rule::application => application_to_expression(the_rule),
         Rule::function_type => function_type_to_expression(the_rule),
         Rule::pair_type => pair_type_to_expression(the_rule),
@@ -205,6 +207,26 @@ pub fn declaration_to_expression(the_rule: Tok) -> Expression {
     };
     let declaration = Declaration::new(name, prefix_parameters, signature, body, declaration_type);
     Expression::Declaration(Box::new(declaration), Box::new(rest))
+}
+
+/// ```ignore
+/// const_declaration =
+///  { "const"
+///  ~ pattern
+///  ~ "=" ~ expression
+///  ~ ";" ~ expression?
+///  }
+/// ```
+pub fn const_declaration_to_expression(the_rule: Tok) -> Expression {
+    let mut inner: Tik = the_rule.into_inner();
+    let name = next_pattern(&mut inner);
+    let body = next_expression(&mut inner);
+    let rest = inner
+        .next()
+        .map(expression_to_expression)
+        .unwrap_or(Expression::Void);
+    end_of_rule(&mut inner);
+    Expression::Constant(name, Box::new(body), Box::new(rest))
 }
 
 /// ```ignore

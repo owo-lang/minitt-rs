@@ -14,6 +14,7 @@ identifier_simple =
   ~ !"rec"
   ~ !"split"
   ~ !"sum"
+  ~ !"const"
   ~ !"\\lambda"
   ~ !"\\Sigma"
   ~ !"\\Pi"
@@ -23,10 +24,11 @@ identifier_simple =
   ~ character+
   }
 identifier_raw =
- @{ ("fun" ~ character+)
+ @{ ("sum" ~ character+)
   | ("split" ~ character+)
   | ("let" ~ character+)
   | ("rec" ~ character+)
+  | ("const" ~ character+)
   | ("0" ~ character+)
   | ("1" ~ character+)
   | ("_" ~ character+)
@@ -96,6 +98,7 @@ first = { atom ~ ".1" }
 second = { atom ~ ".2" }
 expression =
  { declaration
+ | const_declaration
  | application
  | function_type
  | pair_type
@@ -106,6 +109,12 @@ expression =
  }
 
 // Declaration
+const_declaration =
+ { "const"
+ ~ pattern
+ ~ "=" ~ expression
+ ~ ";" ~ expression?
+ }
 declaration =
  { let_or_rec
  ~ pattern

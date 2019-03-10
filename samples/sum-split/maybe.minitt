@@ -22,6 +22,8 @@ let unwrap_type (t : U): (maybe t) -> U = split
 -- Look at this cubicaltt-like replacement:
 
 let unwrap (t : U): \Pi mt: maybe t. (unwrap_type t) mt = split
+  -- I'm so sorry for the dumb parser, function application is accidentally
+  -- right-associative.
   { Just a => a
   | Nothing _ => 0
   };

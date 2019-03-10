@@ -6,3 +6,6 @@ let f : a -> b = \lambda x . x;
 
 let p : a * b = 0, 0;
 -- Arteries are equivalent to \Sigma _: a. b
+
+const infer_my_type = 1, 1;
+-- You can ask the compiler to infer the type directly

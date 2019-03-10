@@ -40,8 +40,9 @@ impl ReadBack for Value {
 
     /// `rbV` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm {
+        use crate::check::normal::NormalExpression::*;
         match self {
-            Value::Lambda(closure) => NormalExpression::Lambda(
+            Value::Lambda(closure) => Lambda(
                 index,
                 Box::new(
                     closure
@@ -49,10 +50,10 @@ impl ReadBack for Value {
                         .read_back(index + 1),
                 ),
             ),
-            Value::Unit => NormalExpression::Unit,
-            Value::One => NormalExpression::One,
-            Value::Type => NormalExpression::Type,
-            Value::Pi(input, output) => NormalExpression::Pi(
+            Value::Unit => Unit,
+            Value::One => One,
+            Value::Type => Type,
+            Value::Pi(input, output) => Pi(
                 Box::new(input.read_back(index)),
                 index,
                 Box::new(
@@ -61,7 +62,7 @@ impl ReadBack for Value {
                         .read_back(index + 1),
                 ),
             ),
-            Value::Sigma(first, second) => NormalExpression::Sigma(
+            Value::Sigma(first, second) => Sigma(
                 Box::new(first.read_back(index)),
                 index,
                 Box::new(
@@ -70,20 +71,18 @@ impl ReadBack for Value {
                         .read_back(index + 1),
                 ),
             ),
-            Value::Pair(first, second) => NormalExpression::Pair(
+            Value::Pair(first, second) => Pair(
                 Box::new(first.read_back(index)),
                 Box::new(second.read_back(index)),
             ),
-            Value::Constructor(name, body) => {
-                NormalExpression::Constructor(name, Box::new(body.read_back(index)))
-            }
+            Value::Constructor(name, body) => Constructor(name, Box::new(body.read_back(index))),
             Value::Split((case_tree, context)) => {
-                NormalExpression::Split((case_tree, Box::new(context.read_back(index))))
+                Split((case_tree, Box::new(context.read_back(index))))
             }
             Value::Sum((constructors, context)) => {
-                NormalExpression::Sum((constructors, Box::new(context.read_back(index))))
+                Sum((constructors, Box::new(context.read_back(index))))
             }
-            Value::Neutral(neutral) => NormalExpression::Neutral(neutral.read_back(index)),
+            Value::Neutral(neutral) => Neutral(neutral.read_back(index)),
         }
     }
 }
