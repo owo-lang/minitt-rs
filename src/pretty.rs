@@ -1,5 +1,5 @@
 use crate::ast::*;
-use crate::check::normal::*;
+use crate::check::read_back::*;
 use core::fmt::Write;
 use std::fmt::{Display, Error as FmtError, Formatter};
 
@@ -302,7 +302,7 @@ impl<Value: Display + Clone> Display for GenericNeutral<Value> {
 
 impl Display for NormalExpression {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        use crate::check::normal::NormalExpression as Expression;
+        use crate::check::read_back::NormalExpression as Expression;
         match self {
             Expression::Lambda(index, expression) => {
                 f.write_str("\u{03BB} <")?;

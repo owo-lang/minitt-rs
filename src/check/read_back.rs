@@ -1,7 +1,32 @@
 use crate::ast::*;
-use crate::check::normal::*;
 use std::fmt::Display;
 use std::rc::Rc;
+
+/// `NRho` in Mini-TT, normal form telescopes (contexts).
+pub type NormalTelescope = Rc<GenericTelescope<NormalExpression>>;
+
+/// `NSClos` in Mini-TT, normal form closures.
+pub type NormalDeepClosure = GenericCaseTree<NormalExpression>;
+
+/// `NNeut` in Mini-TT, normal form neutral values.
+pub type NormalNeutral = GenericNeutral<NormalExpression>;
+
+/// `NExp` in Mini-TT, normal form expressions.<br/>
+/// Deriving `Eq` so we can do comparison.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum NormalExpression {
+    Lambda(u32, Box<Self>),
+    Pair(Box<Self>, Box<Self>),
+    Unit,
+    One,
+    Type,
+    Pi(Box<Self>, u32, Box<Self>),
+    Sigma(Box<Self>, u32, Box<Self>),
+    Constructor(String, Box<Self>),
+    Split(NormalDeepClosure),
+    Sum(NormalDeepClosure),
+    Neutral(NormalNeutral),
+}
 
 /// `genV` in Mini-TT.
 pub fn generate_value(id: u32) -> Value {
@@ -40,7 +65,7 @@ impl ReadBack for Value {
 
     /// `rbV` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm {
-        use crate::check::normal::NormalExpression::*;
+        use crate::check::read_back::NormalExpression::*;
         match self {
             Value::Lambda(closure) => Lambda(
                 index,

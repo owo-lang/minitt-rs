@@ -1,9 +1,9 @@
 use crate::ast::{nil_rc, Closure, Expression, Pattern, Telescope, Value};
-use crate::check::normal::NormalExpression;
+use crate::check::read_back::NormalExpression;
+use core::fmt::Write;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Error, Formatter};
-use core::fmt::Write;
 
 /// Type-Checking context. Name as key, type of the declaration as value.
 pub type GammaRaw = BTreeMap<String, Value>;
@@ -47,7 +47,9 @@ pub fn default_state<'a>() -> TCS<'a> {
 
 #[macro_export]
 macro_rules! tce_unreachable {
-    () => { TCE::Unreachable(file!(), line!(), column!()) };
+    () => {
+        TCE::Unreachable(file!(), line!(), column!())
+    };
 }
 
 impl TCE {
@@ -87,8 +89,10 @@ impl Display for TCE {
                 f.write_str("`.")
             }
             TCE::Unreachable(file, line, column) => {
-                f.write_str("An internal error has occurred. Please report this as a bug.\n\
-                Location of the error: ")?;
+                f.write_str(
+                    "An internal error has occurred. Please report this as a bug.\n\
+                     Location of the error: ",
+                )?;
                 file.fmt(f)?;
                 f.write_str(", line ")?;
                 line.fmt(f)?;

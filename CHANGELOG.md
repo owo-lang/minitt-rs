@@ -2,6 +2,9 @@
 
 # 0.2.3
 
++ Support inferring types of a constructor call
++ Merge `normal.rs` into `read_back.rs`
+
 # 0.2.2
 
 + Use statically-typed errors instead of strings

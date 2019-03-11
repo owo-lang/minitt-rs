@@ -1,9 +1,4 @@
-/// Normal form: when we read back, we get a normal form expression.
-///
-/// Depends on module `syntax`.
-pub mod normal;
-
-/// Read back: read back functions.
+/// Read back: read back functions and normal form definitions.
 ///
 /// Converting terms to normal forms with de-bruijn indices so
 /// we do not need to deal with alpha conversions.
