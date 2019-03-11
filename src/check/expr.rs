@@ -4,6 +4,7 @@ use crate::ast::{up_var_rc, Branch, Closure, Expression, Pattern, Value};
 use crate::check::decl::check_declaration;
 use crate::check::read_back::{generate_value, ReadBack};
 use crate::check::tcm::{update_gamma, update_gamma_borrow, TCE, TCM, TCS};
+use std::collections::BTreeMap;
 
 /// `checkI` in Mini-TT.<br/>
 /// Type inference rule. More inferences are added here (maybe it's useful?).
@@ -16,6 +17,11 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
             .get(&name)
             .cloned()
             .ok_or_else(|| TCE::UnresolvedName(name)),
+        Constructor(name, signature) => {
+            let mut map = BTreeMap::new();
+            map.insert(name, signature);
+            Ok(Value::Sum((Box::new(map), Box::new(context))))
+        }
         Pair(left, right) => {
             let left = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *left)?;
             let right = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *right)?;
