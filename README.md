@@ -54,6 +54,10 @@ let function: \Pi b: bool. return_type b = split
 -- Return things that are of different types.
 ```
 
+```pest
+xasxsa
+```
+
 We can have functions returning values of different types, while it's still
 statically-typed. Very flexible.
 

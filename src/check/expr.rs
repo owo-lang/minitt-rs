@@ -64,6 +64,7 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
                 e => Err(TCE::WantPiBut(e, *argument)),
             },
         },
+        Declaration(_, _) | Constant(_, _, _) => Err(tce_unreachable!()),
         e => Err(TCE::CannotInfer(e)),
     }
 }

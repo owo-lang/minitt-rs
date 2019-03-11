@@ -22,6 +22,7 @@ pub mod read_back;
 /// Typing context (`Gamma`) and its updater, the type-checking error and its pretty-printer
 ///
 /// Depends on module `syntax`.
+#[macro_use]
 pub mod tcm;
 
 /// Expression checker: infer, instance-of check, normal-form comparison, subtyping, etc.

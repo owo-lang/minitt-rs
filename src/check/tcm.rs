@@ -3,6 +3,7 @@ use crate::check::normal::NormalExpression;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Error, Formatter};
+use core::fmt::Write;
 
 /// Type-Checking context. Name as key, type of the declaration as value.
 pub type GammaRaw = BTreeMap<String, Value>;
@@ -21,6 +22,8 @@ pub enum TCE {
     InvalidConstructor(String),
     MissingCase(String),
     UnexpectedCases(String),
+    /// Reaching somewhere that is not expected to reach
+    Unreachable(&'static str, u32, u32),
     WantSigmaBut(Value),
     /// We can get the argument of application here, to better report error
     WantPiBut(Value, Expression),
@@ -40,6 +43,11 @@ pub type TCS<'a> = (Gamma<'a>, Telescope);
 /// Empty `TCS`.
 pub fn default_state<'a>() -> TCS<'a> {
     (Default::default(), nil_rc())
+}
+
+#[macro_export]
+macro_rules! tce_unreachable {
+    () => { TCE::Unreachable(file!(), line!(), column!()) };
 }
 
 impl TCE {
@@ -77,6 +85,16 @@ impl Display for TCE {
                 f.write_str("Expected \u{03A3} type, instead got: `")?;
                 expression.fmt(f)?;
                 f.write_str("`.")
+            }
+            TCE::Unreachable(file, line, column) => {
+                f.write_str("An internal error has occurred. Please report this as a bug.\n\
+                Location of the error: ")?;
+                file.fmt(f)?;
+                f.write_str(", line ")?;
+                line.fmt(f)?;
+                f.write_str(", column ")?;
+                column.fmt(f)?;
+                f.write_char('.')
             }
             TCE::WantPiBut(expression, argument) => {
                 f.write_str("Expected \u{03A0} type, instead got: `")?;
