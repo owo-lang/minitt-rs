@@ -1,7 +1,7 @@
 /// Read back: read back functions and normal form definitions.
 ///
 /// Converting terms to normal forms with de-bruijn indices so
-/// we do not need to deal with alpha conversions.
+/// we do not need to deal with alpha conversions when checking syntactic-equality.
 ///
 /// Functions in this module are put into `impl for` blocks, their docs can be found in:
 ///
