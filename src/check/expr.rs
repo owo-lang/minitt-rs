@@ -23,19 +23,15 @@ pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
         Constructor(name, expression) => {
             let mut map = BTreeMap::new();
             let context = tcs.context.clone();
-            map.insert(
-                name,
-                Box::new(Either::Left(check_infer(index, tcs, *expression)?)),
-            );
+            let inferred = Either::Left(check_infer(index, tcs, *expression)?);
+            map.insert(name, Box::new(inferred));
             Ok(Value::Sum(GenericCaseTree::boxing(map, context)))
         }
         Pair(left, right) => {
             let left = check_infer(index, tcs_borrow!(tcs), *left)?;
             let right = check_infer(index, tcs_borrow!(tcs), *right)?;
-            Ok(Value::Sigma(
-                Box::new(left),
-                Closure::Value(Box::new(right)),
-            ))
+            let right = Closure::Value(Box::new(right));
+            Ok(Value::Sigma(Box::new(left), right))
         }
         First(pair) => match check_infer(index, tcs, *pair)? {
             Value::Sigma(first, _) => Ok(*first),
@@ -135,12 +131,8 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
                 .get(&name)
                 .ok_or_else(|| TCE::InvalidConstructor(name))?
                 .clone();
-            check(
-                index,
-                tcs,
-                *body,
-                reduce_to_value(constructor, *constructors.environment),
-            )
+            let constructor_type = reduce_to_value(constructor, *constructors.environment);
+            check(index, tcs, *body, constructor_type)
         }
         (E::Sum(constructors), V::Type) => check_sum_type(index, tcs, constructors),
         (E::Sigma((pattern, first), second), V::Type)

@@ -5,7 +5,9 @@
 + `TCS` is refactored to a struct
 + `GenericCaseTree` is refactored to a struct
 + Generalize the subtyping introduced in 0.2.3
-  (so they also work on pi-types, sigma-types, inferred sums)
+  (so they also work on pi-types, sigma-types)
++ Inferred sums are now unified with ordinary sums
++ Introduce `either` dependency (it's minimum)
 
 # 0.2.3
 

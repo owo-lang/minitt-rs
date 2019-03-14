@@ -71,35 +71,27 @@ impl ReadBack for Value {
     fn read_back(self, index: u32) -> Self::NormalForm {
         use crate::check::read_back::NormalExpression::*;
         match self {
-            Value::Lambda(closure) => Lambda(
-                index,
-                Box::new(
-                    closure
-                        .instantiate(generate_value(index))
-                        .read_back(index + 1),
-                ),
-            ),
+            Value::Lambda(closure) => {
+                let closure = closure
+                    .instantiate(generate_value(index))
+                    .read_back(index + 1);
+                Lambda(index, Box::new(closure))
+            }
             Value::Unit => Unit,
             Value::One => One,
             Value::Type => Type,
-            Value::Pi(input, output) => Pi(
-                Box::new(input.read_back(index)),
-                index,
-                Box::new(
-                    output
-                        .instantiate(generate_value(index))
-                        .read_back(index + 1),
-                ),
-            ),
-            Value::Sigma(first, second) => Sigma(
-                Box::new(first.read_back(index)),
-                index,
-                Box::new(
-                    second
-                        .instantiate(generate_value(index))
-                        .read_back(index + 1),
-                ),
-            ),
+            Value::Pi(input, output) => {
+                let output = output
+                    .instantiate(generate_value(index))
+                    .read_back(index + 1);
+                Pi(Box::new(input.read_back(index)), index, Box::new(output))
+            }
+            Value::Sigma(first, second) => {
+                let second = second
+                    .instantiate(generate_value(index))
+                    .read_back(index + 1);
+                Sigma(Box::new(first.read_back(index)), index, Box::new(second))
+            }
             Value::Pair(first, second) => Pair(
                 Box::new(first.read_back(index)),
                 Box::new(second.read_back(index)),
