@@ -20,6 +20,7 @@
  [pest]: https://pest.rs/
  [rustyline]: https://docs.rs/rustyline/
  [icon]: https://raw.githubusercontent.com/owo-lang/intellij-minitt/master/res/META-INF/pluginIcon.svg?sanitize=true
+ [plugin]: https://github.com/owo-lang/intellij-minitt/
 
 Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
 This implementation includes a type-checker (extended the origin), an AST
@@ -57,6 +58,12 @@ let function: \Pi b: bool. return_type b = split
 We can have functions returning values of different types, while it's still
 statically-typed. Very flexible.
 
+## Install
+
+```bash
+$ cargo install minitt --bin minittc --all-features --force
+```
+
 ## Resources
 
 ![][icon]
@@ -67,6 +74,7 @@ statically-typed. Very flexible.
 + [Change Log](CHANGELOG.md)
 + [REPL Example](./samples/REPL.md)
 + Windows binary download by [AppVeyor][av-url]
++ [IntelliJ Plugin][plugin]
 
 ## Features
 
