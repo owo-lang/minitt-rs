@@ -4,6 +4,7 @@
 
 + Support inferring types of a constructor call
 + Merge `normal.rs` into `read_back.rs`
++ Subtyping: `sum { A }` is a subtype of `sum { A | B }`
 
 # 0.2.2
 

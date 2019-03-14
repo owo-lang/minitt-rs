@@ -18,10 +18,13 @@ pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) ->
             .get(&name)
             .cloned()
             .ok_or_else(|| TCE::UnresolvedName(name)),
-        Constructor(name, signature) => {
+        Constructor(name, expression) => {
             let mut map = BTreeMap::new();
-            map.insert(name, signature);
-            Ok(Value::Sum((Box::new(map), Box::new(context))))
+            map.insert(
+                name,
+                Box::new(check_infer(index, (gamma, context), *expression)?),
+            );
+            Ok(Value::InferredSum(Box::new(map)))
         }
         Pair(left, right) => {
             let left = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *left)?;

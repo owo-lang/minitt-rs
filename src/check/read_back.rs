@@ -1,4 +1,5 @@
 use crate::ast::*;
+use std::collections::BTreeMap;
 use std::fmt::Display;
 use std::rc::Rc;
 
@@ -6,7 +7,9 @@ use std::rc::Rc;
 pub type NormalTelescope = Rc<GenericTelescope<NormalExpression>>;
 
 /// `NSClos` in Mini-TT, normal form closures.
-pub type NormalDeepClosure = GenericCaseTree<NormalExpression>;
+///
+/// TODO: consider replacing `Expression`
+pub type NormalCaseTree = GenericCaseTree<Expression, NormalExpression>;
 
 /// `NNeut` in Mini-TT, normal form neutral values.
 pub type NormalNeutral = GenericNeutral<NormalExpression>;
@@ -23,8 +26,9 @@ pub enum NormalExpression {
     Pi(Box<Self>, u32, Box<Self>),
     Sigma(Box<Self>, u32, Box<Self>),
     Constructor(String, Box<Self>),
-    Split(NormalDeepClosure),
-    Sum(NormalDeepClosure),
+    Split(NormalCaseTree),
+    Sum(NormalCaseTree),
+    InferredSum(Box<GenericBranch<NormalExpression>>),
     Neutral(NormalNeutral),
 }
 
@@ -106,6 +110,13 @@ impl ReadBack for Value {
             }
             Value::Sum((constructors, context)) => {
                 Sum((constructors, Box::new(context.read_back(index))))
+            }
+            Value::InferredSum(constructors) => {
+                let mut read_back_constructors = BTreeMap::new();
+                for (name, value) in constructors.into_iter() {
+                    read_back_constructors.insert(name, Box::new(value.read_back(index)));
+                }
+                InferredSum(Box::new(read_back_constructors))
             }
             Value::Neutral(neutral) => Neutral(neutral.read_back(index)),
         }

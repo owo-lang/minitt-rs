@@ -70,8 +70,10 @@ impl PartialEq<AnonymousValue> for AnonymousValue {
     }
 }
 
+pub type GenericBranch<T> = BTreeMap<String, Box<T>>;
+
 /// Pattern matching branch.
-pub type Branch = BTreeMap<String, Box<Expression>>;
+pub type Branch = GenericBranch<Expression>;
 
 /// Pattern with type explicitly specified
 pub type Typed = (Pattern, Box<Expression>);
@@ -100,6 +102,8 @@ pub enum Value {
     Split(CaseTree),
     /// Canonical form: sum type.
     Sum(CaseTree),
+    /// Internally generated: inferred sum type.
+    InferredSum(Box<GenericBranch<Value>>),
     /// Neutral form.
     Neutral(Neutral),
 }
@@ -118,7 +122,7 @@ pub enum GenericNeutral<Value: Clone> {
     /// Neutral form: stuck on trying to find the second element of a free variable.
     Second(Box<Self>),
     /// Neutral form: stuck on trying to case-split a free variable.
-    Split(GenericCaseTree<Value>, Box<Self>),
+    Split(GenericCaseTree<Expression, Value>, Box<Self>),
 }
 
 /// `Neut` in Mini-TT, neutral value.
@@ -283,9 +287,12 @@ pub enum Closure {
     Choice(Box<Self>, String),
 }
 
-/// Generic definition for two kinds of case trees
-pub type GenericCaseTree<Value> = (Box<Branch>, Box<Rc<GenericTelescope<Value>>>);
+/// Generic definition for three kinds of case trees
+pub type GenericCaseTree<ValueExpression, ValueInScope> = (
+    Box<GenericBranch<ValueExpression>>,
+    Box<Rc<GenericTelescope<ValueInScope>>>,
+);
 
 /// `SClos` in Mini-TT.<br/>
 /// Case tree.
-pub type CaseTree = GenericCaseTree<Value>;
+pub type CaseTree = GenericCaseTree<Expression, Value>;

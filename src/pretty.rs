@@ -36,33 +36,18 @@ impl Display for Value {
             // Don't print context
             Value::Split((branches, _)) => {
                 f.write_str("split {")?;
-                let mut started = false;
-                for (name, clause) in branches.iter() {
-                    if started {
-                        f.write_str(" | ")?;
-                    } else {
-                        started = true;
-                    }
-                    name.fmt(f)?;
-                    f.write_str(": ")?;
-                    clause.fmt(f)?;
-                }
+                fmt_branch(branches, f)?;
                 f.write_char('}')
             }
             // Don't print the context
             Value::Sum((constructors, _)) => {
                 f.write_str("sum {")?;
-                let mut started = false;
-                for (name, constructor) in constructors.iter() {
-                    if started {
-                        f.write_str(" | ")?;
-                    } else {
-                        started = true;
-                    }
-                    name.fmt(f)?;
-                    f.write_str(": ")?;
-                    constructor.fmt(f)?;
-                }
+                fmt_branch(constructors, f)?;
+                f.write_char('}')
+            }
+            Value::InferredSum(constructors) => {
+                f.write_str("[sum] {")?;
+                fmt_branch(constructors, f)?;
                 f.write_char('}')
             }
             Value::Neutral(neutral) => {
@@ -167,7 +152,7 @@ impl Display for Expression {
     }
 }
 
-fn fmt_branch(branch: &Branch, f: &mut Formatter) -> Result<(), FmtError> {
+fn fmt_branch<E: Display>(branch: &GenericBranch<E>, f: &mut Formatter) -> Result<(), FmtError> {
     let mut started = false;
     for (name, clause) in branch.iter() {
         if started {
@@ -343,33 +328,18 @@ impl Display for NormalExpression {
             }
             Expression::Split((clauses, _)) => {
                 f.write_str("split {")?;
-                let mut started = false;
-                for (name, clause) in clauses.iter() {
-                    if started {
-                        f.write_str(" | ")?;
-                    } else {
-                        started = true;
-                    }
-                    name.fmt(f)?;
-                    f.write_char(' ')?;
-                    clause.fmt(f)?;
-                }
+                fmt_branch(clauses, f)?;
                 f.write_char('}')
             }
             // Don't print the context
             Expression::Sum((constructors, _)) => {
                 f.write_str("sum {")?;
-                let mut started = false;
-                for (name, constructor) in constructors.iter() {
-                    if started {
-                        f.write_str(" | ")?;
-                    } else {
-                        started = true;
-                    }
-                    name.fmt(f)?;
-                    f.write_char(' ')?;
-                    constructor.fmt(f)?;
-                }
+                fmt_branch(constructors, f)?;
+                f.write_char('}')
+            }
+            Expression::InferredSum(constructors) => {
+                f.write_str("[sum] {")?;
+                fmt_branch(constructors, f)?;
                 f.write_char('}')
             }
             Expression::Neutral(neutral) => {
