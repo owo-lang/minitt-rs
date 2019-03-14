@@ -6,19 +6,21 @@ before reading the documentation.
 
 Here's a brief summary of the complete type-checking process.
 
-Since this implementation is actually a dialect or, a variantion of the original one, I use *minitt*
-to represent this implementation and *Mini-TT* for the original one.<br/>
-Only language features that affect type-checking are listed.
+Since this implementation is actually a dialect or, a variation of the original one, I use *minitt*
+to represent this implementation and *Mini-TT* for the original one.
+
+Here's a "feature list" (only language features that affect type-checking are listed):
 
 First, Mini-TT supports:
 
 + Pi/Sigma types
-+ First-class sum types and pattern matching
++ First-class sum types and case-split
 + Recursion
++ Mutual recursion
 
 Mini-TT does not support (while you may expect it to support):
 
-+ Dependent pattern matching (with unifications)
++ Dependent pattern matching (with unification)
 + Meta variables, say, implicit arguments
 
 Mini-TT does not, but minitt does support:
@@ -57,7 +59,7 @@ expression. We check the definitions one by one, after checking each definition 
 context and check the rest. For recursive definitions, we generate a neutral value before actually
 checking it.
 
-This part is quite trivial Mini-TT, but minitt extended definitions with *prefix parameters*, which
+This part is trivial in Mini-TT, but minitt extended definitions with *prefix parameters*, which
 are parameters present before the type signature and the body expression, resulting in a much more
 complicated implementation.
 
@@ -68,9 +70,11 @@ complicated implementation.
 
 ### `check`
 
+This is the so-called `instance of` check, the function name in Mini-TT paper is `check`.
+
 All definitions in Mini-TT comes along with a type signature, Mini-TT tries to type-check the
 signature and then try to match the body expression with the signature, using some hard-coded
-patterns (relavant codes are in [check/expr.rs](check/expr/fn.check.html)), like if the type
+patterns (relevant codes are in [check/expr.rs](check/expr/fn.check.html)), like if the type
 is a pi-type and the value is a lambda, then we go on checking their bodies and types with the
 parameter instantiated as a generated value then recursively check if the instantiated body
 expression is an instance of the pi-type's return type; if the type is a sum type and the value
@@ -79,18 +83,18 @@ If all rules are not applicable, infer the expression type and do a subtyping co
 This comparison is doing some hard-coded comparisons as well. If it still fails, `read-back` to
 normal form and do a syntactic comparison with the `read-back`ed expected type signature.
 
-This is the so-called `instance of` check, the function name in Mini-TT paper is `check`.
-
 ### `checkI`
 
-Trivial function, try to infer the type of a given expression.
+Try to infer the type of a given expression.
 
 Cannot infer types of lambdas or other complicated expressions like nested function calls
 (this situation has been improved a lot if you're glad to use prefix parameters).
 
 ### `checkT`
 
-Check if an expression is a type expression. Trivially implemented.
+Check if an expression is a type expression.
+
+Use some hard-coded rules and fallback to `check expr Type`.
 
 ## Possible Extensions
 
@@ -100,6 +104,7 @@ I'm listing all the possible extension, disregarding how hard can the implementa
 
 + Indexed inductive families
   + Dependent (co)pattern matching
+  + Overlapping pattern matching
   + Props
   + Without-K
 + Quantitative Type Theory
