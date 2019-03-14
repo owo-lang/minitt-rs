@@ -121,15 +121,15 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>
         Some(tcs)
     } else if line.starts_with(NORMALIZE_PFX) {
         let line = line.trim_start_matches(NORMALIZE_CMD).trim_start();
-        normalize(tcs.context.clone(), line);
+        normalize(tcs.context(), line);
         Some(tcs)
     } else if line.starts_with(EVAL_PFX) {
         let line = line.trim_start_matches(EVAL_CMD).trim_start();
-        eval(tcs.context.clone(), line);
+        eval(tcs.context(), line);
         Some(tcs)
     } else if line.starts_with(EVAL_DBG_PFX) {
         let line = line.trim_start_matches(EVAL_DBG_CMD).trim_start();
-        debug_eval(tcs.context.clone(), line);
+        debug_eval(tcs.context(), line);
         Some(tcs)
     } else if line.starts_with(':') {
         println!("Unrecognized command: {}", line);

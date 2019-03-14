@@ -49,7 +49,7 @@ pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
         }
         Pi((pattern, input), output) | Sigma((pattern, input), output) => {
             let tcs = check_type(index, tcs, *input.clone())?;
-            let input_type = input.eval(tcs.context.clone());
+            let input_type = input.eval(tcs.context());
             let generated = generate_value(index);
             let gamma = update_gamma(tcs.gamma, &pattern, input_type, generated)?;
             check_type(index + 1, TCS::new(gamma, tcs.context), *output)?;
@@ -66,7 +66,7 @@ pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
             }
             f => match check_infer(index, tcs_borrow!(tcs), f)? {
                 Value::Pi(input, output) => {
-                    let context = tcs.context.clone();
+                    let context = tcs.context();
                     check(index, tcs, *argument.clone(), *input)?;
                     Ok(output.instantiate(argument.eval(context)))
                 }
@@ -114,7 +114,7 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
         }
         (E::Pair(first, second), V::Sigma(first_type, second_type)) => {
             check(index, tcs_borrow!(tcs), *first.clone(), *first_type)?;
-            let context = tcs.context.clone();
+            let context = tcs.context();
             check(
                 index,
                 tcs,

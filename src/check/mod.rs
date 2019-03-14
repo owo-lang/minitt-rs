@@ -39,11 +39,11 @@ pub mod decl;
 use crate::ast::{Declaration, Expression, Value};
 use crate::check::decl::check_declaration;
 use crate::check::expr::{check, check_infer};
-use crate::check::tcm::{default_state, TCM, TCS};
+use crate::check::tcm::{TCM, TCS};
 
 /// `checkMain` in Mini-TT.
 pub fn check_main<'a>(expression: Expression) -> TCM<TCS<'a>> {
-    check_contextual(default_state(), expression)
+    check_contextual(Default::default(), expression)
 }
 
 /// For REPL: check an expression under an existing context
@@ -58,7 +58,7 @@ pub fn check_infer_contextual(tcs: TCS, expression: Expression) -> TCM<Value> {
 
 /// Similar to `checkMain` in Mini-TT, but for a declaration.
 pub fn check_declaration_main<'a>(declaration: Declaration) -> TCM<TCS<'a>> {
-    check_declaration(0, default_state(), declaration)
+    check_declaration(0, Default::default(), declaration)
 }
 
 #[cfg(test)]

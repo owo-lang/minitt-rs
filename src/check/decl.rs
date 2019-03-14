@@ -95,7 +95,7 @@ pub fn check_simple_declaration(
 ) -> TCM<Gamma> {
     check_type(index, tcs_borrow!(tcs), signature.clone())
         .map_err(|err| try_locate!(err, pattern))?;
-    let signature = signature.eval(tcs.context.clone());
+    let signature = signature.eval(tcs.context());
     check(index, tcs_borrow!(tcs), body.clone(), signature.clone())
         .map_err(|err| try_locate!(err, pattern))?;
     let TCS { gamma, context } = tcs;
@@ -109,7 +109,7 @@ pub fn check_simple_declaration(
 pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<TCS> {
     use crate::ast::DeclarationType::*;
     if declaration.prefix_parameters.is_empty() {
-        let context = tcs.context.clone();
+        let context = tcs.context();
         return match &declaration.declaration_type {
             Simple => check_simple_declaration(
                 index,
@@ -132,7 +132,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
         } => check_lift_parameters(index, tcs_borrow!(tcs), prefix_parameters, |tcs| {
             let tcs = check_type(index, tcs, signature.clone())
                 .map_err(|err| try_locate!(err, pattern))?;
-            let context = tcs.context.clone();
+            let context = tcs.context();
             let tcs = check(index, tcs, body.clone(), signature.clone().eval(context))
                 .map_err(|err| try_locate!(err, pattern))?;
             Ok((signature, body, tcs))

@@ -48,6 +48,11 @@ impl<'a> TCS<'a> {
     pub fn new(gamma: Gamma<'a>, context: Telescope) -> Self {
         Self { gamma, context }
     }
+
+    /// Since `context` is ref-counted, it's gonna be cheap to clone.
+    pub fn context(&self) -> Telescope {
+        self.context.clone()
+    }
 }
 
 impl<'a> Default for TCS<'a> {
@@ -63,11 +68,6 @@ macro_rules! tcs_borrow {
         let TCS { gamma, context } = &$tcs;
         TCS::new(std::borrow::Cow::Borrowed(&*gamma), context.clone())
     }};
-}
-
-/// Empty `TCS`.
-pub fn default_state<'a>() -> TCS<'a> {
-    Default::default()
 }
 
 #[macro_export]
