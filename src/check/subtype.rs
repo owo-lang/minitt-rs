@@ -1,5 +1,5 @@
 use crate::ast::{Expression, Value};
-use crate::check::read_back::ReadBack;
+use crate::check::read_back::{generate_value, ReadBack};
 use crate::check::tcm::{TCE, TCM, TCS};
 use std::collections::BTreeMap;
 
@@ -25,6 +25,18 @@ pub fn check_subtype(index: u32, tcs: TCS, subtype: Value, supertype: Value) -> 
         }
         (Value::InferredSum(sub_tree), Value::InferredSum(super_tree)) => {
             check_subtype_sum(index, tcs, *sub_tree, *super_tree, |sub| *sub, |sup| *sup)
+        }
+        (Value::Pi(sub_param, sub_closure), Value::Pi(super_param, super_closure))
+        | (Value::Sigma(sub_param, sub_closure), Value::Sigma(super_param, super_closure)) => {
+            let tcs = check_subtype(index, tcs, *super_param, *sub_param)?;
+            let generated = generate_value(index);
+            check_subtype(
+                index + 1,
+                tcs_borrow!(tcs),
+                sub_closure.instantiate(generated.clone()),
+                super_closure.instantiate(generated),
+            )?;
+            Ok(tcs)
         }
         (subtype, supertype) => compare_normal(index, tcs, subtype, supertype),
     }
