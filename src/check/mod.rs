@@ -9,8 +9,14 @@
 /// + [`ReadBack` of `Telescope`](../syntax/enum.Telescope.html#impl-ReadBack)
 /// + [`ReadBack` of `Closure`](../syntax/enum.Closure.html#impl-ReadBack)
 ///
-/// Depends on modules `syntax` and `normal`.
+/// Depends on modules `syntax`.
 pub mod read_back;
+
+/// Subtyping check: fallback rules of "instance of" checks: infer the expression's type and check
+/// if it's the subtype of the expected type.
+///
+/// Depends on modules `syntax` and `read_back`.
+pub mod subtype;
 
 /// Type-Checking Monad: context, state and error.
 ///

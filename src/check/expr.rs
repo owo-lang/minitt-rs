@@ -2,7 +2,8 @@ use std::borrow::Cow;
 
 use crate::ast::{up_var_rc, Branch, Closure, Expression, Pattern, Value};
 use crate::check::decl::check_declaration;
-use crate::check::read_back::{generate_value, ReadBack};
+use crate::check::read_back::generate_value;
+use crate::check::subtype::is_subtype;
 use crate::check::tcm::{update_gamma, update_gamma_borrow, TCE, TCM, TCS};
 use std::collections::BTreeMap;
 
@@ -175,28 +176,27 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
                     Err(TCE::UnexpectedCases(clauses.join(" | ")))
                 }
             }
-            not_sum_so_fall_through => check_normal(
+            not_sum_so_fall_through => check_fallback(
                 index,
                 (gamma, context),
                 E::Split(branches),
                 V::Pi(Box::new(not_sum_so_fall_through), closure),
             ),
         },
-        (expression, value) => check_normal(index, (gamma, context), expression, value),
+        (expression, value) => check_fallback(index, (gamma, context), expression, value),
     }
 }
 
-fn check_normal(index: u32, (gamma, context): TCS, body: Expression, signature: Value) -> TCM<TCS> {
+/// Fallback rule of instance check.<br/>
+/// First infer the expression type, then do subtyping comparison.
+fn check_fallback(
+    index: u32,
+    (gamma, context): TCS,
+    body: Expression,
+    signature: Value,
+) -> TCM<TCS> {
     let inferred = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), body)?;
-    let (inferred_normal, expected_normal) = ReadBack::normal(index, inferred, signature);
-    if inferred_normal == expected_normal {
-        Ok((gamma, context))
-    } else {
-        Err(TCE::InferredDoesNotMatchExpected(
-            inferred_normal,
-            expected_normal,
-        ))
-    }
+    is_subtype(index, (gamma, context), inferred, signature)
 }
 
 /// To reuse code that checks if a sum type is well-typed between `check_type` and `check`
