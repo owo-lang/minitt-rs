@@ -1,5 +1,7 @@
 # Change Log
 
+# 0.2.4
+
 # 0.2.3
 
 + Support inferring types of a constructor call
