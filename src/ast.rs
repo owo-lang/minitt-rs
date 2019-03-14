@@ -306,6 +306,14 @@ impl<Expr, Value: Clone> GenericCaseTree<Expr, Value> {
     pub fn boxing(branches: GenericBranch<Expr>, environment: TelescopeRc<Value>) -> Self {
         Self::new(Box::new(branches), Box::new(environment))
     }
+
+    pub fn destruct(self) -> (GenericBranch<Expr>, TelescopeRc<Value>) {
+        let GenericCaseTree {
+            branches,
+            environment,
+        } = self;
+        (*branches, *environment)
+    }
 }
 
 /// `SClos` in Mini-TT.<br/>

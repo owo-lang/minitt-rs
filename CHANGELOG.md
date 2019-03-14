@@ -4,6 +4,8 @@
 
 + `TCS` is refactored to a struct
 + `GenericCaseTree` is refactored to a struct
++ Generalize the subtyping introduced in 0.2.3
+  (so they also work on pi-types, sigma-types, inferred sums)
 
 # 0.2.3
 

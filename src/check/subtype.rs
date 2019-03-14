@@ -1,30 +1,52 @@
-use crate::ast::{CaseTree, GenericBranch, Value};
+use crate::ast::{Expression, Value};
 use crate::check::read_back::ReadBack;
 use crate::check::tcm::{TCE, TCM, TCS};
+use std::collections::BTreeMap;
 
 /// Check if `subtype` is the subtype of `supertype`.
 pub fn check_subtype(index: u32, tcs: TCS, subtype: Value, supertype: Value) -> TCM<TCS> {
     match (subtype, supertype) {
-        (Value::InferredSum(sub_tree), Value::Sum(super_tree)) =>
-            check_subtype_sum(index, tcs, *sub_tree, super_tree),
+        (Value::InferredSum(sub_tree), Value::Sum(super_tree)) => {
+            let (branches, environment) = super_tree.destruct();
+            let super_eval = |sup: Box<Expression>| sup.eval(environment.clone());
+            check_subtype_sum(index, tcs, *sub_tree, branches, |sub| *sub, super_eval)
+        }
+        (Value::Sum(sub_tree), Value::InferredSum(super_tree)) => {
+            let (branches, environment) = sub_tree.destruct();
+            let sub_eval = |sub: Box<Expression>| sub.eval(environment.clone());
+            check_subtype_sum(index, tcs, branches, *super_tree, sub_eval, |sup| *sup)
+        }
+        (Value::Sum(sub_tree), Value::Sum(super_tree)) => {
+            let (super_tree, super_environment) = super_tree.destruct();
+            let (sub_tree, sub_environment) = sub_tree.destruct();
+            let super_eval = |sup: Box<Expression>| sup.eval(super_environment.clone());
+            let sub_eval = |sub: Box<Expression>| sub.eval(sub_environment.clone());
+            check_subtype_sum(index, tcs, sub_tree, super_tree, sub_eval, super_eval)
+        }
+        (Value::InferredSum(sub_tree), Value::InferredSum(super_tree)) => {
+            check_subtype_sum(index, tcs, *sub_tree, *super_tree, |sub| *sub, |sup| *sup)
+        }
         (subtype, supertype) => compare_normal(index, tcs, subtype, supertype),
     }
 }
 
-fn check_subtype_sum(index: u32, tcs: TCS, sub_tree: GenericBranch<Value>, super_tree: CaseTree) -> TCM<TCS> {
-    let super_context = *super_tree.environment;
-    let mut super_tree = super_tree.branches;
+fn check_subtype_sum<Sub, Super>(
+    index: u32,
+    tcs: TCS,
+    sub_tree: BTreeMap<String, Sub>,         // GenericBranch<Value>
+    mut super_tree: BTreeMap<String, Super>, // CaseTree
+    sub_tree_eval: impl Fn(Sub) -> Value,
+    super_tree_eval: impl Fn(Super) -> Value,
+) -> TCM<TCS> {
     for (constructor, sub_parameter) in sub_tree.into_iter() {
-        let super_parameter = super_tree.remove(constructor.as_str())
+        let super_parameter = super_tree
+            .remove(constructor.as_str())
             .ok_or_else(|| TCE::UnexpectedCases(constructor))?;
+        let sub_parameter = sub_tree_eval(sub_parameter);
+        let super_parameter = super_tree_eval(super_parameter);
         // They're supposed to be well-typed, but I'm not sure.
         // A bug report is expected here.
-        check_subtype(
-            index,
-            tcs_borrow!(tcs),
-            *sub_parameter,
-            super_parameter.eval(super_context.clone()),
-        )?;
+        check_subtype(index, tcs_borrow!(tcs), sub_parameter, super_parameter)?;
     }
     return Ok(tcs);
 }
