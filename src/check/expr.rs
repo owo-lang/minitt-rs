@@ -1,8 +1,11 @@
-use crate::ast::{up_var_rc, Branch, Closure, Expression, Pattern, Value};
+use crate::ast::{
+    reduce_to_value, up_var_rc, Branch, Closure, Expression, GenericCaseTree, Pattern, Value,
+};
 use crate::check::decl::check_declaration;
 use crate::check::read_back::generate_value;
 use crate::check::subtype::check_subtype;
 use crate::check::tcm::{update_gamma, update_gamma_borrow, TCE, TCM, TCS};
+use either::Either;
 use std::collections::BTreeMap;
 
 /// `checkI` in Mini-TT.<br/>
@@ -19,8 +22,12 @@ pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
             .ok_or_else(|| TCE::UnresolvedName(name)),
         Constructor(name, expression) => {
             let mut map = BTreeMap::new();
-            map.insert(name, Box::new(check_infer(index, tcs, *expression)?));
-            Ok(Value::InferredSum(Box::new(map)))
+            let context = tcs.context.clone();
+            map.insert(
+                name,
+                Box::new(Either::Left(check_infer(index, tcs, *expression)?)),
+            );
+            Ok(Value::Sum(GenericCaseTree::boxing(map, context)))
         }
         Pair(left, right) => {
             let left = check_infer(index, tcs_borrow!(tcs), *left)?;
@@ -132,7 +139,7 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
                 index,
                 tcs,
                 *body,
-                constructor.eval(*constructors.environment),
+                reduce_to_value(constructor, *constructors.environment),
             )
         }
         (E::Sum(constructors), V::Type) => check_sum_type(index, tcs, constructors),
@@ -161,7 +168,7 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
                         None => return Err(TCE::MissingCase(name)),
                     };
                     let signature = V::Pi(
-                        Box::new(branch.eval(*sum_branches.environment.clone())),
+                        Box::new(reduce_to_value(*branch, *sum_branches.environment.clone())),
                         Closure::Choice(Box::new(closure.clone()), name.clone()),
                     );
                     check(index, tcs_borrow!(tcs), pattern_match, signature)?;

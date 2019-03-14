@@ -1,4 +1,5 @@
 use crate::ast::*;
+use either::Either;
 use std::collections::BTreeMap;
 use std::fmt::Display;
 use std::rc::Rc;
@@ -9,7 +10,7 @@ pub type NormalTelescope = Rc<GenericTelescope<NormalExpression>>;
 /// `NSClos` in Mini-TT, normal form closures.
 ///
 /// TODO: consider replacing `Expression`
-pub type NormalCaseTree = GenericCaseTree<Expression, NormalExpression>;
+pub type NormalCaseTree = GenericCaseTree<Either<NormalExpression, Expression>, NormalExpression>;
 
 /// `NNeut` in Mini-TT, normal form neutral values.
 pub type NormalNeutral = GenericNeutral<NormalExpression>;
@@ -28,7 +29,6 @@ pub enum NormalExpression {
     Constructor(String, Box<Self>),
     Split(NormalCaseTree),
     Sum(NormalCaseTree),
-    InferredSum(Box<GenericBranch<NormalExpression>>),
     Neutral(NormalNeutral),
 }
 
@@ -107,23 +107,30 @@ impl ReadBack for Value {
             Value::Constructor(name, body) => Constructor(name, Box::new(body.read_back(index))),
             Value::Split(case_tree) => Split(case_tree.read_back(index)),
             Value::Sum(constructors) => Sum(constructors.read_back(index)),
-            Value::InferredSum(constructors) => {
-                let mut read_back_constructors = BTreeMap::new();
-                for (name, value) in constructors.into_iter() {
-                    read_back_constructors.insert(name, Box::new(value.read_back(index)));
-                }
-                InferredSum(Box::new(read_back_constructors))
-            }
             Value::Neutral(neutral) => Neutral(neutral.read_back(index)),
         }
     }
+}
+
+fn read_back_branches(
+    index: u32,
+    branches: GenericBranch<Either<Value, Expression>>,
+) -> GenericBranch<Either<NormalExpression, Expression>> {
+    let mut read_back_constructors = BTreeMap::new();
+    for (name, value) in branches.into_iter() {
+        read_back_constructors.insert(name, Box::new(value.map_left(|l| l.read_back(index))));
+    }
+    read_back_constructors
 }
 
 impl ReadBack for CaseTree {
     type NormalForm = NormalCaseTree;
 
     fn read_back(self, index: u32) -> Self::NormalForm {
-        Self::NormalForm::boxing(*self.branches, self.environment.read_back(index))
+        Self::NormalForm::boxing(
+            read_back_branches(index, *self.branches),
+            self.environment.read_back(index),
+        )
     }
 }
 

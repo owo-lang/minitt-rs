@@ -1,3 +1,4 @@
+use either::Either;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
@@ -76,6 +77,14 @@ pub type GenericBranch<T> = BTreeMap<String, Box<T>>;
 /// Pattern matching branch.
 pub type Branch = GenericBranch<Expression>;
 
+pub fn branch_to_righted(branch: Branch) -> GenericBranch<Either<Value, Expression>> {
+    let mut case_tree: GenericBranch<Either<Value, Expression>> = Default::default();
+    for (name, expression) in branch.into_iter() {
+        case_tree.insert(name, Box::new(Either::Right(*expression)));
+    }
+    case_tree
+}
+
 /// Pattern with type explicitly specified
 pub type Typed = (Pattern, Box<Expression>);
 
@@ -103,8 +112,6 @@ pub enum Value {
     Split(CaseTree),
     /// Canonical form: sum type.
     Sum(CaseTree),
-    /// Internally generated: inferred sum type.
-    InferredSum(Box<GenericBranch<Value>>),
     /// Neutral form.
     Neutral(Neutral),
 }
@@ -123,7 +130,7 @@ pub enum GenericNeutral<Value: Clone> {
     /// Neutral form: stuck on trying to find the second element of a free variable.
     Second(Box<Self>),
     /// Neutral form: stuck on trying to case-split a free variable.
-    Split(GenericCaseTree<Expression, Value>, Box<Self>),
+    Split(GenericCaseTree<Either<Value, Expression>, Value>, Box<Self>),
 }
 
 /// `Neut` in Mini-TT, neutral value.
@@ -318,4 +325,8 @@ impl<Expr, Value: Clone> GenericCaseTree<Expr, Value> {
 
 /// `SClos` in Mini-TT.<br/>
 /// Case tree.
-pub type CaseTree = GenericCaseTree<Expression, Value>;
+pub type CaseTree = GenericCaseTree<Either<Value, Expression>, Value>;
+
+pub fn reduce_to_value(either: Either<Value, Expression>, context: Telescope) -> Value {
+    either.either(|l| l, |r| r.eval(context))
+}

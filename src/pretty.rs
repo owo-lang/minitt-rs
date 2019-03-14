@@ -45,11 +45,6 @@ impl Display for Value {
                 constructors.fmt(f)?;
                 f.write_char('}')
             }
-            Value::InferredSum(constructors) => {
-                f.write_str("[sum] {")?;
-                fmt_branch(constructors, f)?;
-                f.write_char('}')
-            }
             Value::Neutral(neutral) => {
                 f.write_str("[")?;
                 neutral.fmt(f)?;
@@ -332,11 +327,6 @@ impl Display for NormalExpression {
             Expression::Sum(constructors) => {
                 f.write_str("sum {")?;
                 constructors.fmt(f)?;
-                f.write_char('}')
-            }
-            Expression::InferredSum(constructors) => {
-                f.write_str("[sum] {")?;
-                fmt_branch(constructors, f)?;
                 f.write_char('}')
             }
             Expression::Neutral(neutral) => {
