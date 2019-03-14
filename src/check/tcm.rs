@@ -38,19 +38,36 @@ pub type TCM<T> = Result<T, TCE>;
 
 /// Type-Checking State ~~, not "Theoretical Computer Science"~~.<br/>
 /// This is not present in Mini-TT.
-pub type TCS<'a> = (Gamma<'a>, Telescope);
+#[derive(Debug)]
+pub struct TCS<'a> {
+    pub gamma: Gamma<'a>,
+    pub context: Telescope,
+}
 
+impl<'a> TCS<'a> {
+    pub fn new(gamma: Gamma<'a>, context: Telescope) -> Self {
+        Self { gamma, context }
+    }
+}
+
+impl<'a> Default for TCS<'a> {
+    fn default() -> Self {
+        Self::new(Default::default(), nil_rc())
+    }
+}
+
+/// Cannot be an implementation of `Clone` due to lifetime requirement
 #[macro_export]
 macro_rules! tcs_borrow {
     ($tcs:expr) => {{
-        let (gamma, context) = &$tcs;
-        (std::borrow::Cow::Borrowed(&*gamma), context.clone())
+        let TCS { gamma, context } = &$tcs;
+        TCS::new(std::borrow::Cow::Borrowed(&*gamma), context.clone())
     }};
 }
 
 /// Empty `TCS`.
 pub fn default_state<'a>() -> TCS<'a> {
-    (Default::default(), nil_rc())
+    Default::default()
 }
 
 #[macro_export]

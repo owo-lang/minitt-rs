@@ -13,7 +13,7 @@ pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
         Unit => Ok(Value::One),
         Type | Void | One => Ok(Value::Type),
         Var(name) => tcs
-            .0
+            .gamma
             .get(&name)
             .cloned()
             .ok_or_else(|| TCE::UnresolvedName(name)),
@@ -35,8 +35,8 @@ pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
             e => Err(TCE::WantSigmaBut(e)),
         },
         Second(pair) => {
-            let (gamma, context) = tcs;
-            match check_infer(index, (gamma, context.clone()), *pair.clone())? {
+            let TCS { gamma, context } = tcs;
+            match check_infer(index, TCS::new(gamma, context.clone()), *pair.clone())? {
                 Value::Sigma(_, second) => Ok(second.instantiate(pair.eval(context).first())),
                 e => Err(TCE::WantSigmaBut(e)),
             }
@@ -48,11 +48,11 @@ pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
             Ok(Value::Type)
         }
         Pi((pattern, input), output) | Sigma((pattern, input), output) => {
-            let (gamma, context) = check_type(index, tcs, *input.clone())?;
-            let input_type = input.eval(context.clone());
+            let tcs = check_type(index, tcs, *input.clone())?;
+            let input_type = input.eval(tcs.context.clone());
             let generated = generate_value(index);
-            let gamma = update_gamma(gamma, &pattern, input_type, generated)?;
-            check_type(index + 1, (gamma, context), *output)?;
+            let gamma = update_gamma(tcs.gamma, &pattern, input_type, generated)?;
+            check_type(index + 1, TCS::new(gamma, tcs.context), *output)?;
             Ok(Value::Type)
         }
         Application(function, argument) => match *function {
@@ -60,14 +60,14 @@ pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
                 let parameter_type = *parameter_type.internal;
                 check(index, tcs_borrow!(tcs), *argument, parameter_type.clone())?;
                 let generated = generate_value(index + 1);
-                let gamma = update_gamma_borrow(tcs.0, &pattern, parameter_type, &generated)?;
-                let context = up_var_rc(tcs.1, pattern, generated);
-                check_infer(index + 1, (gamma, context), *return_value)
+                let gamma = update_gamma_borrow(tcs.gamma, &pattern, parameter_type, &generated)?;
+                let context = up_var_rc(tcs.context, pattern, generated);
+                check_infer(index + 1, TCS::new(gamma, context), *return_value)
             }
             f => match check_infer(index, tcs_borrow!(tcs), f)? {
                 Value::Pi(input, output) => {
-                    let (gamma, context) = tcs;
-                    check(index, (gamma, context.clone()), *argument.clone(), *input)?;
+                    let context = tcs.context.clone();
+                    check(index, tcs, *argument.clone(), *input)?;
                     Ok(output.instantiate(argument.eval(context)))
                 }
                 e => Err(TCE::WantPiBut(e, *argument)),
@@ -102,22 +102,22 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
         // There's nothing left to check.
         (E::Void, _) => Ok(tcs),
         (E::Lambda(pattern, _, body), V::Pi(signature, closure)) => {
-            let (gamma, context) = tcs;
+            let TCS { gamma, context } = tcs;
             let generated = generate_value(index);
             let gamma = update_gamma_borrow(gamma, &pattern, *signature, &generated)?;
             check(
                 index + 1,
-                (gamma, up_var_rc(context, pattern, generated.clone())),
+                TCS::new(gamma, up_var_rc(context, pattern, generated.clone())),
                 *body,
                 closure.instantiate(generated),
             )
         }
         (E::Pair(first, second), V::Sigma(first_type, second_type)) => {
             check(index, tcs_borrow!(tcs), *first.clone(), *first_type)?;
-            let (gamma, context) = tcs;
+            let context = tcs.context.clone();
             check(
                 index,
-                (gamma, context.clone()),
+                tcs,
                 *second,
                 second_type.instantiate(first.eval(context)),
             )
@@ -140,11 +140,11 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
         }
         (E::Constant(pattern, body, rest), rest_type) => {
             let signature = check_infer(index, tcs_borrow!(tcs), *body.clone())?;
-            let (gamma, context) = tcs;
+            let TCS { gamma, context } = tcs;
             let body_val = body.eval(context.clone());
             let gamma = update_gamma_borrow(gamma, &pattern, signature, &body_val)?;
             let context = up_var_rc(context, pattern, body_val);
-            check(index, (gamma, context), *rest, rest_type)
+            check(index, TCS::new(gamma, context), *rest, rest_type)
         }
         // I really wish to have box pattern here :(
         (E::Split(mut branches), V::Pi(sum, closure)) => match *sum {
@@ -154,15 +154,11 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
                         Some(pattern_match) => *pattern_match,
                         None => return Err(TCE::MissingCase(name)),
                     };
-                    check(
-                        index,
-                        tcs_borrow!(tcs),
-                        pattern_match,
-                        V::Pi(
-                            Box::new(branch.eval(*telescope.clone())),
-                            Closure::Choice(Box::new(closure.clone()), name.clone()),
-                        ),
-                    )?;
+                    let signature = V::Pi(
+                        Box::new(branch.eval(*telescope.clone())),
+                        Closure::Choice(Box::new(closure.clone()), name.clone()),
+                    );
+                    check(index, tcs_borrow!(tcs), pattern_match, signature)?;
                 }
                 if branches.is_empty() {
                     Ok(tcs)
@@ -206,7 +202,7 @@ pub fn check_telescoped(
     second: Expression,
 ) -> TCM<TCS> {
     check_type(index, tcs_borrow!(tcs), first.clone())?;
-    let (gamma, context) = tcs;
+    let TCS { gamma, context } = tcs;
     let generated = generate_value(index);
     let gamma = update_gamma(
         gamma,
@@ -216,7 +212,7 @@ pub fn check_telescoped(
     )?;
     check_type(
         index + 1,
-        (gamma, up_var_rc(context, pattern, generated)),
+        TCS::new(gamma, up_var_rc(context, pattern, generated)),
         second,
     )
 }

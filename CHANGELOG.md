@@ -2,6 +2,8 @@
 
 # 0.2.4
 
++ `TCS` is refactored to a struct
+
 # 0.2.3
 
 + Support inferring types of a constructor call
