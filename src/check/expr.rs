@@ -185,7 +185,7 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
 
 /// Fallback rule of instance check.<br/>
 /// First infer the expression type, then do subtyping comparison.
-fn check_fallback(index: u32, tcs: TCS, body: Expression, signature: Value) -> TCM<TCS> {
+pub fn check_fallback(index: u32, tcs: TCS, body: Expression, signature: Value) -> TCM<TCS> {
     let inferred = check_infer(index, tcs_borrow!(tcs), body)?;
     check_subtype(index, tcs, inferred, signature)
 }

@@ -34,8 +34,11 @@ pub fn check_subtype(index: u32, tcs: TCS, subtype: Value, supertype: Value) -> 
     }
 }
 
+/// I'm not sure if I should recursively check or not, because if there's recursive sum type,
+/// recursively `check_subtype` will cause stack-overflow.
+/// A bug report is expected to prove this to be false.
 #[inline]
-fn check_subtype_sum<Sub, Super>(
+pub fn check_subtype_sum<Sub, Super>(
     index: u32,
     tcs: TCS,
     sub_tree: BTreeMap<String, Sub>,
@@ -49,9 +52,6 @@ fn check_subtype_sum<Sub, Super>(
             .ok_or_else(|| TCE::UnexpectedCases(constructor))?;
         let sub_parameter = sub_tree_eval(sub_parameter);
         let super_parameter = super_tree_eval(super_parameter);
-        // I'm not sure if I should recursively check or not, because if there's recursive sum type,
-        // recursively `check_subtype` will cause stack-overflow.
-        // A bug report is expected to prove this to be false.
         compare_normal(index, tcs_borrow!(tcs), sub_parameter, super_parameter)?;
     }
     return Ok(tcs);

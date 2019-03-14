@@ -1,3 +1,6 @@
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/owo-lang/intellij-minitt/master/res/META-INF/pluginIcon.svg?sanitize=true"
+)]
 /*!
 Reading the [README](https://github.com/owo-lang/minitt-rs/blob/master/README.md) is recommended
 before reading the documentation.
