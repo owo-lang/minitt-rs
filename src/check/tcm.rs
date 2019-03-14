@@ -9,7 +9,7 @@ use std::fmt::{Display, Error, Formatter};
 pub type GammaRaw = BTreeMap<String, Value>;
 
 /// `Gamma` in Mini-TT.<br/>
-/// By doing this we get `lookupG` in Mini-TT for free.
+/// By aliasing `BTreeMap` to `Gamma`, we get `lookupG` in Mini-TT for free.
 pub type Gamma<'a> = Cow<'a, GammaRaw>;
 
 /// Type-Checking Error.
@@ -22,12 +22,12 @@ pub enum TCE {
     InvalidConstructor(String),
     MissingCase(String),
     UnexpectedCases(String),
-    /// Reaching somewhere that is not expected to reach
+    /// Reaching somewhere that is not expected to reach.
     Unreachable(&'static str, u32, u32),
     WantSigmaBut(Value),
-    /// We can get the argument of application here, to better report error
+    /// We can get the argument of application here, to better report error.
     WantPiBut(Value, Expression),
-    /// First argument is inferred value, second is expected
+    /// First argument is inferred value, second is expected.
     InferredDoesNotMatchExpected(NormalExpression, NormalExpression),
     Located(Box<TCE>, Pattern),
 }
@@ -36,7 +36,7 @@ pub enum TCE {
 /// Type-Checking Monad.
 pub type TCM<T> = Result<T, TCE>;
 
-/// Type-Checking State ~~, not "Theoretical Computer Science"~~.<br/>
+/// Type-Checking State <del>, not "Theoretical Computer Science"</del>.<br/>
 /// This is not present in Mini-TT.
 #[derive(Debug)]
 pub struct TCS<'a> {
@@ -61,7 +61,7 @@ impl<'a> Default for TCS<'a> {
     }
 }
 
-/// Cannot be an implementation of `Clone` due to lifetime requirement
+/// Cannot be an implementation of `Clone` due to lifetime requirement.
 #[macro_export]
 macro_rules! tcs_borrow {
     ($tcs:expr) => {{
@@ -70,6 +70,7 @@ macro_rules! tcs_borrow {
     }};
 }
 
+/// Records the source code location that the error occurs, just like `Agda.Util.Impossible`
 #[macro_export]
 macro_rules! tce_unreachable {
     () => {

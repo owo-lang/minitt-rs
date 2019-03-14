@@ -32,6 +32,9 @@ Mini-TT does not, but minitt does support:
 + Universe levels and subtyping (work in progress)
 + Subtyping on sum types (work in progress)
 
+[Version 0.1.8](https://docs.rs/crate/minitt/0.1.8) of minitt is basically a vanilla Mini-TT,
+several extensions are introduced in later versions.
+
 ## Syntax Trees
 
 Mini-TT has three syntax trees:
@@ -45,7 +48,7 @@ Mini-TT has three syntax trees:
     that cannot be reduced due to the presence of this parameter
   + Values might be [closures](ast/enum.Closure.html): expression + context + parameter bindings
 + [Normal form syntax tree](check/read_back/enum.NormalExpression.html), aka normal forms.
-  This is the output of the `read-back` functions
+  This is the output of the "read back" functions
   + Details are introduced later. Personally, I consider this not necessary and ugly.
 
 ## Type-Checking
@@ -123,6 +126,8 @@ I'm listing all the possible extension, disregarding how hard can the implementa
     [cubicaltt](https://github.com/mortberg/cubicaltt)
   + Cartesian Cubical Type Theory
   + De Morgan Cubical Type Theory
+  + Higher-Inductive Families
+    + First-class?
 + Coinduction and Guarded Recursion
 + Sized types (implicit?)
 */
@@ -139,14 +144,17 @@ pub mod ast;
 ///
 /// + [Methods of `Pattern`](../syntax/enum.Pattern.html#methods)
 /// + [Methods of `Value`](../syntax/enum.Value.html#methods)
-/// + [Methods of `Telescope`](../syntax/enum.Telescope.html#methods)
+/// + [Methods of `Telescope`](../syntax/enum.GenericTelescope.html#methods)
 /// + [Methods of `Closure`](../syntax/enum.Closure.html#methods)
 /// + [Methods of `Expression`](../syntax/enum.Expression.html#methods)
 ///
 /// Depends on module `syntax`.
 pub mod eval;
 
-/// Type checking: everything related to type-checking, including:<br/>
+/// Type checking: everything related to type-checking.
+///
+/// This module includes:
+///
 /// + Normal form and read-back functions
 /// + The four type checking functions -- `checkI`, `checkD`, `check` and `checkT`.
 /// + (extended) (sub)typing rules

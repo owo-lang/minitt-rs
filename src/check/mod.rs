@@ -5,9 +5,9 @@
 ///
 /// Functions in this module are put into `impl for` blocks, their docs can be found in:
 ///
-/// + [`ReadBack` of `Value`](../syntax/enum.Value.html#impl-ReadBack)
-/// + [`ReadBack` of `Telescope`](../syntax/enum.Telescope.html#impl-ReadBack)
-/// + [`ReadBack` of `Closure`](../syntax/enum.Closure.html#impl-ReadBack)
+/// + [`ReadBack` of `Value`](../../syntax/enum.Value.html#impl-ReadBack)
+/// + [`ReadBack` of `Telescope`](../../syntax/enum.GenericTelescope.html#impl-ReadBack)
+/// + [`ReadBack` of `Closure`](../../syntax/enum.Closure.html#impl-ReadBack)
 ///
 /// Depends on modules `syntax`.
 pub mod read_back;
