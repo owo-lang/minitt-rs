@@ -29,6 +29,7 @@ Mini-TT does not, but minitt does support:
   help of an [additional member of lambda expressions](ast/struct.AnonymousValue.html)
 + Infer types of expressions that appears deeply inside an expression
 + Constant expressions with type signature completely inferred
++ Universe levels and subtyping (work in progress)
 + Subtyping on sum types (work in progress)
 
 ## Syntax Trees
@@ -78,9 +79,13 @@ patterns (relevant codes are in [check/expr.rs](check/expr/fn.check.html)), like
 is a pi-type and the value is a lambda, then we go on checking their bodies and types with the
 parameter instantiated as a generated value then recursively check if the instantiated body
 expression is an instance of the pi-type's return type; if the type is a sum type and the value
-is a constructor call, then check if the constructor is present in the sum.<br/>
-If all rules are not applicable, infer the expression type and do a subtyping comparison.
-This comparison is doing some hard-coded comparisons as well. If it still fails, `read-back` to
+is a constructor call, then check if the constructor is present in the sum.
+
+If all these hard-coded rules are not applicable, infer the expression type and perform a
+[subtyping check](check/subtype/fn.check_subtype.html). This rule is an extension.
+The subtyping check is basically doing some hard-coded comparisons as well.
+
+If it still fails, [read back](check/read_back/) to
 normal form and do a syntactic comparison with the `read-back`ed expected type signature.
 
 ### `checkI`
@@ -94,7 +99,7 @@ Cannot infer types of lambdas or other complicated expressions like nested funct
 
 Check if an expression is a type expression.
 
-Use some hard-coded rules and fallback to `check expr Type`.
+Use some hard-coded rules and fallback to `check(expr, Type)`.
 
 ## Possible Extensions
 
