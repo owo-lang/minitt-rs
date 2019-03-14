@@ -11,18 +11,18 @@ pub fn check_subtype(index: u32, tcs: TCS, subtype: Value, supertype: Value) -> 
             let super_eval = |sup: Box<Expression>| sup.eval(environment.clone());
             check_subtype_sum(index, tcs, *sub_tree, branches, |sub| *sub, super_eval)
         }
-        (Value::Sum(sub_tree), Value::InferredSum(super_tree)) => {
-            let (branches, environment) = sub_tree.destruct();
-            let sub_eval = |sub: Box<Expression>| sub.eval(environment.clone());
-            check_subtype_sum(index, tcs, branches, *super_tree, sub_eval, |sup| *sup)
-        }
-        (Value::Sum(sub_tree), Value::Sum(super_tree)) => {
-            let (super_tree, super_environment) = super_tree.destruct();
-            let (sub_tree, sub_environment) = sub_tree.destruct();
-            let super_eval = |sup: Box<Expression>| sup.eval(super_environment.clone());
-            let sub_eval = |sub: Box<Expression>| sub.eval(sub_environment.clone());
-            check_subtype_sum(index, tcs, sub_tree, super_tree, sub_eval, super_eval)
-        }
+        // (Value::Sum(sub_tree), Value::InferredSum(super_tree)) => {
+        //     let (branches, environment) = sub_tree.destruct();
+        //     let sub_eval = |sub: Box<Expression>| sub.eval(environment.clone());
+        //     check_subtype_sum(index, tcs, branches, *super_tree, sub_eval, |sup| *sup)
+        // }
+        // (Value::Sum(sub_tree), Value::Sum(super_tree)) => {
+        //     let (super_tree, super_environment) = super_tree.destruct();
+        //     let (sub_tree, sub_environment) = sub_tree.destruct();
+        //     let super_eval = |sup: Box<Expression>| sup.eval(super_environment.clone());
+        //     let sub_eval = |sub: Box<Expression>| sub.eval(sub_environment.clone());
+        //     check_subtype_sum(index, tcs, sub_tree, super_tree, sub_eval, super_eval)
+        // }
         (Value::InferredSum(sub_tree), Value::InferredSum(super_tree)) => {
             check_subtype_sum(index, tcs, *sub_tree, *super_tree, |sub| *sub, |sup| *sup)
         }
