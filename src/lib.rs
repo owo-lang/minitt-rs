@@ -27,6 +27,7 @@ Mini-TT does not, but minitt does support:
   help of an [additional member of lambda expressions](ast/struct.AnonymousValue.html)
 + Infer types of expressions that appears deeply inside an expression
 + Constant expressions with type signature completely inferred
++ Subtyping on sum types (work in progress)
 
 ## Syntax Trees
 
@@ -74,8 +75,9 @@ is a pi-type and the value is a lambda, then we go on checking their bodies and 
 parameter instantiated as a generated value then recursively check if the instantiated body
 expression is an instance of the pi-type's return type; if the type is a sum type and the value
 is a constructor call, then check if the constructor is present in the sum.<br/>
-If all rules are not applicable, infer the expression type, `read-back` to normal form and do
-a syntactic comparison with the `read-back`ed expected type signature.
+If all rules are not applicable, infer the expression type and do a subtyping comparison.
+This comparison is doing some hard-coded comparisons as well. If it still fails, `read-back` to
+normal form and do a syntactic comparison with the `read-back`ed expected type signature.
 
 This is the so-called `instance of` check, the function name in Mini-TT paper is `check`.
 
