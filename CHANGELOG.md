@@ -1,5 +1,7 @@
 # Change Log
 
+# 0.2.5
+
 # 0.2.4
 
 + `TCS` is refactored to a struct
