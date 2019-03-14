@@ -5,7 +5,9 @@ use crate::check::tcm::{TCE, TCM, TCS};
 /// Check if `subtype` is the subtype of `supertype`.
 pub fn check_subtype(index: u32, tcs: TCS, subtype: Value, supertype: Value) -> TCM<TCS> {
     let (subtype, supertype) = match (subtype, supertype) {
-        (Value::InferredSum(sub_tree), Value::Sum((mut super_tree, super_context))) => {
+        (Value::InferredSum(sub_tree), Value::Sum(super_tree)) => {
+            let super_context = *super_tree.environment;
+            let mut super_tree = super_tree.branches;
             for (constructor, sub_parameter) in sub_tree.into_iter() {
                 if let Some(super_parameter) = super_tree.remove(constructor.as_str()) {
                     // They're supposed to be well-typed, but I'm not sure.
@@ -14,7 +16,7 @@ pub fn check_subtype(index: u32, tcs: TCS, subtype: Value, supertype: Value) -> 
                         index,
                         tcs_borrow!(tcs),
                         *sub_parameter,
-                        super_parameter.eval(*super_context.clone()),
+                        super_parameter.eval(super_context.clone()),
                     )?;
                 } else {
                     return Err(TCE::UnexpectedCases(constructor));

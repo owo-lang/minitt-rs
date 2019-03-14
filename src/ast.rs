@@ -64,6 +64,7 @@ impl AnonymousValue {
 }
 
 impl Eq for AnonymousValue {}
+
 impl PartialEq<AnonymousValue> for AnonymousValue {
     fn eq(&self, _other: &AnonymousValue) -> bool {
         true
@@ -288,10 +289,24 @@ pub enum Closure {
 }
 
 /// Generic definition for three kinds of case trees
-pub type GenericCaseTree<ValueExpression, ValueInScope> = (
-    Box<GenericBranch<ValueExpression>>,
-    Box<Rc<GenericTelescope<ValueInScope>>>,
-);
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct GenericCaseTree<ValueExpression, ValueInScope: Clone> {
+    pub branches: Box<GenericBranch<ValueExpression>>,
+    pub environment: Box<TelescopeRc<ValueInScope>>,
+}
+
+impl<Expr, Value: Clone> GenericCaseTree<Expr, Value> {
+    pub fn new(branches: Box<GenericBranch<Expr>>, environment: Box<TelescopeRc<Value>>) -> Self {
+        Self {
+            branches,
+            environment,
+        }
+    }
+
+    pub fn boxing(branches: GenericBranch<Expr>, environment: TelescopeRc<Value>) -> Self {
+        Self::new(Box::new(branches), Box::new(environment))
+    }
+}
 
 /// `SClos` in Mini-TT.<br/>
 /// Case tree.

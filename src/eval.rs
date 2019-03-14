@@ -130,15 +130,16 @@ impl Value {
         use crate::ast::GenericNeutral as Neutral;
         match self {
             Value::Lambda(closure) => closure.instantiate(argument),
-            Value::Split((case_tree, context)) => match argument {
+            Value::Split(case_tree) => match argument {
                 Value::Constructor(name, body) => case_tree
+                    .branches
                     .get(&name)
                     .unwrap_or_else(|| panic!("Cannot find constructor `{}`.", name))
                     .clone()
-                    .eval(*context)
+                    .eval(*case_tree.environment)
                     .apply(*body),
                 Value::Neutral(neutral) => {
-                    Value::Neutral(Neutral::Split((case_tree, context), Box::new(neutral)))
+                    Value::Neutral(Neutral::Split(case_tree, Box::new(neutral)))
                 }
                 e => panic!("Cannot apply a: {}", e),
             },
@@ -165,8 +166,8 @@ impl Expression {
                 .resolve(&name)
                 .map_err(|err| eprintln!("{}", err))
                 .unwrap(),
-            E::Sum(constructors) => V::Sum((Box::new(constructors), Box::new(context))),
-            E::Split(case_tree) => V::Split((Box::new(case_tree), Box::new(context))),
+            E::Sum(constructors) => V::Sum(GenericCaseTree::boxing(constructors, context)),
+            E::Split(case_tree) => V::Split(GenericCaseTree::boxing(case_tree, context)),
             E::Pi((pattern, first), second) => {
                 let first = Box::new(first.eval(context.clone()));
                 let second =

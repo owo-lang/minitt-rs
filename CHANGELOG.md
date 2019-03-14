@@ -3,6 +3,7 @@
 # 0.2.4
 
 + `TCS` is refactored to a struct
++ `GenericCaseTree` is refactored to a struct
 
 # 0.2.3
 

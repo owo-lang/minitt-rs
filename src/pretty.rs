@@ -34,15 +34,15 @@ impl Display for Value {
                 arguments.fmt(f)
             }
             // Don't print context
-            Value::Split((branches, _)) => {
+            Value::Split(branches) => {
                 f.write_str("split {")?;
-                fmt_branch(branches, f)?;
+                branches.fmt(f)?;
                 f.write_char('}')
             }
             // Don't print the context
-            Value::Sum((constructors, _)) => {
+            Value::Sum(constructors) => {
                 f.write_str("sum {")?;
-                fmt_branch(constructors, f)?;
+                constructors.fmt(f)?;
                 f.write_char('}')
             }
             Value::InferredSum(constructors) => {
@@ -149,6 +149,12 @@ impl Display for Expression {
             }
             Expression::Void => Ok(()),
         }
+    }
+}
+
+impl<Expr: Display, Value: Clone + Display> Display for GenericCaseTree<Expr, Value> {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        fmt_branch(&*self.branches, f)
     }
 }
 
@@ -265,21 +271,12 @@ impl<Value: Display + Clone> Display for GenericNeutral<Value> {
                 f.write_str(".2")?;
                 f.write_char(')')
             }
-            GenericNeutral::Split((clauses, _), argument) => {
-                f.write_str("app (")?;
-                let mut started = false;
-                for (name, clause) in clauses.iter() {
-                    name.fmt(f)?;
-                    f.write_str(": ")?;
-                    clause.fmt(f)?;
-                    if started {
-                        f.write_str(", ")?;
-                    } else {
-                        started = true;
-                    }
-                }
-                f.write_char(')')?;
-                argument.fmt(f)
+            GenericNeutral::Split(clauses, argument) => {
+                f.write_str("app ")?;
+                argument.fmt(f)?;
+                f.write_str(" {")?;
+                clauses.fmt(f)?;
+                f.write_char('}')
             }
         }
     }
@@ -326,15 +323,15 @@ impl Display for NormalExpression {
                 f.write_str(" ")?;
                 arguments.fmt(f)
             }
-            Expression::Split((clauses, _)) => {
+            Expression::Split(clauses) => {
                 f.write_str("split {")?;
-                fmt_branch(clauses, f)?;
+                clauses.fmt(f)?;
                 f.write_char('}')
             }
             // Don't print the context
-            Expression::Sum((constructors, _)) => {
+            Expression::Sum(constructors) => {
                 f.write_str("sum {")?;
-                fmt_branch(constructors, f)?;
+                constructors.fmt(f)?;
                 f.write_char('}')
             }
             Expression::InferredSum(constructors) => {

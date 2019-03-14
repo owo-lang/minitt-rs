@@ -105,12 +105,8 @@ impl ReadBack for Value {
                 Box::new(second.read_back(index)),
             ),
             Value::Constructor(name, body) => Constructor(name, Box::new(body.read_back(index))),
-            Value::Split((case_tree, context)) => {
-                Split((case_tree, Box::new(context.read_back(index))))
-            }
-            Value::Sum((constructors, context)) => {
-                Sum((constructors, Box::new(context.read_back(index))))
-            }
+            Value::Split(case_tree) => Split(case_tree.read_back(index)),
+            Value::Sum(constructors) => Sum(constructors.read_back(index)),
             Value::InferredSum(constructors) => {
                 let mut read_back_constructors = BTreeMap::new();
                 for (name, value) in constructors.into_iter() {
@@ -123,10 +119,17 @@ impl ReadBack for Value {
     }
 }
 
+impl ReadBack for CaseTree {
+    type NormalForm = NormalCaseTree;
+
+    fn read_back(self, index: u32) -> Self::NormalForm {
+        Self::NormalForm::boxing(*self.branches, self.environment.read_back(index))
+    }
+}
+
 impl ReadBack for &TelescopeRaw {
     type NormalForm = NormalTelescope;
 
-    //noinspection RsBorrowChecker
     /// `rbRho` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm {
         use crate::ast::GenericTelescope::*;
@@ -158,10 +161,9 @@ impl ReadBack for Neutral {
             ),
             First(neutral) => First(Box::new(neutral.read_back(index))),
             Second(neutral) => Second(Box::new(neutral.read_back(index))),
-            Split((case_tree, context), body) => Split(
-                (case_tree, Box::new(context.read_back(index))),
-                Box::new(body.read_back(index)),
-            ),
+            Split(case_tree, body) => {
+                Split(case_tree.read_back(index), Box::new(body.read_back(index)))
+            }
         }
     }
 }

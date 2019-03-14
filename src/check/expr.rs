@@ -122,12 +122,18 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
                 second_type.instantiate(first.eval(context)),
             )
         }
-        (E::Constructor(name, body), V::Sum((constructors, telescope))) => {
+        (E::Constructor(name, body), V::Sum(constructors)) => {
             let constructor = *constructors
+                .branches
                 .get(&name)
                 .ok_or_else(|| TCE::InvalidConstructor(name))?
                 .clone();
-            check(index, tcs, *body, constructor.eval(*telescope))
+            check(
+                index,
+                tcs,
+                *body,
+                constructor.eval(*constructors.environment),
+            )
         }
         (E::Sum(constructors), V::Type) => check_sum_type(index, tcs, constructors),
         (E::Sigma((pattern, first), second), V::Type)
@@ -148,14 +154,14 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
         }
         // I really wish to have box pattern here :(
         (E::Split(mut branches), V::Pi(sum, closure)) => match *sum {
-            V::Sum((sum_branches, telescope)) => {
-                for (name, branch) in sum_branches.into_iter() {
+            V::Sum(sum_branches) => {
+                for (name, branch) in sum_branches.branches.into_iter() {
                     let pattern_match = match branches.remove(&name) {
                         Some(pattern_match) => *pattern_match,
                         None => return Err(TCE::MissingCase(name)),
                     };
                     let signature = V::Pi(
-                        Box::new(branch.eval(*telescope.clone())),
+                        Box::new(branch.eval(*sum_branches.environment.clone())),
                         Closure::Choice(Box::new(closure.clone()), name.clone()),
                     );
                     check(index, tcs_borrow!(tcs), pattern_match, signature)?;
