@@ -36,9 +36,17 @@ pub enum TCE {
 /// Type-Checking Monad.
 pub type TCM<T> = Result<T, TCE>;
 
-/// Type-Checking State~~, not "Theoretical Computer Science"~~.<br/>
+/// Type-Checking State ~~, not "Theoretical Computer Science"~~.<br/>
 /// This is not present in Mini-TT.
 pub type TCS<'a> = (Gamma<'a>, Telescope);
+
+#[macro_export]
+macro_rules! tcs_borrow {
+    ($tcs:expr) => {{
+        let (gamma, context) = &$tcs;
+        (std::borrow::Cow::Borrowed(&*gamma), context.clone())
+    }};
+}
 
 /// Empty `TCS`.
 pub fn default_state<'a>() -> TCS<'a> {

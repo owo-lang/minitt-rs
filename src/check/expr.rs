@@ -9,65 +9,66 @@ use std::collections::BTreeMap;
 
 /// `checkI` in Mini-TT.<br/>
 /// Type inference rule. More inferences are added here (maybe it's useful?).
-pub fn check_infer(index: u32, (gamma, context): TCS, expression: Expression) -> TCM<Value> {
+pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
     use crate::ast::Expression::*;
     match expression {
         Unit => Ok(Value::One),
         Type | Void | One => Ok(Value::Type),
-        Var(name) => gamma
+        Var(name) => tcs
+            .0
             .get(&name)
             .cloned()
             .ok_or_else(|| TCE::UnresolvedName(name)),
         Constructor(name, expression) => {
             let mut map = BTreeMap::new();
-            map.insert(
-                name,
-                Box::new(check_infer(index, (gamma, context), *expression)?),
-            );
+            map.insert(name, Box::new(check_infer(index, tcs, *expression)?));
             Ok(Value::InferredSum(Box::new(map)))
         }
         Pair(left, right) => {
-            let left = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *left)?;
-            let right = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), *right)?;
+            let left = check_infer(index, tcs_borrow!(tcs), *left)?;
+            let right = check_infer(index, tcs_borrow!(tcs), *right)?;
             Ok(Value::Sigma(
                 Box::new(left),
                 Closure::Value(Box::new(right)),
             ))
         }
-        First(pair) => match check_infer(index, (gamma, context), *pair)? {
+        First(pair) => match check_infer(index, tcs, *pair)? {
             Value::Sigma(first, _) => Ok(*first),
             e => Err(TCE::WantSigmaBut(e)),
         },
+        Second(pair) => {
+            let (gamma, context) = tcs;
+            match check_infer(index, (gamma, context.clone()), *pair.clone())? {
+                Value::Sigma(_, second) => Ok(second.instantiate(pair.eval(context).first())),
+                e => Err(TCE::WantSigmaBut(e)),
+            }
+        }
         Sum(branches) => {
             for (_name, branch) in branches.into_iter() {
-                check_type(index, (Cow::Borrowed(&gamma), context.clone()), *branch)?;
+                check_type(index, tcs_borrow!(tcs), *branch)?;
             }
             Ok(Value::Type)
         }
         Pi((pattern, input), output) | Sigma((pattern, input), output) => {
-            let (gamma, context) = check_type(index, (gamma, context), *input.clone())?;
+            let (gamma, context) = check_type(index, tcs, *input.clone())?;
             let input_type = input.eval(context.clone());
             let generated = generate_value(index);
             let gamma = update_gamma(gamma, &pattern, input_type, generated)?;
             check_type(index + 1, (gamma, context), *output)?;
             Ok(Value::Type)
         }
-        Second(pair) => match check_infer(index, (gamma, context.clone()), *pair.clone())? {
-            Value::Sigma(_, second) => Ok(second.instantiate(pair.eval(context).first())),
-            e => Err(TCE::WantSigmaBut(e)),
-        },
         Application(function, argument) => match *function {
             Lambda(pattern, Some(parameter_type), return_value) => {
                 let parameter_type = *parameter_type.internal;
-                let tcs = (Cow::Borrowed(&*gamma), context.clone());
-                check(index, tcs, *argument, parameter_type.clone())?;
+                check(index, tcs_borrow!(tcs), *argument, parameter_type.clone())?;
                 let generated = generate_value(index + 1);
-                let gamma = update_gamma_borrow(gamma, &pattern, parameter_type, &generated)?;
-                let context = up_var_rc(context, pattern, generated);
+                let gamma = update_gamma_borrow(tcs.0, &pattern, parameter_type, &generated)?;
+                let context = up_var_rc(tcs.1, pattern, generated);
                 check_infer(index + 1, (gamma, context), *return_value)
             }
-            f => match check_infer(index, (Cow::Borrowed(&gamma), context.clone()), f)? {
+            f => match check_infer(index, tcs_borrow!(tcs), f)? {
                 Value::Pi(input, output) => {
+                    let (gamma, context) = tcs;
                     check(index, (gamma, context.clone()), *argument.clone(), *input)?;
                     Ok(output.instantiate(argument.eval(context)))
                 }

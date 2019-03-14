@@ -1,15 +1,9 @@
 use crate::ast::Value;
 use crate::check::read_back::ReadBack;
 use crate::check::tcm::{TCE, TCM, TCS};
-use std::borrow::Cow;
 
 /// Check if `subtype` is the subtype of `supertype`.
-pub fn check_subtype(
-    index: u32,
-    (gamma, context): TCS,
-    subtype: Value,
-    supertype: Value,
-) -> TCM<TCS> {
+pub fn check_subtype(index: u32, tcs: TCS, subtype: Value, supertype: Value) -> TCM<TCS> {
     let (subtype, supertype) = match (subtype, supertype) {
         (Value::InferredSum(sub_tree), Value::Sum((mut super_tree, super_context))) => {
             for (constructor, sub_parameter) in sub_tree.into_iter() {
@@ -18,7 +12,7 @@ pub fn check_subtype(
                     // A bug report is expected here.
                     check_subtype(
                         index,
-                        (Cow::Borrowed(&gamma), context.clone()),
+                        tcs_borrow!(tcs),
                         *sub_parameter,
                         super_parameter.eval(*super_context.clone()),
                     )?;
@@ -26,11 +20,11 @@ pub fn check_subtype(
                     return Err(TCE::UnexpectedCases(constructor));
                 }
             }
-            return Ok((gamma, context));
+            return Ok(tcs);
         }
         (subtype, supertype) => (subtype, supertype),
     };
-    compare_normal(index, (gamma, context), subtype, supertype)
+    compare_normal(index, tcs, subtype, supertype)
 }
 
 /// Read back the type values and do syntactic comparison

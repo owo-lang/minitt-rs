@@ -12,12 +12,6 @@
 /// Depends on modules `syntax`.
 pub mod read_back;
 
-/// Subtyping check: fallback rules of "instance of" checks: infer the expression's type and check
-/// if it's the subtype of the expected type.
-///
-/// Depends on modules `syntax` and `read_back`.
-pub mod subtype;
-
 /// Type-Checking Monad: context, state and error.
 ///
 /// Typing context (`Gamma`) and its updater, the type-checking error and its pretty-printer
@@ -25,6 +19,12 @@ pub mod subtype;
 /// Depends on module `syntax`.
 #[macro_use]
 pub mod tcm;
+
+/// Subtyping check: fallback rules of "instance of" checks: infer the expression's type and check
+/// if it's the subtype of the expected type.
+///
+/// Depends on modules `syntax` and `read_back`.
+pub mod subtype;
 
 /// Expression checker: infer, instance-of check, normal-form comparison, subtyping, etc.
 ///
