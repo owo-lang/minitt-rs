@@ -9,7 +9,6 @@ mod repl;
 
 pub fn main() {
     use minitt::check::check_main;
-    use minitt::check::tcm::default_state;
     let args = args::pre();
 
     // Parse
@@ -34,10 +33,10 @@ pub fn main() {
                 }
                 checked
             } else {
-                default_state()
+                Default::default()
             }
         })
-        .unwrap_or_else(|| default_state());
+        .unwrap_or_else(|| Default::default());
 
     // REPL
     if args.interactive_plain {

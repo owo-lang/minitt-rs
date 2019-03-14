@@ -1,7 +1,7 @@
 use crate::cli::util::parse_file;
 use minitt::ast::{Expression, GenericTelescope, Telescope, Value};
 use minitt::check::read_back::ReadBack;
-use minitt::check::tcm::{default_state, TCE, TCS};
+use minitt::check::tcm::{TCE, TCS};
 use minitt::check::{check_contextual, check_infer_contextual};
 use minitt::parser::parse_str_err_printed;
 use rustyline::completion::{Completer, FilenameCompleter, Pair};
@@ -9,7 +9,6 @@ use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
 use rustyline::hint::Hinter;
 use rustyline::{CompletionType, Config, Editor, Helper};
-use std::borrow::Cow;
 use std::io::{stdin, stdout, Write};
 
 struct MiniHelper {
@@ -94,45 +93,43 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>
         show_telescope(&tcs);
         Some(tcs)
     } else if line == DEBUG_CMD {
-        debug(&tcs.1);
+        debug(&tcs.context);
         Some(tcs)
     } else if line == HELP_CMD {
         help(current_mode);
         Some(tcs)
     } else if line.starts_with(LOAD_PFX) {
-        let file = line.trim_start_matches(LOAD_CMD).trim_start();
-        Some(match parse_file(file) {
-            Some(ast) => update_tcs(tcs, ast),
-            None => tcs,
-        })
+        Some(
+            match parse_file(line.trim_start_matches(LOAD_CMD).trim_start()) {
+                Some(ast) => update_tcs(tcs, ast),
+                None => tcs,
+            },
+        )
     } else if line.starts_with(TYPE_PFX) {
-        let (gamma, context) = tcs;
-        let borrowed_tcs = (Cow::Borrowed(&*gamma), context.clone());
-        infer_normalize(borrowed_tcs, line.trim_start_matches(TYPE_CMD).trim_start());
-        Some((gamma, context))
+        infer_normalize(
+            tcs_borrow!(tcs),
+            line.trim_start_matches(TYPE_CMD).trim_start(),
+        );
+        Some(tcs)
     } else if line.starts_with(INFER_PFX) {
-        let (gamma, context) = tcs;
-        let borrowed_tcs = (Cow::Borrowed(&*gamma), context.clone());
         let line = line.trim_start_matches(INFER_CMD).trim_start();
-        infer(borrowed_tcs, line);
-        Some((gamma, context))
+        infer(tcs_borrow!(tcs), line);
+        Some(tcs)
     } else if line.starts_with(INFER_DBG_PFX) {
-        let (gamma, context) = tcs;
-        let borrowed_tcs = (Cow::Borrowed(&*gamma), context.clone());
         let line = line.trim_start_matches(INFER_DBG_CMD).trim_start();
-        debug_infer(borrowed_tcs, line);
-        Some((gamma, context))
+        debug_infer(tcs_borrow!(tcs), line);
+        Some(tcs)
     } else if line.starts_with(NORMALIZE_PFX) {
         let line = line.trim_start_matches(NORMALIZE_CMD).trim_start();
-        normalize(tcs.1.clone(), line);
+        normalize(tcs.context.clone(), line);
         Some(tcs)
     } else if line.starts_with(EVAL_PFX) {
         let line = line.trim_start_matches(EVAL_CMD).trim_start();
-        eval(tcs.1.clone(), line);
+        eval(tcs.context.clone(), line);
         Some(tcs)
     } else if line.starts_with(EVAL_DBG_PFX) {
         let line = line.trim_start_matches(EVAL_DBG_CMD).trim_start();
-        debug_eval(tcs.1.clone(), line);
+        debug_eval(tcs.context.clone(), line);
         Some(tcs)
     } else if line.starts_with(':') {
         println!("Unrecognized command: {}", line);
@@ -337,13 +334,12 @@ fn update_tcs(tcs: TCS, expr: Expression) -> TCS {
     check_contextual(tcs, expr).unwrap_or_else(|err| {
         eprintln!("{}", err);
         eprintln!("Type-Checking State reset due to error (maybe implement recover later).");
-        default_state()
+        Default::default()
     })
 }
 
 fn show_telescope(tcs: &TCS) {
-    let (_, context) = &tcs;
-    match context.as_ref() {
+    match tcs.context.as_ref() {
         GenericTelescope::Nil => println!("Current Telescope is empty."),
         context => {
             println!("Current Telescope:\n{}", context);
@@ -352,13 +348,12 @@ fn show_telescope(tcs: &TCS) {
 }
 
 fn show_gamma(tcs: &TCS) {
-    let (gamma, _) = &tcs;
-    if gamma.is_empty() {
+    if tcs.gamma.is_empty() {
         println!("Current Gamma is empty.");
     } else {
         println!("Current Gamma:");
     }
-    gamma
+    tcs.gamma
         .iter()
         .for_each(|(name, value)| println!("{}: {}", name, value));
 }
