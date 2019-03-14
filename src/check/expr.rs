@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use crate::ast::{up_var_rc, Branch, Closure, Expression, Pattern, Value};
 use crate::check::decl::check_declaration;
 use crate::check::read_back::generate_value;
@@ -96,14 +94,15 @@ pub fn check_type(index: u32, tcs: TCS, expression: Expression) -> TCM<TCS> {
 
 /// `check` in Mini-TT.<br/>
 /// However, telescope and gamma are preserved for REPL use.
-pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: Value) -> TCM<TCS> {
+pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<TCS> {
     use crate::ast::Expression as E;
     use crate::ast::Value as V;
     match (expression, value) {
-        (E::Unit, V::One) | (E::Type, V::Type) | (E::One, V::Type) => Ok((gamma, context)),
+        (E::Unit, V::One) | (E::Type, V::Type) | (E::One, V::Type) => Ok(tcs),
         // There's nothing left to check.
-        (E::Void, _) => Ok((gamma, context)),
+        (E::Void, _) => Ok(tcs),
         (E::Lambda(pattern, _, body), V::Pi(signature, closure)) => {
+            let (gamma, context) = tcs;
             let generated = generate_value(index);
             let gamma = update_gamma_borrow(gamma, &pattern, *signature, &generated)?;
             check(
@@ -114,12 +113,8 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
             )
         }
         (E::Pair(first, second), V::Sigma(first_type, second_type)) => {
-            check(
-                index,
-                (Cow::Borrowed(&gamma), context.clone()),
-                *first.clone(),
-                *first_type,
-            )?;
+            check(index, tcs_borrow!(tcs), *first.clone(), *first_type)?;
+            let (gamma, context) = tcs;
             check(
                 index,
                 (gamma, context.clone()),
@@ -132,24 +127,20 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
                 .get(&name)
                 .ok_or_else(|| TCE::InvalidConstructor(name))?
                 .clone();
-            check(index, (gamma, context), *body, constructor.eval(*telescope))
+            check(index, tcs, *body, constructor.eval(*telescope))
         }
-        (E::Sum(constructors), V::Type) => check_sum_type(index, (gamma, context), constructors),
+        (E::Sum(constructors), V::Type) => check_sum_type(index, tcs, constructors),
         (E::Sigma((pattern, first), second), V::Type)
         | (E::Pi((pattern, first), second), V::Type) => {
-            check_telescoped(index, (gamma, context), pattern, *first, *second)
+            check_telescoped(index, tcs, pattern, *first, *second)
         }
         (E::Declaration(declaration, rest), rest_type) => {
-            let (gamma, context) =
-                check_declaration(index, (gamma, context.clone()), *declaration)?;
-            check(index, (gamma, context), *rest, rest_type)
+            let tcs = check_declaration(index, tcs, *declaration)?;
+            check(index, tcs, *rest, rest_type)
         }
         (E::Constant(pattern, body, rest), rest_type) => {
-            let signature = check_infer(
-                index,
-                (Cow::Borrowed(&gamma), context.clone()),
-                *body.clone(),
-            )?;
+            let signature = check_infer(index, tcs_borrow!(tcs), *body.clone())?;
+            let (gamma, context) = tcs;
             let body_val = body.eval(context.clone());
             let gamma = update_gamma_borrow(gamma, &pattern, signature, &body_val)?;
             let context = up_var_rc(context, pattern, body_val);
@@ -165,7 +156,7 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
                     };
                     check(
                         index,
-                        (Cow::Borrowed(&gamma), context.clone()),
+                        tcs_borrow!(tcs),
                         pattern_match,
                         V::Pi(
                             Box::new(branch.eval(*telescope.clone())),
@@ -174,7 +165,7 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
                     )?;
                 }
                 if branches.is_empty() {
-                    Ok((gamma, context))
+                    Ok(tcs)
                 } else {
                     let clauses: Vec<_> = branches.keys().map(|br| br.as_str()).collect();
                     Err(TCE::UnexpectedCases(clauses.join(" | ")))
@@ -182,52 +173,40 @@ pub fn check(index: u32, (gamma, context): TCS, expression: Expression, value: V
             }
             not_sum_so_fall_through => check_fallback(
                 index,
-                (gamma, context),
+                tcs,
                 E::Split(branches),
                 V::Pi(Box::new(not_sum_so_fall_through), closure),
             ),
         },
-        (expression, value) => check_fallback(index, (gamma, context), expression, value),
+        (expression, value) => check_fallback(index, tcs, expression, value),
     }
 }
 
 /// Fallback rule of instance check.<br/>
 /// First infer the expression type, then do subtyping comparison.
-fn check_fallback(
-    index: u32,
-    (gamma, context): TCS,
-    body: Expression,
-    signature: Value,
-) -> TCM<TCS> {
-    let inferred = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), body)?;
-    check_subtype(index, (gamma, context), inferred, signature)
+fn check_fallback(index: u32, tcs: TCS, body: Expression, signature: Value) -> TCM<TCS> {
+    let inferred = check_infer(index, tcs_borrow!(tcs), body)?;
+    check_subtype(index, tcs, inferred, signature)
 }
 
 /// To reuse code that checks if a sum type is well-typed between `check_type` and `check`
-pub fn check_sum_type(index: u32, (gamma, context): TCS, constructors: Branch) -> TCM<TCS> {
+pub fn check_sum_type(index: u32, tcs: TCS, constructors: Branch) -> TCM<TCS> {
     for constructor in constructors.values().cloned() {
-        check_type(
-            index,
-            (Cow::Borrowed(&gamma), context.clone()),
-            *constructor,
-        )?;
+        check_type(index, tcs_borrow!(tcs), *constructor)?;
     }
-    Ok((gamma, context))
+    Ok(tcs)
 }
 
 /// To reuse code that checks if a sigma or a pi type is well-typed between `check_type` and `check`
 pub fn check_telescoped(
     index: u32,
-    (gamma, context): TCS,
+    tcs: TCS,
     pattern: Pattern,
     first: Expression,
     second: Expression,
 ) -> TCM<TCS> {
-    check_type(
-        index,
-        (Cow::Borrowed(&gamma), context.clone()),
-        first.clone(),
-    )?;
+    check_type(index, tcs_borrow!(tcs), first.clone())?;
+    let (gamma, context) = tcs;
     let generated = generate_value(index);
     let gamma = update_gamma(
         gamma,

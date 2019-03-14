@@ -53,16 +53,17 @@ pub fn check_lift_parameters<'a>(
 /// This part deals with recursive declarations, but without prefixed parameters.
 pub fn check_recursive_declaration(
     index: u32,
-    (gamma, context): TCS,
+    tcs: TCS,
     declaration: Declaration,
 ) -> TCM<Gamma> {
     let pattern = declaration.pattern.clone();
     check_type(
         index,
-        (Cow::Borrowed(&gamma), context.clone()),
+        tcs_borrow!(tcs),
         declaration.signature.clone(),
     )
     .map_err(|err| try_locate!(err, pattern))?;
+    let (gamma, context) = tcs;
     let signature = declaration.signature.clone().eval(context.clone());
     let generated = generate_value(index);
     let fake_gamma = update_gamma_borrow(
@@ -93,25 +94,26 @@ pub fn check_recursive_declaration(
 /// This part deals with non-recursive declarations, but without prefixed parameters.
 pub fn check_simple_declaration(
     index: u32,
-    (gamma, context): TCS,
+    tcs: TCS,
     pattern: Pattern,
     signature: Expression,
     body: Expression,
 ) -> TCM<Gamma> {
     check_type(
         index,
-        (Cow::Borrowed(&gamma), context.clone()),
+        tcs_borrow!(tcs),
         signature.clone(),
     )
     .map_err(|err| try_locate!(err, pattern))?;
-    let signature = signature.eval(context.clone());
+    let signature = signature.eval(tcs.1.clone());
     check(
         index,
-        (Cow::Borrowed(&gamma), context.clone()),
+        tcs_borrow!(tcs),
         body.clone(),
         signature.clone(),
     )
     .map_err(|err| try_locate!(err, pattern))?;
+    let (gamma, context) = tcs;
     update_gamma_lazy(gamma, &pattern, signature, || body.eval(context))
         .map_err(|err| try_locate!(err, pattern))
 }
