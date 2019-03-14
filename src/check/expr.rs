@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use crate::ast::{up_var_rc, Branch, Closure, Expression, Pattern, Value};
 use crate::check::decl::check_declaration;
 use crate::check::read_back::generate_value;
-use crate::check::subtype::is_subtype;
+use crate::check::subtype::check_subtype;
 use crate::check::tcm::{update_gamma, update_gamma_borrow, TCE, TCM, TCS};
 use std::collections::BTreeMap;
 
@@ -196,7 +196,7 @@ fn check_fallback(
     signature: Value,
 ) -> TCM<TCS> {
     let inferred = check_infer(index, (Cow::Borrowed(&gamma), context.clone()), body)?;
-    is_subtype(index, (gamma, context), inferred, signature)
+    check_subtype(index, (gamma, context), inferred, signature)
 }
 
 /// To reuse code that checks if a sum type is well-typed between `check_type` and `check`
