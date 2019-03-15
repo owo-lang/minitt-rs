@@ -1,5 +1,5 @@
 let f1 : 1 = 0;
-let f2 : U = 1;
+let f2 : Type = 1;
 
 -- Since we have dependent types, types can be arbitrary expressions
 let f3 : f2 = f1;

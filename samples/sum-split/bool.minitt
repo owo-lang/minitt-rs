@@ -1,4 +1,4 @@
-let bool: U = sum { True | False };
+let bool: Type = Sum { True | False };
 -- Each constructor have only one argument
 -- Capitalized names are constructors so constructor calls are lexically
 -- recognizable

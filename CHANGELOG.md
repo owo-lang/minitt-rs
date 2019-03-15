@@ -2,6 +2,8 @@
 
 # 0.2.5
 
++ Rename `U` to `Type`, `sum` to `Sum`
+
 # 0.2.4
 
 + `TCS` is refactored to a struct

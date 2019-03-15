@@ -27,16 +27,16 @@ Current Gamma is empty.
 => :load samples\sum-split\bool.minitt
 => :gamma
 Current Gamma:
-and: Π sum {False: 1 | True: 1}. _. Π _: bool. bool
-bool: U
-boolean_id: Π sum {False: 1 | True: 1}. _. bool
-not: Π sum {False: 1 | True: 1}. _. bool
+and: Π Sum {False: 1 | True: 1}. _. Π _: bool. bool
+bool: Type
+boolean_id: Π Sum {False: 1 | True: 1}. _. bool
+not: Π Sum {False: 1 | True: 1}. _. bool
 => :context
 Current Telescope:
 let and: Π _: bool. Π _: bool. bool = split {False λ n. λ _. False n | True λ n. boolean_id};
 let boolean_id: Π _: bool. bool = λ n. n;
 let not: Π _: bool. bool = split {False λ n. True n | True λ n. False n};
-let bool: U = sum {False 1 | True 1};
+let bool: Type = Sum {False 1 | True 1};
 
 => :help
 Commands:
@@ -50,16 +50,16 @@ Commands:
 :normalize <EXPR>    Try to evaluate and normalize the type of the given expression.
 
 => :infer and
-Π sum {False: 1 | True: 1}. _. Π _: bool. bool
-=> :infer U
-U
+Π Sum {False: 1 | True: 1}. _. Π _: bool. bool
+=> :infer Type
+Type
 => :infer 0
 1
 => :infer (0,0)
 Σ 1. 1
 => :infer and (False 1)
-TypeCheck: U is not equal to 1 up to normal form
-=> let c : U = 1;
+TypeCheck: Type is not equal to 1 up to normal form
+=> let c : Type = 1;
 => :quit
 ```
 

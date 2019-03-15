@@ -39,7 +39,7 @@ foreach my $fixture (map {substr $_, 0, -1}
             map {say red("  $_")} split /\n/, $diff;
             next if $isCI;
             print colored('  Update the golden value (y/N)? ', 'cyan');
-            (readline =~ s/[\n\r]//rg) eq 'y' ? `$cmd &> $out`
+            (readline =~ s/[\n\r]//rg) eq 'y' ? `$cmd >& $out`
                 : say colored(<<"HINT", 'bold yellow');
   Leaving it alone.
   To update the golden value, run `test_runner.pl` in `src/test` directly.

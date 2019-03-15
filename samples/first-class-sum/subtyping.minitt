@@ -1,4 +1,4 @@
-const bool = sum { True | False };
+const bool = Sum { True | False };
 
 const myTrue = True;
 let check: bool = myTrue;

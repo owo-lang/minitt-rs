@@ -1,13 +1,13 @@
-let maybe: U -> U = \lambda t. sum { Just t | Nothing };
+let maybe: Type -> Type = \lambda t. Sum { Just t | Nothing };
 
-let the: \Pi t: U. (t -> t) = \lambda _. \lambda a. a;
+let the: \Pi t: Type. (t -> t) = \lambda _. \lambda a. a;
 
-let unwrap_type (t : U): (maybe t) -> U = split
+let unwrap_type (t : Type): (maybe t) -> Type = split
   { Just _ => t
   | Nothing => 1
   };
 
--- let unwrap_bad: \Pi t: U. \Pi mt: maybe t. (unwrap_type t) mt = \lambda t.
+-- let unwrap_bad: \Pi t: Type. \Pi mt: maybe t. (unwrap_type t) mt = \lambda t.
 --   the (\Pi mt: maybe t. (unwrap_type t) mt) split
 --     { Just a => a
 --     | Nothing => 0
@@ -21,7 +21,7 @@ let unwrap_type (t : U): (maybe t) -> U = split
 -- And, as you can imagine, it cannot infer `split`'s type signature obviously.
 -- Look at this cubicaltt-like replacement:
 
-let unwrap (t : U): \Pi mt: maybe t. (unwrap_type t) mt = split
+let unwrap (t : Type): \Pi mt: maybe t. (unwrap_type t) mt = split
   -- I'm so sorry for the dumb parser, function application is accidentally
   -- right-associative.
   { Just a => a

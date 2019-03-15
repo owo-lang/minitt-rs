@@ -1,5 +1,5 @@
-let a : U = 1;
-let b : U = 1;
+let a : Type = 1;
+let b : Type = 1;
 
 let f : a -> b = \lambda x . x;
 -- Arrows are equivalent to \Pi _: a. b

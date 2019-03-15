@@ -1,8 +1,8 @@
-const bool = sum { True | False };
-const unit = sum { TT };
+const bool = Sum { True | False };
+const unit = Sum { TT };
 -- A 2 type and a 1 type
 
-let return_type: bool -> U = split
+let return_type: bool -> Type = split
  { True => unit
  | False => 1
  };

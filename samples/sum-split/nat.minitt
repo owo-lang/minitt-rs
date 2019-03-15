@@ -1,11 +1,11 @@
-rec nat : U = sum { Zero | Suc nat };
+rec nat : Type = Sum { Zero | Suc nat };
 -- Inductive definition of nat
 
 let one : nat = Zero;
 
 let two : nat = Suc one;
 
-let test_case_split: nat -> U = split
+let test_case_split: nat -> Type = split
  { Zero => 1
  | Suc  => 1
  };

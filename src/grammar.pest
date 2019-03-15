@@ -13,7 +13,6 @@ identifier_simple =
  @{ !"let"
   ~ !"rec"
   ~ !"split"
-  ~ !"sum"
   ~ !"const"
   ~ !"\\lambda"
   ~ !"\\Sigma"
@@ -24,8 +23,7 @@ identifier_simple =
   ~ character+
   }
 identifier_raw =
- @{ ("sum" ~ character+)
-  | ("split" ~ character+)
+ @{ ("split" ~ character+)
   | ("let" ~ character+)
   | ("rec" ~ character+)
   | ("const" ~ character+)
@@ -45,7 +43,7 @@ single_arrow = _{ "->" | "\u{2192}" }
 let_or_rec = { "let" | "rec" }
 one = { "1" }
 unit = { "0" }
-universe = { "U" }
+universe = { "Type" }
 // void = { EOI }
 meta_var = { "_" }
 
@@ -77,14 +75,14 @@ pattern_match =
  }
 sigma_type = { sigma ~ typed_abstraction }
 split = { "split" ~ choices }
-sum = { "sum" ~ branches }
+sum = { "Sum" ~ branches }
 variable = { identifier }
 atom =
   { universe
+  | sum
   | constructor
   | variable
   | split
-  | sum
   | one
   | unit
   | pi_type
