@@ -70,17 +70,21 @@ pub fn check_subtype_sum<Sub, Super>(
             .ok_or_else(|| TCE::UnexpectedCases(constructor))?;
         let sub_parameter = sub_tree_eval(sub_parameter);
         let super_parameter = super_tree_eval(super_parameter);
-        match compare_normal(
+        compare_normal(
             index,
             tcs_borrow!(tcs),
             sub_parameter.clone(),
             super_parameter.clone(),
-        ) {
-            Ok(_) => {}
-            Err(_) => {
-                tcs = check_subtype(index, tcs, sub_parameter, super_parameter, false)?;
-            }
-        }
+        )
+        .or_else(|_err| {
+            check_subtype(
+                index,
+                tcs_borrow!(tcs),
+                sub_parameter,
+                super_parameter,
+                false,
+            )
+        })?;
     }
     Ok(tcs)
 }
