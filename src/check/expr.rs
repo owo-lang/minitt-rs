@@ -187,7 +187,7 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
 /// First infer the expression type, then do subtyping comparison.
 pub fn check_fallback(index: u32, tcs: TCS, body: Expression, signature: Value) -> TCM<TCS> {
     let inferred = check_infer(index, tcs_borrow!(tcs), body)?;
-    check_subtype(index, tcs, inferred, signature)
+    check_subtype(index, tcs, inferred, signature, true)
 }
 
 /// To reuse code that checks if a sum type is well-typed between `check_type` and `check`

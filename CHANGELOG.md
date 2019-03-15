@@ -3,6 +3,7 @@
 # 0.2.5
 
 + Rename `U` to `Type`, `sum` to `Sum`
++ Improve the subtyping rule generalized in 0.2.4
 
 # 0.2.4
 

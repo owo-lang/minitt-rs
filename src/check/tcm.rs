@@ -27,8 +27,10 @@ pub enum TCE {
     WantSigmaBut(Value),
     /// We can get the argument of application here, to better report error.
     WantPiBut(Value, Expression),
+    /// Actually first value, expected second value
+    TypeMismatch(Value, Value),
     /// First argument is inferred value, second is expected.
-    InferredDoesNotMatchExpected(NormalExpression, NormalExpression),
+    ReadBackTypeMismatch(NormalExpression, NormalExpression),
     Located(Box<TCE>, Pattern),
 }
 
@@ -143,13 +145,8 @@ impl Display for TCE {
                 f.write_str(joined_name.as_str())?;
                 f.write_str("`.")
             }
-            TCE::InferredDoesNotMatchExpected(inferred, expected) => {
-                f.write_str("Type mismatch: expected `")?;
-                expected.fmt(f)?;
-                f.write_str("`, got (inferred): `")?;
-                inferred.fmt(f)?;
-                f.write_str("`.")
-            }
+            TCE::ReadBackTypeMismatch(inferred, expected) => mismatch(f, inferred, expected),
+            TCE::TypeMismatch(inferred, expected) => mismatch(f, inferred, expected),
             TCE::Located(wrapped, pattern) => {
                 wrapped.fmt(f)?;
                 f.write_str("\nWhen checking the declaration of `")?;
@@ -230,4 +227,13 @@ fn update_gamma_by_var<'a>(gamma: Gamma<'a>, type_val: Value, name: &String) -> 
     let mut gamma = gamma.into_owned();
     gamma.insert(name.clone(), type_val);
     Ok(Cow::Owned(gamma))
+}
+
+#[inline]
+fn mismatch<E: Display>(f: &mut Formatter, inferred: &E, expected: &E) -> Result<(), Error> {
+    f.write_str("Type mismatch: expected `")?;
+    expected.fmt(f)?;
+    f.write_str("`, got (inferred): `")?;
+    inferred.fmt(f)?;
+    f.write_str("`.")
 }
