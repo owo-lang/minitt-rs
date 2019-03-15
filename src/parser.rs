@@ -451,7 +451,7 @@ mod tests {
 
     #[test]
     fn simple_parse() {
-        successful_test_case("let unit_one : 1 = 0;\nlet type_one : U = unit_one;");
+        successful_test_case("let unit_one : 1 = 0;\nlet type_one : Type = unit_one;");
         successful_test_case("let application : k = f e;");
         successful_test_case("let pair_first_second : k = ((x, y).1).2;");
         successful_test_case("let sigma_type : \\Sigma x : x_type . y = x, y;");
@@ -462,7 +462,7 @@ mod tests {
 
     #[test]
     fn no_reparse() {
-        successful_no_reparse("let function : sum {C e} = split {C _ => e};");
+        successful_no_reparse("let function : Sum {C e} = split {C _ => e};");
         successful_no_reparse("let function (x : a) : bla = rua;");
     }
 

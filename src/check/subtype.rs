@@ -58,7 +58,7 @@ pub fn check_subtype(
 #[inline]
 pub fn check_subtype_sum<Sub, Super>(
     index: u32,
-    mut tcs: TCS,
+    tcs: TCS,
     sub_tree: BTreeMap<String, Sub>,
     mut super_tree: BTreeMap<String, Super>,
     sub_tree_eval: impl Fn(Sub) -> Value,
