@@ -54,7 +54,7 @@ pub fn check_subtype_sum<Sub, Super>(
         let super_parameter = super_tree_eval(super_parameter);
         compare_normal(index, tcs_borrow!(tcs), sub_parameter, super_parameter)?;
     }
-    return Ok(tcs);
+    Ok(tcs)
 }
 
 /// Read back the type values and do syntactic comparison.

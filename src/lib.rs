@@ -43,16 +43,30 @@ several extensions are introduced in later versions.
 Mini-TT has three syntax trees:
 
 + [Surface syntax tree](ast/enum.Expression.html), aka concrete syntax tree, representing
-  expressions that cannot be type-checked alone or simply not type-checked yet
+  expressions that cannot be type-checked alone (and this is because of the presence of free
+  variables) or simply not type-checked yet
 + [Abstract syntax tree](ast/enum.Value.html), aka values or terms, representing expressions
   that are already type-checked. This implies "no free variables"
   + Values might be [neutral values](ast/enum.GenericNeutral.html): these values represents
     variable bindings that are not free but not reducible, like a parameter, or an expression
     that cannot be reduced due to the presence of this parameter
-  + Values might be [closures](ast/enum.Closure.html): expression + context + parameter bindings
+  + Values might be [closures](ast/enum.Closure.html): surface syntax term + context +
+    parameter bindings
 + [Normal form syntax tree](check/read_back/enum.NormalExpression.html), aka normal forms.
   This is the output of the "read back" functions
   + Details are introduced later. Personally, I consider this not necessary and ugly.
+
+Mini-TT has two "environments":
+
++ One typing context (called [`Gamma`](check/tcm/type.Gamma.html) in minitt), this is passed around
+  only during type-checking
++ One evaluation context (called [`Telescope`](ast/enum.GenericTelescope.html) in minitt), this is
+  stored in closures (as captured environment)
+
+However, since type-checking produces new closures and need a evaluation context to reduce terms,
+these two environments are passed together during type-checking.<br/>
+They're stored together in [`TCS`](check/tcm/struct.TCS.html), which is short for "Type-Checking
+State".
 
 ## Type-Checking
 
