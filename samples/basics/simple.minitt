@@ -1,6 +1,6 @@
 let f1 : U = 1;
 -- U is universe, the type of types.
--- 1 is the "one" type, which have one instance.
+-- 1 is the "one" type (a.k.a unit type), which has one instance.
 
 let f2 : 1 = 0;
 -- .. and 0 is the instance of 1.
