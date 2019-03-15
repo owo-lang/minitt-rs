@@ -44,7 +44,7 @@ let_or_rec = { "let" | "rec" }
 one = { "1" }
 unit = { "0" }
 universe = { "Type" }
-// void = { EOI }
+void = { EOI }
 meta_var = { "_" }
 
 // Prefixed parameters

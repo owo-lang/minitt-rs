@@ -23,7 +23,7 @@ impl Display for Value {
                 f.write_str("\u{03A0} ")?;
                 output.fmt_with_type(f, Some(&**input))
             }
-            Value::Type => f.write_str("U"),
+            Value::Type => f.write_str("Type"),
             Value::Sigma(first, second) => {
                 f.write_str("\u{03A3} ")?;
                 second.fmt_with_type(f, Some(&**first))
@@ -41,7 +41,7 @@ impl Display for Value {
             }
             // Don't print the context
             Value::Sum(constructors) => {
-                f.write_str("sum {")?;
+                f.write_str("Sum {")?;
                 constructors.fmt(f)?;
                 f.write_char('}')
             }
@@ -104,7 +104,7 @@ impl Display for Expression {
                 f.write_str(". ")?;
                 output.fmt(f)
             }
-            Expression::Type => f.write_str("U"),
+            Expression::Type => f.write_str("Type"),
             Expression::Sigma((pattern, first), second) => {
                 f.write_str("\u{03A3} ")?;
                 pattern.fmt(f)?;
@@ -125,7 +125,7 @@ impl Display for Expression {
             }
             // Don't print the context
             Expression::Sum(constructors) => {
-                f.write_str("sum {")?;
+                f.write_str("Sum {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
             }
@@ -304,7 +304,7 @@ impl Display for NormalExpression {
                 f.write_str(". ")?;
                 output.fmt(f)
             }
-            Expression::Type => f.write_str("U"),
+            Expression::Type => f.write_str("Type"),
             Expression::Sigma(first, index, second) => {
                 f.write_str("\u{03A3} <")?;
                 index.fmt(f)?;
@@ -325,7 +325,7 @@ impl Display for NormalExpression {
             }
             // Don't print the context
             Expression::Sum(constructors) => {
-                f.write_str("sum {")?;
+                f.write_str("Sum {")?;
                 constructors.fmt(f)?;
                 f.write_char('}')
             }
