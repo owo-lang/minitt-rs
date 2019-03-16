@@ -27,7 +27,10 @@ pub fn main() {
                 // Type Check
                 let checked = check_main(ast)
                     .map_err(|err| eprintln!("{}", err))
-                    .expect("Type-Check failed.");
+                    .unwrap_or_else(|()| {
+                        eprintln!("Type-Check failed.");
+                        std::process::exit(1);
+                    });
                 if !args.quiet {
                     println!("Type-Check successful.");
                 }

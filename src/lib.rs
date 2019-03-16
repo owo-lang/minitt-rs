@@ -32,8 +32,8 @@ Mini-TT does not, but minitt does support:
   help of an [additional member of lambda expressions](ast/struct.AnonymousValue.html)
 + Infer types of expressions that appears deeply inside an expression
 + Constant expressions with type signature completely inferred
-+ Universe levels and subtyping (work in progress)
-+ Subtyping on sum types (work in progress)
++ Universe levels and its subtyping
++ First-class sum types and its subtyping (work in progress)
 
 [Version 0.1.8](https://docs.rs/crate/minitt/0.1.8) of minitt is basically a vanilla Mini-TT,
 several extensions are introduced in later versions.

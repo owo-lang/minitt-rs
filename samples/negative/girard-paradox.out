@@ -1,5 +1,4 @@
 Parse successful.
 Type mismatch: expected `Type0`, got (inferred): `Type1`.
 When checking the declaration of `error`.
-thread 'main' panicked at 'Type-Check failed.: ()', src/libcore/result.rs:997:5
-note: Run with `RUST_BACKTRACE=1` environment variable to display a backtrace.
+Type-Check failed.

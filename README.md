@@ -38,21 +38,21 @@ don't get confused when they read the paper while reading this implementation.
 A dependently-typed program in [samples](./samples/dependent/function.minitt):
 
 ```haskell
-const bool = sum { True | False };
-const unit = sum { TT };
 -- A 2 type and a 1 type
+const bool = Sum { True | False };
+const unit = Sum { TT };
 
-let return_type: bool -> U = split
+-- By `function.minitt` of course I mean dependent functions :)
+let return_type: bool -> Type = split
  { True => unit
  | False => 1
  };
--- By `function.minitt` of course I mean dependent functions :)
 
+-- Return things that are of different types.
 let function: \Pi b: bool. return_type b = split
  { True => TT
  | False => 0
  };
--- Return things that are of different types.
 ```
 
 We can have functions returning values of different types, while it's still
