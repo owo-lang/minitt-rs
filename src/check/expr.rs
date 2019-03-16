@@ -151,22 +151,13 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
             check(index, tcs, *body, constructor_type)
         }
         (E::Sum(constructors), V::Type(level)) => {
-            let (actual_level, tcs) = check_sum_type(index, tcs, constructors)?;
-            if actual_level <= level {
-                Ok(tcs)
-            } else {
-                Err(TCE::LevelMismatch(actual_level, level))
-            }
+            check_level(level, check_sum_type(index, tcs, constructors)?)
         }
         (E::Sigma((pattern, first), second), V::Type(level))
-        | (E::Pi((pattern, first), second), V::Type(level)) => {
-            let (actual_level, tcs) = check_telescoped(index, tcs, pattern, *first, *second)?;
-            if actual_level <= level {
-                Ok(tcs)
-            } else {
-                Err(TCE::LevelMismatch(actual_level, level))
-            }
-        }
+        | (E::Pi((pattern, first), second), V::Type(level)) => check_level(
+            level,
+            check_telescoped(index, tcs, pattern, *first, *second)?,
+        ),
         (E::Declaration(declaration, rest), rest_type) => {
             let tcs = check_declaration(index, tcs, *declaration)?;
             check(index, tcs, *rest, rest_type)
@@ -208,6 +199,15 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
             ),
         },
         (expression, value) => check_fallback(index, tcs, expression, value),
+    }
+}
+
+/// Level comparison
+pub fn check_level(level: u32, (actual_level, tcs): (u32, TCS)) -> TCM<TCS> {
+    if actual_level <= level {
+        Ok(tcs)
+    } else {
+        Err(TCE::LevelMismatch(actual_level, level))
     }
 }
 
