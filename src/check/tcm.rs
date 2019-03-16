@@ -29,6 +29,10 @@ pub enum TCE {
     WantPiBut(Value, Expression),
     /// Actually first value, expected second value
     TypeMismatch(Value, Value),
+    /// Want a type, but unfortunately it's not
+    NotType(Value),
+    /// Actually first level, expected second level
+    LevelMismatch(u32, u32),
     /// First argument is inferred value, second is expected.
     ReadBackTypeMismatch(NormalExpression, NormalExpression),
     Located(Box<TCE>, Pattern),
@@ -133,6 +137,18 @@ impl Display for TCE {
                 expression.fmt(f)?;
                 f.write_str("`\nWhen checking the application whose argument is `")?;
                 argument.fmt(f)?;
+                f.write_str("`.")
+            }
+            TCE::NotType(value) => {
+                f.write_str("Expected a type expression, instead got: `")?;
+                value.fmt(f)?;
+                f.write_str("`.")
+            }
+            TCE::LevelMismatch(actual, expected) => {
+                f.write_str("Expected a type expression at level `")?;
+                expected.fmt(f)?;
+                f.write_str("`, instead got one at level: `")?;
+                actual.fmt(f)?;
                 f.write_str("`.")
             }
             TCE::MissingCase(name) => {

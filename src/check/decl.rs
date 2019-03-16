@@ -30,7 +30,7 @@ pub fn check_lift_parameters<'a>(
         return check_body(tcs);
     }
     let (pattern, expression) = parameters.remove(0);
-    let TCS { gamma, context } = check_type(index, tcs, *expression.clone())?;
+    let (_level, TCS { gamma, context }) = check_type(index, tcs, *expression.clone())?;
     let generated = generate_value(index);
     let type_val = expression.clone().eval(context.clone());
     let gamma = update_gamma_borrow(gamma, &pattern, type_val.clone(), &generated)?;
@@ -130,7 +130,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
             body,
             declaration_type: Simple,
         } => check_lift_parameters(index, tcs_borrow!(tcs), prefix_parameters, |tcs| {
-            let tcs = check_type(index, tcs, signature.clone())
+            let (_level, tcs) = check_type(index, tcs, signature.clone())
                 .map_err(|err| try_locate!(err, pattern))?;
             let context = tcs.context();
             let tcs = check(index, tcs, body.clone(), signature.clone().eval(context))
@@ -145,7 +145,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
                 tcs_borrow!(tcs),
                 declaration.prefix_parameters.clone(),
                 |tcs| {
-                    let TCS { gamma, context } =
+                    let (_level, TCS { gamma, context }) =
                         check_type(index, tcs, declaration.signature.clone())
                             .map_err(|err| try_locate!(err, pattern))?;
                     let pattern = pattern.clone();
