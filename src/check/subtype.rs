@@ -12,8 +12,16 @@ pub fn check_subtype(
     supertype: Value,
     read_back: bool,
 ) -> TCM<TCS> {
+    use crate::ast::Value::*;
     match (subtype, supertype) {
-        (Value::Sum(sub_tree), Value::Sum(super_tree)) => {
+        (Type(sub_level), Type(super_level)) => {
+            if sub_level <= super_level {
+                Ok(tcs)
+            } else {
+                Err(TCE::TypeMismatch(Type(sub_level), Type(super_level)))
+            }
+        }
+        (Sum(sub_tree), Sum(super_tree)) => {
             let (super_tree, super_environment) = super_tree.destruct();
             let (sub_tree, sub_environment) = sub_tree.destruct();
             let super_eval = |sup: Box<Either<Value, Expression>>| {
@@ -24,8 +32,8 @@ pub fn check_subtype(
             };
             check_subtype_sum(index, tcs, sub_tree, super_tree, sub_eval, super_eval)
         }
-        (Value::Pi(sub_param, sub_closure), Value::Pi(super_param, super_closure))
-        | (Value::Sigma(sub_param, sub_closure), Value::Sigma(super_param, super_closure)) => {
+        (Pi(sub_param, sub_closure), Pi(super_param, super_closure))
+        | (Sigma(sub_param, sub_closure), Sigma(super_param, super_closure)) => {
             let tcs = check_subtype(index, tcs, *super_param, *sub_param, true)?;
             let generated = generate_value(index);
             check_subtype(
