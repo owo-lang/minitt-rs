@@ -1,5 +1,7 @@
 # Change Log
 
+# 0.2.6
+
 # 0.2.5
 
 + Rename `U` to `Type`, `sum` to `Sum`

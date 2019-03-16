@@ -1,6 +1,6 @@
 [package]
 name = "minitt"
-version = "0.2.5"
+version = "0.2.6"
 authors = ["ice1000 <ice1000kotlin@foxmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
