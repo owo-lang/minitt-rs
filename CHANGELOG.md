@@ -4,7 +4,8 @@
 
 + Rename `U` to `Type`, `sum` to `Sum`
 + Improve the subtyping rule generalized in 0.2.4
-+ Introduce universe levels (pretty much WIP)
++ Introduce universe levels, you're now allowed to have
+  `Type0`, `Type1`, etc. (and no longer `Type : Type`) (pretty much WIP)
 
 # 0.2.4
 
