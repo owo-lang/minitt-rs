@@ -1,14 +1,14 @@
-let a: Πx: bool. bool = λx. x;
 -- Pi, lambda
+let a: Πx: bool. bool = λx. x;
 
-let b: bool ✖ bool × bool = (1, 1, 1);
 -- Multiplication, both OK
+let b: bool ✖ bool × bool = (1, 1, 1);
 
-let c: Σx: bool. bool = bla;
 -- Sigma
+let c: Σx: bool. bool = bla;
 
+-- Arrows
 let d: bool → bool = split
  { True _ ⇒ False 0
  | False _ ⇒ True 0
  };
--- Arrows

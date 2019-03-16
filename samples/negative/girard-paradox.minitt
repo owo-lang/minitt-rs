@@ -1,8 +1,7 @@
-let error: Type = Type;
-
 --
 -- Created by intellij-minitt on 2019-03-16
 -- girard-paradox
 -- Author: ice1000
 --
 
+let error: Type = Type;

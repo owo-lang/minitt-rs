@@ -1,8 +1,6 @@
-let f1 : Type = 1;
 -- Type is universe, the type of types.
 -- 1 is the "one" type (a.k.a unit type), which has one instance.
+let f1 : Type = 1;
 
-let f2 : 1 = 0;
 -- .. and 0 is the instance of 1.
-
--- Unfortunately comments are not allowed at the beginning of a file :(
+let f2 : 1 = 0;

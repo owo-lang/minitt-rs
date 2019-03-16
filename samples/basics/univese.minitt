@@ -2,11 +2,12 @@ let level1: Type2 = Type1;
 
 let level0_: Type1 = Type0;
 let level0: level1 = Type0;
-let levelBla: level0 = 1;
+
 -- Type levels can be a variable
+let levelBla: level0 = 1;
 
-let dio: Type234 = Type233;
 -- Oh! DIO is so high!
+let dio: Type234 = Type233;
 
-let subtype: dio = Type1;
 -- Subtype
+let subtype: dio = Type1;

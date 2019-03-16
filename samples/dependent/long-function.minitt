@@ -1,3 +1,2 @@
+-- Introduce typed parameter in this way can help minitt better infer the types
 let the (x : Type) (a : x) : x = a;
--- Introduce typed parameter in this way can help minitt better infer the
--- types

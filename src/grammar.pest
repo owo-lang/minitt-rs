@@ -128,3 +128,6 @@ declaration =
  ~ "=" ~ expression
  ~ ";" ~ expression?
  }
+
+// File
+file = { WHITESPACE* ~ expression }

@@ -12,17 +12,23 @@ struct MiniParser;
 type Tok<'a> = Pair<'a, Rule>;
 type Tik<'a> = Pairs<'a, Rule>;
 
-/// Parse a string into an optional expression
+/// Parse a string into an optional expression based on `file` rule:
+/// ```ignore
+/// file = { WHITESPACE* ~ expression }
+/// ```
 pub fn parse_str(input: &str) -> Result<Expression, String> {
     Ok(expression_to_expression(
-        MiniParser::parse(Rule::expression, input)
+        MiniParser::parse(Rule::file, input)
             .map_err(|err| format!("Parse failed at:{}", err))?
+            .next()
+            .unwrap()
+            .into_inner()
             .next()
             .unwrap(),
     ))
 }
 
-/// Parse a string into an optional expression and print error to stderr
+/// Parse a string into an optional expression and print error to stderr.
 #[inline]
 pub fn parse_str_err_printed(code: &str) -> Result<Expression, ()> {
     parse_str(code).map_err(|err| eprintln!("{}", err))

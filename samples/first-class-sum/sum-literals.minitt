@@ -1,9 +1,9 @@
-const boolA = Sum { True | False };
 -- This is a demonstration showing that sum types
 -- in Mini-TT are first-class.
+const boolA = Sum { True | False };
 
+-- See?
 let myNot: Sum { True | False } -> boolA = split
   { True => False
   | False => True
   };
--- See?

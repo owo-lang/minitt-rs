@@ -1,2 +1,2 @@
-let a : b = c;
 -- CLI flag "--parse-only": just parse, don't type-check.
+let a : b = c;

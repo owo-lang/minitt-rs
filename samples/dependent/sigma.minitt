@@ -1,13 +1,13 @@
-let pair: \Sigma a: 1. 1 = 0, 0;
 -- A pair whose type is a sigma type
+let pair: \Sigma a: 1. 1 = 0, 0;
 
+-- Projections
 let fst: 1 = pair.1;
 let snd: 1 = pair.2;
--- Projections
 
-let new_feature: 1 = (0, 0).2;
 -- Vanilla Mini-TT does not support this (IIRC).
+let new_feature: 1 = (0, 0).2;
 
-let complicated: 1 = (((0, 0), (0, 0).2).1).2;
 -- Have to add a parenthesis between, because I didn't spend much time
 -- on the parser.
+let complicated: 1 = (((0, 0), (0, 0).2).1).2;

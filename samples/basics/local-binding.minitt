@@ -1,4 +1,4 @@
+-- Local let-bindings!
 let sample: Type =
   let unit: Type = Sum { TT 1 };
   unit;
--- Local let-bindings!

@@ -1,15 +1,15 @@
+-- A 2 type and a 1 type
 const bool = Sum { True | False };
 const unit = Sum { TT };
--- A 2 type and a 1 type
 
+-- By `function.minitt` of course I mean dependent functions :)
 let return_type: bool -> Type = split
  { True => unit
  | False => 1
  };
--- By `function.minitt` of course I mean dependent functions :)
 
+-- Return things that are of different types.
 let function: \Pi b: bool. return_type b = split
  { True => TT
  | False => 0
  };
--- Return things that are of different types.
