@@ -30,6 +30,7 @@ pub fn check_lift_parameters<'a>(
         return check_body(tcs);
     }
     let (pattern, expression) = parameters.remove(0);
+    // TODO: this level might be the pi level
     let (_level, TCS { gamma, context }) = check_type(index, tcs, *expression.clone())?;
     let generated = generate_value(index);
     let type_val = expression.clone().eval(context.clone());
@@ -130,6 +131,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
             body,
             declaration_type: Simple,
         } => check_lift_parameters(index, tcs_borrow!(tcs), prefix_parameters, |tcs| {
+            // TODO: this level might be the pi level
             let (_level, tcs) = check_type(index, tcs, signature.clone())
                 .map_err(|err| try_locate!(err, pattern))?;
             let context = tcs.context();
@@ -145,6 +147,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
                 tcs_borrow!(tcs),
                 declaration.prefix_parameters.clone(),
                 |tcs| {
+                    // TODO: this level might be the pi level
                     let (_level, TCS { gamma, context }) =
                         check_type(index, tcs, declaration.signature.clone())
                             .map_err(|err| try_locate!(err, pattern))?;
