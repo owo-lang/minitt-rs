@@ -247,7 +247,7 @@ pub fn const_declaration_to_expression(the_rule: Tok) -> Expression {
 pub fn atom_to_expression(rules: Tok) -> Expression {
     let the_rule: Tok = rules.into_inner().next().unwrap();
     match the_rule.as_rule() {
-        Rule::universe => Expression::Type,
+        Rule::universe => universe_to_expression(the_rule),
         Rule::constructor => constructor_to_expression(the_rule),
         Rule::variable => variable_to_expression(the_rule),
         Rule::split => Expression::Split(choices_to_tree_map(the_rule)),
@@ -382,6 +382,16 @@ pub fn constructor_to_expression(the_rule: Tok) -> Expression {
 }
 
 /// ```ignore
+/// level = { ASCII_DIGIT* }
+/// universe = @{ "Type" ~ level }
+/// ```
+pub fn universe_to_expression(the_rule: Tok) -> Expression {
+    let mut inner: Tik = the_rule.into_inner();
+    let level = inner.next().unwrap().as_str();
+    Expression::Type(level.parse().unwrap_or(0))
+}
+
+/// ```ignore
 /// constructor_name = @{ ASCII_ALPHA_UPPER ~ identifier? }
 /// constructor = { constructor_name ~ expression }
 /// ```
@@ -451,7 +461,7 @@ mod tests {
 
     #[test]
     fn simple_parse() {
-        successful_test_case("let unit_one : 1 = 0;\nlet type_one : Type = unit_one;");
+        successful_test_case("let unit_one : 1 = 0;\nlet type_one : Type0 = unit_one;");
         successful_test_case("let application : k = f e;");
         successful_test_case("let pair_first_second : k = ((x, y).1).2;");
         successful_test_case("let sigma_type : \\Sigma x : x_type . y = x, y;");

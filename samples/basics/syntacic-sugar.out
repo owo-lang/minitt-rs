@@ -1,6 +1,6 @@
 Parse successful.
-let a: Type = 1;
-let b: Type = 1;
+let a: Type0 = 1;
+let b: Type0 = 1;
 let f: Π _: a. b = λ x. x;
 let p: Σ _: a. b = (0, 0);
 const infer_my_type = (1, 1);

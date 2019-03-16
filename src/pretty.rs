@@ -23,7 +23,10 @@ impl Display for Value {
                 f.write_str("\u{03A0} ")?;
                 output.fmt_with_type(f, Some(&**input))
             }
-            Value::Type => f.write_str("Type"),
+            Value::Type(level) => {
+                f.write_str("Type")?;
+                level.fmt(f)
+            }
             Value::Sigma(first, second) => {
                 f.write_str("\u{03A3} ")?;
                 second.fmt_with_type(f, Some(&**first))
@@ -104,7 +107,10 @@ impl Display for Expression {
                 f.write_str(". ")?;
                 output.fmt(f)
             }
-            Expression::Type => f.write_str("Type"),
+            Expression::Type(level) => {
+                f.write_str("Type")?;
+                level.fmt(f)
+            }
             Expression::Sigma((pattern, first), second) => {
                 f.write_str("\u{03A3} ")?;
                 pattern.fmt(f)?;
@@ -304,7 +310,10 @@ impl Display for NormalExpression {
                 f.write_str(". ")?;
                 output.fmt(f)
             }
-            Expression::Type => f.write_str("Type"),
+            Expression::Type(level) => {
+                f.write_str("Type")?;
+                level.fmt(f)
+            }
             Expression::Sigma(first, index, second) => {
                 f.write_str("\u{03A3} <")?;
                 index.fmt(f)?;

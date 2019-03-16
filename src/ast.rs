@@ -10,13 +10,13 @@ pub enum Expression {
     Unit,
     /// `1`
     One,
-    /// `U`
-    Type,
+    /// `Type`
+    Type(u32),
     /// Empty file
     Void,
     /// `bla`
     Var(String),
-    /// `sum { Bla x }`
+    /// `Sum { Bla x }`
     Sum(Branch),
     /// `split { Bla x => y }`
     Split(Branch),
@@ -99,7 +99,7 @@ pub enum Value {
     /// Canonical form: unit type.
     One,
     /// Canonical form: type universe.
-    Type,
+    Type(u32),
     /// Canonical form: pi type (type for dependent functions).
     Pi(Box<Self>, Closure),
     /// Canonical form: sigma type (type for dependent pair).
@@ -229,7 +229,7 @@ pub enum GenericTelescope<Value: Clone> {
     /// recursive declaration as an `Expression` (which is a member of `Declaration`) here.
     ///
     /// The problem is quite complicated and can be reproduced by checking out 0.1.5 revision and
-    /// type-check this code:
+    /// type-check this code (`Type` was `U` and `Sum` was `sum` at that time):
     ///
     /// ```ignore
     /// rec nat : U = sum { Zero 1 | Suc nat };

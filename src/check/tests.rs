@@ -6,14 +6,14 @@ fn simple_check() {
     check_declaration_main(Declaration::simple(
         Pattern::Unit,
         vec![],
-        Expression::Type,
+        Expression::Type(0),
         Expression::One,
     ))
     .unwrap();
     let error_message = check_declaration_main(Declaration::simple(
         Pattern::Unit,
         vec![],
-        Expression::Type,
+        Expression::Type(0),
         Expression::Unit,
     ))
     .unwrap_err();

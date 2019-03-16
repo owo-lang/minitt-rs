@@ -23,7 +23,7 @@ pub enum NormalExpression {
     Pair(Box<Self>, Box<Self>),
     Unit,
     One,
-    Type,
+    Type(u32),
     Pi(Box<Self>, u32, Box<Self>),
     Sigma(Box<Self>, u32, Box<Self>),
     Constructor(String, Box<Self>),
@@ -79,7 +79,7 @@ impl ReadBack for Value {
             }
             Value::Unit => Unit,
             Value::One => One,
-            Value::Type => Type,
+            Value::Type(level) => Type(level),
             Value::Pi(input, output) => {
                 let output = output
                     .instantiate(generate_value(index))

@@ -163,7 +163,7 @@ impl Expression {
         match self {
             E::Unit => V::Unit,
             E::One => V::One,
-            E::Type => V::Type,
+            E::Type(level) => V::Type(level),
             E::Var(name) => context
                 .resolve(&name)
                 .map_err(|err| eprintln!("{}", err))

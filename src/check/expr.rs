@@ -14,7 +14,8 @@ pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
     use crate::ast::Expression::*;
     match expression {
         Unit => Ok(Value::One),
-        Type | Void | One => Ok(Value::Type),
+        Type(level) => Ok(Value::Type(level + 1)),
+        Void | One => Ok(Value::Type(0)),
         Var(name) => tcs
             .gamma
             .get(&name)
@@ -48,7 +49,8 @@ pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
             for (_name, branch) in branches.into_iter() {
                 check_type(index, tcs_borrow!(tcs), *branch)?;
             }
-            Ok(Value::Type)
+            // Do we need to find the highest level of each branch?
+            Ok(Value::Type(0))
         }
         Pi((pattern, input), output) | Sigma((pattern, input), output) => {
             let tcs = check_type(index, tcs, *input.clone())?;
@@ -56,7 +58,8 @@ pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
             let generated = generate_value(index);
             let gamma = update_gamma(tcs.gamma, &pattern, input_type, generated)?;
             check_type(index + 1, TCS::new(gamma, tcs.context), *output)?;
-            Ok(Value::Type)
+            // Does this need to depend on the level of the return type?
+            Ok(Value::Type(0))
         }
         Application(function, argument) => match *function {
             Lambda(pattern, Some(parameter_type), return_value) => {
@@ -83,15 +86,18 @@ pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
 
 /// `checkT` in Mini-TT.<br/>
 /// Check if an expression is a well-typed type expression.
+///
+/// TODO: return the level
 pub fn check_type(index: u32, tcs: TCS, expression: Expression) -> TCM<TCS> {
     use crate::ast::Expression::*;
     match expression {
-        Sum(constructors) => check_sum_type(index, tcs, constructors),
+        Sum(constructors) => check_sum_type(index, tcs, constructors, 0),
         Pi((pattern, first), second) | Sigma((pattern, first), second) => {
-            check_telescoped(index, tcs, pattern, *first, *second)
+            check_telescoped(index, tcs, pattern, *first, *second, 0)
         }
-        Type | Void | One => Ok(tcs),
-        expression => check(index, tcs, expression, Value::Type),
+        Type(_level) => Ok(tcs),
+        Void | One => Ok(tcs),
+        expression => check(index, tcs, expression, Value::Type(0)),
     }
 }
 
@@ -101,7 +107,14 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
     use crate::ast::Expression as E;
     use crate::ast::Value as V;
     match (expression, value) {
-        (E::Unit, V::One) | (E::Type, V::Type) | (E::One, V::Type) => Ok(tcs),
+        (E::Unit, V::One) | (E::One, V::Type(0)) => Ok(tcs),
+        (E::Type(low), V::Type(high)) => {
+            if high > low {
+                Ok(tcs)
+            } else {
+                Err(TCE::TypeMismatch(V::Type(low + 1), V::Type(high)))
+            }
+        }
         // There's nothing left to check.
         (E::Void, _) => Ok(tcs),
         (E::Lambda(pattern, _, body), V::Pi(signature, closure)) => {
@@ -134,10 +147,10 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
             let constructor_type = reduce_to_value(constructor, *constructors.environment);
             check(index, tcs, *body, constructor_type)
         }
-        (E::Sum(constructors), V::Type) => check_sum_type(index, tcs, constructors),
-        (E::Sigma((pattern, first), second), V::Type)
-        | (E::Pi((pattern, first), second), V::Type) => {
-            check_telescoped(index, tcs, pattern, *first, *second)
+        (E::Sum(constructors), V::Type(level)) => check_sum_type(index, tcs, constructors, level),
+        (E::Sigma((pattern, first), second), V::Type(level))
+        | (E::Pi((pattern, first), second), V::Type(level)) => {
+            check_telescoped(index, tcs, pattern, *first, *second, level)
         }
         (E::Declaration(declaration, rest), rest_type) => {
             let tcs = check_declaration(index, tcs, *declaration)?;
@@ -191,7 +204,7 @@ pub fn check_fallback(index: u32, tcs: TCS, body: Expression, signature: Value) 
 }
 
 /// To reuse code that checks if a sum type is well-typed between `check_type` and `check`
-pub fn check_sum_type(index: u32, tcs: TCS, constructors: Branch) -> TCM<TCS> {
+pub fn check_sum_type(index: u32, tcs: TCS, constructors: Branch, _level: u32) -> TCM<TCS> {
     for constructor in constructors.values().cloned() {
         check_type(index, tcs_borrow!(tcs), *constructor)?;
     }
@@ -205,6 +218,7 @@ pub fn check_telescoped(
     pattern: Pattern,
     first: Expression,
     second: Expression,
+    _level: u32,
 ) -> TCM<TCS> {
     check_type(index, tcs_borrow!(tcs), first.clone())?;
     let TCS { gamma, context } = tcs;

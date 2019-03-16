@@ -43,7 +43,8 @@ single_arrow = _{ "->" | "\u{2192}" }
 let_or_rec = { "let" | "rec" }
 one = { "1" }
 unit = { "0" }
-universe = { "Type" }
+level = { ASCII_DIGIT* }
+universe = ${ "Type" ~ level }
 void = { EOI }
 meta_var = { "_" }
 
