@@ -109,7 +109,7 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
     match (expression, value) {
         (E::Unit, V::One) | (E::One, V::Type(0)) => Ok(tcs),
         (E::Type(low), V::Type(high)) => {
-            if high > low {
+            if low < high {
                 Ok(tcs)
             } else {
                 Err(TCE::TypeMismatch(V::Type(low + 1), V::Type(high)))
