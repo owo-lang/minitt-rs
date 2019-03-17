@@ -29,8 +29,8 @@ pub enum TCE {
     WantPiBut(Value, Expression),
     /// Actually first value, expected second value
     TypeMismatch(Value, Value),
-    /// Want a type, but unfortunately it's not
-    NotType(Value),
+    /// Want a type's type, but unfortunately it's not
+    NotTypeType(Value),
     /// Actually first level, expected second level
     LevelMismatch(u32, u32),
     /// First argument is inferred value, second is expected.
@@ -139,7 +139,7 @@ impl Display for TCE {
                 argument.fmt(f)?;
                 f.write_str("`.")
             }
-            TCE::NotType(value) => {
+            TCE::NotTypeType(value) => {
                 f.write_str("Expected a type expression, instead got: `")?;
                 value.fmt(f)?;
                 f.write_str("`.")

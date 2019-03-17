@@ -10,7 +10,7 @@ use std::collections::BTreeMap;
 
 /// `checkI` in Mini-TT.<br/>
 /// Type inference rule. More inferences are added here (maybe it's useful?).
-pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
+pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Value> {
     use crate::ast::Expression::*;
     match expression {
         Unit => Ok(Value::One),
@@ -46,11 +46,15 @@ pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
             }
         }
         Sum(branches) => {
+            let mut max = 0u32;
             for (_name, branch) in branches.into_iter() {
-                check_type(index, tcs_borrow!(tcs), *branch)?;
+                let (level, new) = check_type(index, tcs, *branch)?;
+                tcs = new;
+                if level > max {
+                    max = level;
+                }
             }
-            // Do we need to find the highest level of each branch?
-            Ok(Value::Type(0))
+            Ok(Value::Type(max))
         }
         Pi((pattern, input), output) | Sigma((pattern, input), output) => {
             let (level, tcs) = check_type(index, tcs, *input.clone())?;
@@ -64,7 +68,7 @@ pub fn check_infer(index: u32, tcs: TCS, expression: Expression) -> TCM<Value> {
         Application(function, argument) => match *function {
             Lambda(pattern, Some(parameter_type), return_value) => {
                 let parameter_type = *parameter_type.internal;
-                check(index, tcs_borrow!(tcs), *argument, parameter_type.clone())?;
+                tcs = check(index, tcs, *argument, parameter_type.clone())?;
                 let generated = generate_value(index + 1);
                 let gamma = update_gamma_borrow(tcs.gamma, &pattern, parameter_type, &generated)?;
                 let context = up_var_rc(tcs.context, pattern, generated);
@@ -106,7 +110,7 @@ pub fn check_type(index: u32, tcs: TCS, expression: Expression) -> TCM<(u32, TCS
 
 /// `check` in Mini-TT.<br/>
 /// However, telescope and gamma are preserved for REPL use.
-pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<TCS> {
+pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> TCM<TCS> {
     use crate::ast::Expression as E;
     use crate::ast::Value as V;
     match (expression, value) {
@@ -121,7 +125,7 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
         // There's nothing left to check.
         (E::Void, _) => Ok(tcs),
         (E::Lambda(pattern, _, body), V::Pi(signature, closure)) => {
-            let TCS { gamma, context } = tcs;
+            let TCS { gamma, context } = tcs_borrow!(tcs);
             let generated = generate_value(index);
             let gamma = update_gamma_borrow(gamma, &pattern, *signature, &generated)?;
             check(
@@ -129,10 +133,11 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
                 TCS::new(gamma, up_var_rc(context, pattern, generated.clone())),
                 *body,
                 closure.instantiate(generated),
-            )
+            )?;
+            Ok(tcs)
         }
         (E::Pair(first, second), V::Sigma(first_type, second_type)) => {
-            check(index, tcs_borrow!(tcs), *first.clone(), *first_type)?;
+            tcs = check(index, tcs, *first.clone(), *first_type)?;
             let context = tcs.context();
             check(
                 index,
@@ -164,11 +169,12 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
         }
         (E::Constant(pattern, body, rest), rest_type) => {
             let signature = check_infer(index, tcs_borrow!(tcs), *body.clone())?;
-            let TCS { gamma, context } = tcs;
+            let TCS { gamma, context } = tcs_borrow!(tcs);
             let body_val = body.eval(context.clone());
             let gamma = update_gamma_borrow(gamma, &pattern, signature, &body_val)?;
             let context = up_var_rc(context, pattern, body_val);
-            check(index, TCS::new(gamma, context), *rest, rest_type)
+            check(index, TCS::new(gamma, context), *rest, rest_type)?;
+            Ok(tcs)
         }
         // I really wish to have box pattern here :(
         (E::Split(mut branches), V::Pi(sum, closure)) => match *sum {
@@ -182,7 +188,7 @@ pub fn check(index: u32, tcs: TCS, expression: Expression, value: Value) -> TCM<
                         Box::new(reduce_to_value(*branch, *sum_branches.environment.clone())),
                         Closure::Choice(Box::new(closure.clone()), name.clone()),
                     );
-                    check(index, tcs_borrow!(tcs), pattern_match, signature)?;
+                    tcs = check(index, tcs, pattern_match, signature)?;
                 }
                 if branches.is_empty() {
                     Ok(tcs)
@@ -219,10 +225,11 @@ pub fn check_fallback(index: u32, tcs: TCS, body: Expression, signature: Value) 
 }
 
 /// To reuse code that checks if a sum type is well-typed between `check_type` and `check`
-pub fn check_sum_type(index: u32, tcs: TCS, constructors: Branch) -> TCM<(u32, TCS)> {
+pub fn check_sum_type(index: u32, mut tcs: TCS, constructors: Branch) -> TCM<(u32, TCS)> {
     let mut max = 0;
     for constructor in constructors.values().cloned() {
-        let (level, _) = check_type(index, tcs_borrow!(tcs), *constructor)?;
+        let (level, new) = check_type(index, tcs, *constructor)?;
+        tcs = new;
         if level > max {
             max = level
         }
@@ -239,7 +246,7 @@ pub fn check_telescoped(
     second: Expression,
 ) -> TCM<(u32, TCS)> {
     check_type(index, tcs_borrow!(tcs), first.clone())?;
-    let TCS { gamma, context } = tcs;
+    let TCS { gamma, context } = tcs_borrow!(tcs);
     let generated = generate_value(index);
     let gamma = update_gamma(
         gamma,
@@ -247,9 +254,10 @@ pub fn check_telescoped(
         first.eval(context.clone()),
         generated.clone(),
     )?;
-    check_type(
+    let (level, _) = check_type(
         index + 1,
         TCS::new(gamma, up_var_rc(context, pattern, generated)),
         second,
-    )
+    )?;
+    Ok((level, tcs))
 }
