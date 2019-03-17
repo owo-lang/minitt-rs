@@ -89,6 +89,28 @@ impl Closure {
 }
 
 impl Value {
+    /// Calculate the level of `self`, return `None` if it's not a type value.
+    pub fn level_safe(&self) -> Option<u32> {
+        match self {
+            Value::One => Some(0),
+            Value::Type(level) => Some(1 + level),
+            // TODO: implement
+            Value::Pi(_, _) => Some(0),
+            // TODO: implement
+            Value::Sigma(_, _) => Some(0),
+            // TODO: implement
+            Value::Sum(_) => Some(0),
+            // TODO: introduce new neutral as well?
+            _ => None,
+        }
+    }
+
+    /// This is called `levelView` in Agda.
+    pub fn level(&self) -> u32 {
+        self.level_safe()
+            .unwrap_or_else(|| panic!("Cannot calculate the level of: {}", self))
+    }
+
     /// `vfst` in Mini-TT.<br/>
     /// Run `.1` on a Pair.
     pub fn first(self) -> Value {

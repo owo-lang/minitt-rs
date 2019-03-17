@@ -99,12 +99,15 @@ pub fn check_type(index: u32, tcs: TCS, expression: Expression) -> TCM<(u32, TCS
         }
         Type(level) => Ok((level + 1, tcs)),
         Void | One => Ok((0, tcs)),
-        expression => match check_infer(index, tcs_borrow!(tcs), expression)? {
-            Value::Type(level) => Ok((level, tcs)),
-            // Sum/Sigma/Pi with higher levels?
-            Value::Sum(_) | Value::Pi(_, _) | Value::Sigma(_, _) => Ok((0, tcs)),
-            otherwise => Err(TCE::NotType(otherwise)),
-        },
+        expression => {
+            let inferred = check_infer(index, tcs_borrow!(tcs), expression)?;
+            inferred
+                .level_safe()
+                // If `inferred` is a type expression, its own type must be > 0
+                .filter(|level| *level > 0)
+                .map(|level| (level - 1, tcs))
+                .ok_or_else(|| TCE::NotTypeType(inferred))
+        }
     }
 }
 
