@@ -243,12 +243,13 @@ pub fn check_sum_type(index: u32, mut tcs: TCS, constructors: Branch) -> TCM<(u3
 /// To reuse code that checks if a sigma or a pi type is well-typed between `check_type` and `check`
 pub fn check_telescoped(
     index: u32,
-    tcs: TCS,
+    mut tcs: TCS,
     pattern: Pattern,
     first: Expression,
     second: Expression,
 ) -> TCM<(u32, TCS)> {
-    check_type(index, tcs_borrow!(tcs), first.clone())?;
+    let (_, new) = check_type(index, tcs, first.clone())?;
+    tcs = new;
     let TCS { gamma, context } = tcs_borrow!(tcs);
     let generated = generate_value(index);
     let gamma = update_gamma(

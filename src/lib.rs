@@ -118,7 +118,10 @@ Cannot infer types of lambdas or other complicated expressions like nested funct
 
 ### `checkT`
 
-Check if an expression is a type expression.
+Check if an expression is a type expression, returns the type's level because only `Value` have the
+method [`level()`](ast/enum.Value.html#method.level) (while returning the level is the only way for
+`check_type` to preserve this information. If we return a value, we can call `.level()` on the
+value).
 
 Use some hard-coded rules and fallback to `check(expr, Type)`.
 
