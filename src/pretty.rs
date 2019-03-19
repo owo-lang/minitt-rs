@@ -149,6 +149,11 @@ impl Display for Expression {
                 rest.fmt(f)
             }
             Expression::Void => Ok(()),
+            Expression::Merge(lhs, rhs) => {
+                lhs.fmt(f)?;
+                f.write_str(" ++ ")?;
+                rhs.fmt(f)
+            }
         }
     }
 }

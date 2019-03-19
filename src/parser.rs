@@ -71,6 +71,7 @@ fn end_of_rule(inner: &mut Tik) {
 /// expression =
 ///  { declaration
 ///  | const_declaration
+///  | merge_sum
 ///  | application
 ///  | function_type
 ///  | pair_type
@@ -85,6 +86,7 @@ pub fn expression_to_expression(rules: Tok) -> Expression {
     match the_rule.as_rule() {
         Rule::declaration => declaration_to_expression(the_rule),
         Rule::const_declaration => const_declaration_to_expression(the_rule),
+        Rule::merge_sum => merge_sum_to_expression(the_rule),
         Rule::application => application_to_expression(the_rule),
         Rule::function_type => function_type_to_expression(the_rule),
         Rule::pair_type => pair_type_to_expression(the_rule),
@@ -233,6 +235,17 @@ pub fn const_declaration_to_expression(the_rule: Tok) -> Expression {
         .unwrap_or(Expression::Void);
     end_of_rule(&mut inner);
     Expression::Constant(name, Box::new(body), Box::new(rest))
+}
+
+/// ```ignore
+/// merge_sum = { atom ~ "++" ~ expression }
+/// ```
+pub fn merge_sum_to_expression(the_rule: Tok) -> Expression {
+    let mut inner: Tik = the_rule.into_inner();
+    let lhs = next_atom(&mut inner);
+    let rhs = next_expression(&mut inner);
+    end_of_rule(&mut inner);
+    Expression::Merge(Box::new(lhs), Box::new(rhs))
 }
 
 /// ```ignore

@@ -194,6 +194,7 @@ impl Expression {
                 branch_to_righted(constructors),
                 context,
             )),
+            E::Merge(left, right) => unimplemented!(),
             E::Split(case_tree) => V::Split(GenericCaseTree::boxing(
                 branch_to_righted(case_tree),
                 context,

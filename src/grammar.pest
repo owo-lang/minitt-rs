@@ -99,11 +99,13 @@ pair_type = { atom ~ multiplication ~ expression }
 // Higher-level expressions
 application = { atom ~ expression }
 pair = { atom ~ "," ~ expression }
+merge_sum = { atom ~ "++" ~ expression }
 first = { atom ~ ".1" }
 second = { atom ~ ".2" }
 expression =
  { declaration
  | const_declaration
+ | merge_sum
  | application
  | function_type
  | pair_type
