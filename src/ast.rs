@@ -78,6 +78,8 @@ pub type GenericBranch<T> = BTreeMap<String, Box<T>>;
 /// Pattern matching branch.
 pub type Branch = GenericBranch<Expression>;
 
+/// This function name is mysterious, but I failed to find a better name. It's for converting a
+/// `Branch` into a `CaseTree` by inserting the `context` to every `Case`s.
 pub fn branch_to_righted(branch: Branch, context: Telescope) -> CaseTree {
     let mut case_tree: CaseTree = Default::default();
     for (name, expression) in branch.into_iter() {
@@ -316,6 +318,7 @@ impl<Expression, Value: Clone> GenericCase<Expression, Value> {
     }
 }
 
+/// One single case in case trees.
 pub type Case = GenericCase<Either<Value, Expression>, Value>;
 
 /// `SClos` in Mini-TT.<br/>

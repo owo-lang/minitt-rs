@@ -27,7 +27,7 @@ impl Pattern {
                     Ok(val)
                 } else {
                     Err(format!(
-                        "Expected projection: `{}`, found: `{}`",
+                        "Expected projection: `{}`, found: `{}`.",
                         pattern_name, name
                     ))
                 }
@@ -43,7 +43,7 @@ impl TelescopeRaw {
         use crate::ast::DeclarationType::*;
         use crate::ast::GenericTelescope::*;
         match self {
-            Nil => Err(format!("Unresolved reference: `{}`", name)),
+            Nil => Err(format!("Unresolved reference: `{}`.", name)),
             UpDec(context, declaration) => {
                 let pattern = &declaration.pattern;
                 if pattern.contains(name) {
@@ -108,7 +108,7 @@ impl Value {
     /// This is called `levelView` in Agda.
     pub fn level(&self) -> u32 {
         self.level_safe()
-            .unwrap_or_else(|| panic!("Cannot calculate the level of: {}", self))
+            .unwrap_or_else(|| panic!("Cannot calculate the level of: `{}`.", self))
     }
 
     /// `vfst` in Mini-TT.<br/>
@@ -118,7 +118,7 @@ impl Value {
         match self {
             Value::Pair(first, _) => *first,
             Value::Neutral(neutral) => Value::Neutral(Neutral::First(Box::new(neutral))),
-            e => panic!("Cannot first: {}", e),
+            e => panic!("Cannot first: `{}`.", e),
         }
     }
 
@@ -129,7 +129,7 @@ impl Value {
         match self {
             Value::Pair(_, second) => *second,
             Value::Neutral(neutral) => Value::Neutral(Neutral::Second(Box::new(neutral))),
-            e => panic!("Cannot second: {}", e),
+            e => panic!("Cannot second: `{}`.", e),
         }
     }
 
@@ -143,7 +143,7 @@ impl Value {
                 Value::Neutral(Neutral::First(Box::new(neutral.clone()))),
                 Value::Neutral(Neutral::Second(Box::new(neutral))),
             ),
-            e => panic!("Cannot destruct: {}", e),
+            e => panic!("Cannot destruct: `{}`.", e),
         }
     }
 
@@ -162,12 +162,12 @@ impl Value {
                 Value::Neutral(neutral) => {
                     Value::Neutral(Neutral::Split(case_tree, Box::new(neutral)))
                 }
-                e => panic!("Cannot apply a: {}", e),
+                e => panic!("Cannot apply a: `{}`.", e),
             },
             Value::Neutral(neutral) => {
                 Value::Neutral(Neutral::Application(Box::new(neutral), Box::new(argument)))
             }
-            e => panic!("Cannot apply on: {}", e),
+            e => panic!("Cannot apply on: `{}`.", e),
         }
     }
 }
@@ -188,7 +188,19 @@ impl Expression {
                 .map_err(|err| eprintln!("{}", err))
                 .unwrap(),
             E::Sum(constructors) => V::Sum(branch_to_righted(constructors, context)),
-            E::Merge(left, right) => unimplemented!(),
+            E::Merge(left, right) => {
+                let mut left = match left.eval(context.clone()) {
+                    V::Sum(constructors) => constructors,
+                    otherwise => panic!("Not a Sum expression: `{}`.", otherwise),
+                };
+                let mut right = match right.eval(context) {
+                    V::Sum(constructors) => constructors,
+                    otherwise => panic!("Not a Sum expression: `{}`.", otherwise),
+                };
+                // TODO: check overlap
+                left.append(&mut right);
+                V::Sum(left)
+            }
             E::Split(case_tree) => V::Split(branch_to_righted(case_tree, context)),
             E::Pi((pattern, first), second) => {
                 let first = Box::new(first.eval(context.clone()));
