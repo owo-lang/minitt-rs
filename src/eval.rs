@@ -40,7 +40,6 @@ impl Pattern {
 impl TelescopeRaw {
     /// `getRho` in Mini-TT.
     pub fn resolve(&self, name: &str) -> Result<Value, String> {
-        use crate::ast::DeclarationType::*;
         use crate::ast::GenericTelescope::*;
         match self {
             Nil => Err(format!("Unresolved reference: `{}`.", name)),
@@ -49,13 +48,11 @@ impl TelescopeRaw {
                 if pattern.contains(name) {
                     pattern.project(
                         name,
-                        declaration
-                            .body
-                            .clone()
-                            .eval(match declaration.declaration_type {
-                                Simple => context.clone(),
-                                Recursive => up_dec_rc(context.clone(), declaration.clone()),
-                            }),
+                        declaration.body.clone().eval(if declaration.is_recursive {
+                            up_dec_rc(context.clone(), declaration.clone())
+                        } else {
+                            context.clone()
+                        }),
                     )
                 } else {
                     context.resolve(name)

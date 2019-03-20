@@ -155,13 +155,6 @@ pub enum Pattern {
     Var(String),
 }
 
-/// Whether a type is recursive or not.
-#[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub enum DeclarationType {
-    Simple,
-    Recursive,
-}
-
 /// `Decl` in Mini-TT.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Declaration {
@@ -169,7 +162,7 @@ pub struct Declaration {
     pub prefix_parameters: Vec<Typed>,
     pub signature: Expression,
     pub body: Expression,
-    pub declaration_type: DeclarationType,
+    pub is_recursive: bool,
 }
 
 impl Declaration {
@@ -179,14 +172,14 @@ impl Declaration {
         prefix_parameters: Vec<Typed>,
         signature: Expression,
         body: Expression,
-        declaration_type: DeclarationType,
+        is_recursive: bool,
     ) -> Self {
         Self {
             pattern,
             prefix_parameters,
             signature,
             body,
-            declaration_type,
+            is_recursive,
         }
     }
 
@@ -197,13 +190,7 @@ impl Declaration {
         signature: Expression,
         body: Expression,
     ) -> Self {
-        Self::new(
-            pattern,
-            prefix_parameters,
-            signature,
-            body,
-            DeclarationType::Simple,
-        )
+        Self::new(pattern, prefix_parameters, signature, body, false)
     }
 
     /// Recursive declarations
@@ -213,13 +200,7 @@ impl Declaration {
         signature: Expression,
         body: Expression,
     ) -> Self {
-        Self::new(
-            pattern,
-            prefix_parameters,
-            signature,
-            body,
-            DeclarationType::Recursive,
-        )
+        Self::new(pattern, prefix_parameters, signature, body, true)
     }
 }
 

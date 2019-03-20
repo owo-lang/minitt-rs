@@ -108,18 +108,18 @@ pub fn check_simple_declaration(
 /// prefixed parameters :)<br/>
 /// Check if a declaration is well-typed and update the context.
 pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<TCS> {
-    use crate::ast::DeclarationType::*;
     if declaration.prefix_parameters.is_empty() {
         let context = tcs.context();
-        return match &declaration.declaration_type {
-            Simple => check_simple_declaration(
+        return if !declaration.is_recursive {
+            check_simple_declaration(
                 index,
                 tcs,
                 declaration.pattern.clone(),
                 declaration.signature.clone(),
                 declaration.body.clone(),
-            ),
-            Recursive => check_recursive_declaration(index, tcs, declaration.clone()),
+            )
+        } else {
+            check_recursive_declaration(index, tcs, declaration.clone())
         }
         .map(|gamma| TCS::new(gamma, up_dec_rc(context, declaration)));
     }
@@ -129,7 +129,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
             prefix_parameters,
             signature,
             body,
-            declaration_type: Simple,
+            is_recursive: false,
         } => check_lift_parameters(index, tcs_borrow!(tcs), prefix_parameters, |tcs| {
             // TODO: this level might be the pi level
             let (_level, tcs) = check_type(index, tcs, signature.clone())

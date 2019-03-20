@@ -197,10 +197,7 @@ impl Display for Pattern {
 
 impl Display for Declaration {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        f.write_str(match self.declaration_type {
-            DeclarationType::Simple => "let",
-            DeclarationType::Recursive => "rec",
-        })?;
+        f.write_str(if self.is_recursive { "rec" } else { "let" })?;
         f.write_char(' ')?;
         self.pattern.fmt(f)?;
         for (pattern, prefix_parameter_type) in self.prefix_parameters.iter() {

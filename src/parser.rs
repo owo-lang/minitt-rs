@@ -208,12 +208,7 @@ pub fn declaration_to_expression(the_rule: Tok) -> Expression {
         .map(expression_to_expression)
         .unwrap_or(Expression::Void);
     end_of_rule(&mut inner);
-    let declaration_type = if rec {
-        DeclarationType::Recursive
-    } else {
-        DeclarationType::Simple
-    };
-    let declaration = Declaration::new(name, prefix_parameters, signature, body, declaration_type);
+    let declaration = Declaration::new(name, prefix_parameters, signature, body, rec);
     Expression::Declaration(Box::new(declaration), Box::new(rest))
 }
 
