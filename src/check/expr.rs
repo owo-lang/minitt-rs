@@ -1,12 +1,12 @@
-use crate::ast::{
-    reduce_to_value, up_var_rc, Branch, Closure, Expression, GenericCaseTree, Pattern, Value,
-};
+use std::collections::BTreeMap;
+
+use either::Either;
+
+use crate::ast::{up_var_rc, Branch, Closure, Expression, GenericCase, Pattern, Value};
 use crate::check::decl::check_declaration;
 use crate::check::read_back::generate_value;
 use crate::check::subtype::check_subtype;
 use crate::check::tcm::{update_gamma, update_gamma_borrow, TCE, TCM, TCS};
-use either::Either;
-use std::collections::BTreeMap;
 
 /// `checkI` in Mini-TT.<br/>
 /// Type inference rule. More inferences are added here (maybe it's useful?).
@@ -25,8 +25,8 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
             let mut map = BTreeMap::new();
             let context = tcs.context.clone();
             let inferred = Either::Left(check_infer(index, tcs, *expression)?);
-            map.insert(name, Box::new(inferred));
-            Ok(Value::Sum(GenericCaseTree::boxing(map, context)))
+            map.insert(name, Box::new(GenericCase::new(inferred, context)));
+            Ok(Value::Sum(Box::new(map)))
         }
         Pair(left, right) => {
             let left = check_infer(index, tcs_borrow!(tcs), *left)?;
@@ -150,13 +150,12 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
             )
         }
         (E::Constructor(name, body), V::Sum(constructors)) => {
-            let constructor = *constructors
-                .branches
+            let constructor = constructors
                 .get(&name)
                 .ok_or_else(|| TCE::InvalidConstructor(name))?
-                .clone();
-            let constructor_type = reduce_to_value(constructor, *constructors.environment);
-            check(index, tcs, *body, constructor_type)
+                .clone()
+                .reduce_to_value();
+            check(index, tcs, *body, constructor)
         }
         (E::Sum(constructors), V::Type(level)) => {
             check_level(level, check_sum_type(index, tcs, constructors)?)
@@ -182,13 +181,13 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
         // I really wish to have box pattern here :(
         (E::Split(mut branches), V::Pi(sum, closure)) => match *sum {
             V::Sum(sum_branches) => {
-                for (name, branch) in sum_branches.branches.into_iter() {
+                for (name, branch) in sum_branches.into_iter() {
                     let pattern_match = match branches.remove(&name) {
                         Some(pattern_match) => *pattern_match,
                         None => return Err(TCE::MissingCase(name)),
                     };
                     let signature = V::Pi(
-                        Box::new(reduce_to_value(*branch, *sum_branches.environment.clone())),
+                        Box::new(branch.reduce_to_value()),
                         Closure::Choice(Box::new(closure.clone()), name.clone()),
                     );
                     tcs = check(index, tcs, pattern_match, signature)?;

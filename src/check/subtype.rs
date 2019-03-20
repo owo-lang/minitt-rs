@@ -1,8 +1,8 @@
-use crate::ast::{reduce_to_value, Expression, Value};
+use std::collections::BTreeMap;
+
+use crate::ast::{Case, Value};
 use crate::check::read_back::{generate_value, ReadBack};
 use crate::check::tcm::{TCE, TCM, TCS};
-use either::Either;
-use std::collections::BTreeMap;
 
 /// Check if `subtype` is the subtype of `supertype`.
 pub fn check_subtype(
@@ -22,15 +22,10 @@ pub fn check_subtype(
             }
         }
         (Sum(sub_tree), Sum(super_tree)) => {
-            let (super_tree, super_environment) = super_tree.destruct();
-            let (sub_tree, sub_environment) = sub_tree.destruct();
-            let super_eval = |sup: Box<Either<Value, Expression>>| {
-                reduce_to_value(*sup, super_environment.clone())
-            };
-            let sub_eval = |sub: Box<Either<Value, Expression>>| {
-                reduce_to_value(*sub, sub_environment.clone())
-            };
-            check_subtype_sum(index, tcs, sub_tree, super_tree, sub_eval, super_eval)
+            let super_eval = |sup: Box<Case>| sup.reduce_to_value();
+            let sub_eval = |sub: Box<Case>| sub.reduce_to_value();
+            // TODO: this no longer need to be generic
+            check_subtype_sum(index, tcs, *sub_tree, *super_tree, sub_eval, super_eval)
         }
         (Pi(sub_param, sub_closure), Pi(super_param, super_closure))
         | (Sigma(sub_param, sub_closure), Sigma(super_param, super_closure)) => {

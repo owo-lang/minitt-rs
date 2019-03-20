@@ -78,10 +78,11 @@ pub type GenericBranch<T> = BTreeMap<String, Box<T>>;
 /// Pattern matching branch.
 pub type Branch = GenericBranch<Expression>;
 
-pub fn branch_to_righted(branch: Branch) -> GenericBranch<Either<Value, Expression>> {
-    let mut case_tree: GenericBranch<Either<Value, Expression>> = Default::default();
+pub fn branch_to_righted(branch: Branch, context: Telescope) -> CaseTree {
+    let mut case_tree: CaseTree = Default::default();
     for (name, expression) in branch.into_iter() {
-        case_tree.insert(name, Box::new(Either::Right(*expression)));
+        let case = GenericCase::new(Either::Right(*expression), context.clone());
+        case_tree.insert(name, Box::new(case));
     }
     case_tree
 }
@@ -298,36 +299,39 @@ pub enum Closure {
 
 /// Generic definition for three kinds of case trees
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct GenericCaseTree<ValueExpression, ValueInScope: Clone> {
-    pub branches: Box<GenericBranch<ValueExpression>>,
-    pub environment: Box<TelescopeRc<ValueInScope>>,
+pub struct GenericCase<Expression, Value: Clone> {
+    pub expression: Expression,
+    pub context: TelescopeRc<Value>,
 }
 
-impl<Expr, Value: Clone> GenericCaseTree<Expr, Value> {
-    pub fn new(branches: Box<GenericBranch<Expr>>, environment: Box<TelescopeRc<Value>>) -> Self {
+// TODO: Remove this
+pub type GenericCaseTree<Expression, Value> = Box<GenericBranch<GenericCase<Expression, Value>>>;
+
+impl<Expression, Value: Clone> GenericCase<Expression, Value> {
+    pub fn new(expression: Expression, context: TelescopeRc<Value>) -> Self {
         Self {
-            branches,
-            environment,
+            expression,
+            context,
         }
     }
 
-    pub fn boxing(branches: GenericBranch<Expr>, environment: TelescopeRc<Value>) -> Self {
-        Self::new(Box::new(branches), Box::new(environment))
-    }
-
-    pub fn destruct(self) -> (GenericBranch<Expr>, TelescopeRc<Value>) {
-        let GenericCaseTree {
-            branches,
-            environment,
-        } = self;
-        (*branches, *environment)
+    pub fn boxing(expression: Expression, context: TelescopeRc<Value>) -> Self {
+        Self::new(expression, context)
     }
 }
 
+pub type Case = GenericCase<Either<Value, Expression>, Value>;
+
 /// `SClos` in Mini-TT.<br/>
 /// Case tree.
-pub type CaseTree = GenericCaseTree<Either<Value, Expression>, Value>;
+pub type CaseTree = Box<GenericBranch<Case>>;
 
-pub fn reduce_to_value(either: Either<Value, Expression>, context: Telescope) -> Value {
-    either.either(|l| l, |r| r.eval(context))
+impl GenericCase<Either<Value, Expression>, Value> {
+    pub fn reduce_to_value(self) -> Value {
+        let GenericCase {
+            expression,
+            context,
+        } = self;
+        expression.either(|l| l, |r| r.eval(context))
+    }
 }

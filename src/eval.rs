@@ -153,15 +153,12 @@ impl Value {
         match self {
             Value::Lambda(closure) => closure.instantiate(argument),
             Value::Split(case_tree) => match argument {
-                Value::Constructor(name, body) => reduce_to_value(
-                    *case_tree
-                        .branches
-                        .get(&name)
-                        .unwrap_or_else(|| panic!("Cannot find constructor `{}`.", name))
-                        .clone(),
-                    *case_tree.environment,
-                )
-                .apply(*body),
+                Value::Constructor(name, body) => case_tree
+                    .get(&name)
+                    .unwrap_or_else(|| panic!("Cannot find constructor `{}`.", name))
+                    .clone()
+                    .reduce_to_value()
+                    .apply(*body),
                 Value::Neutral(neutral) => {
                     Value::Neutral(Neutral::Split(case_tree, Box::new(neutral)))
                 }
@@ -190,15 +187,9 @@ impl Expression {
                 .resolve(&name)
                 .map_err(|err| eprintln!("{}", err))
                 .unwrap(),
-            E::Sum(constructors) => V::Sum(GenericCaseTree::boxing(
-                branch_to_righted(constructors),
-                context,
-            )),
+            E::Sum(constructors) => V::Sum(branch_to_righted(constructors, context)),
             E::Merge(left, right) => unimplemented!(),
-            E::Split(case_tree) => V::Split(GenericCaseTree::boxing(
-                branch_to_righted(case_tree),
-                context,
-            )),
+            E::Split(case_tree) => V::Split(branch_to_righted(case_tree, context)),
             E::Pi((pattern, first), second) => {
                 let first = Box::new(first.eval(context.clone()));
                 let second =

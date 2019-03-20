@@ -39,13 +39,13 @@ impl Display for Value {
             // Don't print context
             Value::Split(branches) => {
                 f.write_str("split {")?;
-                branches.fmt(f)?;
+                fmt_branch(branches, f)?;
                 f.write_char('}')
             }
             // Don't print the context
             Value::Sum(constructors) => {
                 f.write_str("Sum {")?;
-                constructors.fmt(f)?;
+                fmt_branch(constructors, f)?;
                 f.write_char('}')
             }
             Value::Neutral(neutral) => {
@@ -158,9 +158,9 @@ impl Display for Expression {
     }
 }
 
-impl<Expr: Display, Value: Clone + Display> Display for GenericCaseTree<Expr, Value> {
+impl<Expr: Display, Value: Clone + Display> Display for GenericCase<Expr, Value> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        fmt_branch(&*self.branches, f)
+        self.expression.fmt(f)
     }
 }
 
@@ -281,7 +281,7 @@ impl<Value: Display + Clone> Display for GenericNeutral<Value> {
                 f.write_str("app ")?;
                 argument.fmt(f)?;
                 f.write_str(" {")?;
-                clauses.fmt(f)?;
+                fmt_branch(clauses, f)?;
                 f.write_char('}')
             }
         }
@@ -334,13 +334,13 @@ impl Display for NormalExpression {
             }
             Expression::Split(clauses) => {
                 f.write_str("split {")?;
-                clauses.fmt(f)?;
+                fmt_branch(clauses, f)?;
                 f.write_char('}')
             }
             // Don't print the context
             Expression::Sum(constructors) => {
                 f.write_str("Sum {")?;
-                constructors.fmt(f)?;
+                fmt_branch(constructors, f)?;
                 f.write_char('}')
             }
             Expression::Neutral(neutral) => {
