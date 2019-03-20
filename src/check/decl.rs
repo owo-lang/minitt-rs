@@ -4,6 +4,7 @@ use crate::ast::{up_dec_rc, up_var_rc, AnonymousValue, Declaration, Expression, 
 use crate::check::expr::{check, check_type};
 use crate::check::read_back::generate_value;
 use crate::check::tcm::{update_gamma_borrow, update_gamma_lazy, Gamma, TCE, TCM, TCS};
+use crate::ast::MaybeLevel::SomeLevel;
 
 macro_rules! try_locate {
     ($err:expr, $pattern:expr) => {
@@ -46,6 +47,7 @@ pub fn check_lift_parameters<'a>(
         Expression::Pi(
             (pattern.clone(), Box::new(*expression)),
             Box::new(signature),
+            SomeLevel(0),
         ),
         Expression::Lambda(pattern, AnonymousValue::some(type_val), Box::new(body)),
         tcs,
@@ -67,7 +69,7 @@ pub fn check_recursive_declaration(index: u32, tcs: TCS, declaration: Declaratio
         signature.clone(),
         &generated,
     )
-    .map_err(|err| try_locate!(err, pattern))?;
+        .map_err(|err| try_locate!(err, pattern))?;
     let fake_context = up_var_rc(context.clone(), pattern.clone(), generated);
     check(
         index + 1,
@@ -75,14 +77,14 @@ pub fn check_recursive_declaration(index: u32, tcs: TCS, declaration: Declaratio
         declaration.body.clone(),
         signature.clone(),
     )
-    .map_err(|err| try_locate!(err, pattern))?;
+        .map_err(|err| try_locate!(err, pattern))?;
     update_gamma_lazy(gamma, &pattern, signature, || {
         declaration
             .body
             .clone()
             .eval(up_dec_rc(context, declaration))
     })
-    .map_err(|err| try_locate!(err, pattern))
+        .map_err(|err| try_locate!(err, pattern))
 }
 
 /// Extracted from `checkD` in Mini-TT.<br/>
@@ -121,7 +123,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
             ),
             Recursive => check_recursive_declaration(index, tcs, declaration.clone()),
         }
-        .map(|gamma| TCS::new(gamma, up_dec_rc(context, declaration)));
+            .map(|gamma| TCS::new(gamma, up_dec_rc(context, declaration)));
     }
     let (pattern, signature, body) = match declaration {
         Declaration {
@@ -139,7 +141,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
                 .map_err(|err| try_locate!(err, pattern))?;
             Ok((signature, body, tcs))
         })
-        .map(|(signature, body, _)| (pattern, signature, body))?,
+            .map(|(signature, body, _)| (pattern, signature, body))?,
         declaration => {
             let pattern = declaration.pattern.clone();
             check_lift_parameters(
@@ -160,7 +162,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
                         signature.clone(),
                         &generated,
                     )
-                    .map_err(|err| try_locate!(err, pattern))?;
+                        .map_err(|err| try_locate!(err, pattern))?;
                     let fake_context = up_var_rc(context.clone(), pattern.clone(), generated);
                     check(
                         index + 1,
@@ -168,7 +170,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
                         declaration.body.clone(),
                         signature,
                     )
-                    .map_err(|err| try_locate!(err, pattern))?;
+                        .map_err(|err| try_locate!(err, pattern))?;
                     Ok((
                         declaration.signature.clone(),
                         declaration.body.clone(),
@@ -176,7 +178,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
                     ))
                 },
             )
-            .map(|(signature, body, _)| (pattern, signature, body))?
+                .map(|(signature, body, _)| (pattern, signature, body))?
         }
     };
 

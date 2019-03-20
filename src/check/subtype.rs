@@ -21,7 +21,7 @@ pub fn check_subtype(
                 Err(TCE::TypeMismatch(Type(sub_level), Type(super_level)))
             }
         }
-        (Sum(sub_tree), Sum(super_tree)) => {
+        (Sum(sub_tree, _), Sum(super_tree, _)) => {
             let (super_tree, super_environment) = super_tree.destruct();
             let (sub_tree, sub_environment) = sub_tree.destruct();
             let super_eval = |sup: Box<Either<Value, Expression>>| {
@@ -32,8 +32,8 @@ pub fn check_subtype(
             };
             check_subtype_sum(index, tcs, sub_tree, super_tree, sub_eval, super_eval)
         }
-        (Pi(sub_param, sub_closure), Pi(super_param, super_closure))
-        | (Sigma(sub_param, sub_closure), Sigma(super_param, super_closure)) => {
+        (Pi(sub_param, sub_closure, _), Pi(super_param, super_closure, _))
+        | (Sigma(sub_param, sub_closure, _), Sigma(super_param, super_closure, _)) => {
             let tcs = check_subtype(index, tcs, *super_param, *sub_param, true)?;
             let generated = generate_value(index);
             check_subtype(
@@ -84,15 +84,15 @@ pub fn check_subtype_sum<Sub, Super>(
             sub_parameter.clone(),
             super_parameter.clone(),
         )
-        .or_else(|_err| {
-            check_subtype(
-                index,
-                tcs_borrow!(tcs),
-                sub_parameter,
-                super_parameter,
-                false,
-            )
-        })?;
+            .or_else(|_err| {
+                check_subtype(
+                    index,
+                    tcs_borrow!(tcs),
+                    sub_parameter,
+                    super_parameter,
+                    false,
+                )
+            })?;
     }
     Ok(tcs)
 }

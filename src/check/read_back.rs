@@ -24,11 +24,11 @@ pub enum NormalExpression {
     Unit,
     One,
     Type(u32),
-    Pi(Box<Self>, u32, Box<Self>),
-    Sigma(Box<Self>, u32, Box<Self>),
+    Pi(Box<Self>, u32, Box<Self>, Level),
+    Sigma(Box<Self>, u32, Box<Self>, Level),
     Constructor(String, Box<Self>),
     Split(NormalCaseTree),
-    Sum(NormalCaseTree),
+    Sum(NormalCaseTree, Level),
     Neutral(NormalNeutral),
 }
 
@@ -80,17 +80,17 @@ impl ReadBack for Value {
             Value::Unit => Unit,
             Value::One => One,
             Value::Type(level) => Type(level),
-            Value::Pi(input, output) => {
+            Value::Pi(input, output, level) => {
                 let output = output
                     .instantiate(generate_value(index))
                     .read_back(index + 1);
-                Pi(Box::new(input.read_back(index)), index, Box::new(output))
+                Pi(Box::new(input.read_back(index)), index, Box::new(output), 0)
             }
-            Value::Sigma(first, second) => {
+            Value::Sigma(first, second, _) => {
                 let second = second
                     .instantiate(generate_value(index))
                     .read_back(index + 1);
-                Sigma(Box::new(first.read_back(index)), index, Box::new(second))
+                Sigma(Box::new(first.read_back(index)), index, Box::new(second), 0)
             }
             Value::Pair(first, second) => Pair(
                 Box::new(first.read_back(index)),
@@ -98,7 +98,7 @@ impl ReadBack for Value {
             ),
             Value::Constructor(name, body) => Constructor(name, Box::new(body.read_back(index))),
             Value::Split(case_tree) => Split(case_tree.read_back(index)),
-            Value::Sum(constructors) => Sum(constructors.read_back(index)),
+            Value::Sum(constructors, _) => Sum(constructors.read_back(index), 0),
             Value::Neutral(neutral) => Neutral(neutral.read_back(index)),
         }
     }

@@ -2,6 +2,7 @@ use crate::ast::*;
 use crate::check::read_back::*;
 use core::fmt::Write;
 use std::fmt::{Display, Error as FmtError, Formatter};
+use crate::ast::MaybeLevel::SomeLevel;
 
 impl Display for Value {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
@@ -19,16 +20,20 @@ impl Display for Value {
             }
             Value::Unit => f.write_str("0"),
             Value::One => f.write_str("1"),
-            Value::Pi(input, output) => {
-                f.write_str("\u{03A0} ")?;
+            Value::Pi(input, output, level) => {
+                f.write_str("\u{03A0}")?;
+                level.fmt(f)?;
+                f.write_str(" ")?;
                 output.fmt_with_type(f, Some(&**input))
             }
             Value::Type(level) => {
                 f.write_str("Type")?;
                 level.fmt(f)
             }
-            Value::Sigma(first, second) => {
-                f.write_str("\u{03A3} ")?;
+            Value::Sigma(first, second, level) => {
+                f.write_str("\u{03A3}")?;
+                level.fmt(f)?;
+                f.write_str(" ")?;
                 second.fmt_with_type(f, Some(&**first))
             }
             Value::Constructor(name, arguments) => {
@@ -43,8 +48,10 @@ impl Display for Value {
                 f.write_char('}')
             }
             // Don't print the context
-            Value::Sum(constructors) => {
-                f.write_str("Sum {")?;
+            Value::Sum(constructors, level) => {
+                f.write_str("Sum")?;
+                level.fmt(f)?;
+                f.write_str(" {")?;
                 constructors.fmt(f)?;
                 f.write_char('}')
             }
@@ -99,8 +106,10 @@ impl Display for Expression {
             }
             Expression::Unit => f.write_str("0"),
             Expression::One => f.write_str("1"),
-            Expression::Pi((pattern, input), output) => {
-                f.write_str("\u{03A0} ")?;
+            Expression::Pi((pattern, input), output, level) => {
+                f.write_str("\u{03A0}")?;
+                level.fmt(f)?;
+                f.write_str(" ")?;
                 pattern.fmt(f)?;
                 f.write_str(": ")?;
                 input.fmt(f)?;
@@ -111,8 +120,10 @@ impl Display for Expression {
                 f.write_str("Type")?;
                 level.fmt(f)
             }
-            Expression::Sigma((pattern, first), second) => {
-                f.write_str("\u{03A3} ")?;
+            Expression::Sigma((pattern, first), second, level) => {
+                f.write_str("\u{03A3}")?;
+                level.fmt(f)?;
+                f.write_str(" ")?;
                 pattern.fmt(f)?;
                 f.write_str(": ")?;
                 first.fmt(f)?;
@@ -130,8 +141,10 @@ impl Display for Expression {
                 f.write_char('}')
             }
             // Don't print the context
-            Expression::Sum(constructors) => {
-                f.write_str("Sum {")?;
+            Expression::Sum(constructors, level) => {
+                f.write_str("Sum")?;
+                level.fmt(f)?;
+                f.write_str(" {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
             }
@@ -302,8 +315,10 @@ impl Display for NormalExpression {
             }
             Expression::Unit => f.write_str("0"),
             Expression::One => f.write_str("1"),
-            Expression::Pi(input, index, output) => {
-                f.write_str("\u{03A0} <")?;
+            Expression::Pi(input, index, output, level) => {
+                f.write_str("\u{03A0}")?;
+                level.fmt(f)?;
+                f.write_str(" <")?;
                 index.fmt(f)?;
                 f.write_str("> ")?;
                 input.fmt(f)?;
@@ -314,8 +329,10 @@ impl Display for NormalExpression {
                 f.write_str("Type")?;
                 level.fmt(f)
             }
-            Expression::Sigma(first, index, second) => {
-                f.write_str("\u{03A3} <")?;
+            Expression::Sigma(first, index, second, level) => {
+                f.write_str("\u{03A3}")?;
+                level.fmt(f)?;
+                f.write_str(" <")?;
                 index.fmt(f)?;
                 f.write_str("> ")?;
                 first.fmt(f)?;
@@ -333,8 +350,10 @@ impl Display for NormalExpression {
                 f.write_char('}')
             }
             // Don't print the context
-            Expression::Sum(constructors) => {
-                f.write_str("Sum {")?;
+            Expression::Sum(constructors, level) => {
+                f.write_str("Sum")?;
+                level.fmt(f)?;
+                f.write_str(" {")?;
                 constructors.fmt(f)?;
                 f.write_char('}')
             }
@@ -343,6 +362,15 @@ impl Display for NormalExpression {
                 neutral.fmt(f)?;
                 f.write_char(']')
             }
+        }
+    }
+}
+
+impl Display for MaybeLevel {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        match self {
+            SomeLevel(level) => level.fmt(f),
+            NoLevel => f.write_str("<no_level>")
         }
     }
 }
