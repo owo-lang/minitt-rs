@@ -132,7 +132,10 @@ pub enum GenericNeutral<Value: Clone> {
     /// Neutral form: stuck on trying to find the second element of a free variable.
     Second(Box<Self>),
     /// Neutral form: stuck on trying to case-split a free variable.
-    Split(GenericCaseTree<Either<Value, Expression>, Value>, Box<Self>),
+    Split(
+        GenericBranch<GenericCase<Either<Value, Expression>, Value>>,
+        Box<Self>,
+    ),
 }
 
 /// `Neut` in Mini-TT, neutral value.
@@ -304,9 +307,6 @@ pub struct GenericCase<Expression, Value: Clone> {
     pub context: TelescopeRc<Value>,
 }
 
-// TODO: Remove this
-pub type GenericCaseTree<Expression, Value> = Box<GenericBranch<GenericCase<Expression, Value>>>;
-
 impl<Expression, Value: Clone> GenericCase<Expression, Value> {
     pub fn new(expression: Expression, context: TelescopeRc<Value>) -> Self {
         Self {
@@ -314,17 +314,13 @@ impl<Expression, Value: Clone> GenericCase<Expression, Value> {
             context,
         }
     }
-
-    pub fn boxing(expression: Expression, context: TelescopeRc<Value>) -> Self {
-        Self::new(expression, context)
-    }
 }
 
 pub type Case = GenericCase<Either<Value, Expression>, Value>;
 
 /// `SClos` in Mini-TT.<br/>
 /// Case tree.
-pub type CaseTree = Box<GenericBranch<Case>>;
+pub type CaseTree = GenericBranch<Case>;
 
 impl GenericCase<Either<Value, Expression>, Value> {
     pub fn reduce_to_value(self) -> Value {

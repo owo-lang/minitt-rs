@@ -10,7 +10,7 @@ pub type NormalTelescope = Rc<GenericTelescope<NormalExpression>>;
 pub type NormalCase = GenericCase<Either<NormalExpression, Expression>, NormalExpression>;
 
 /// `NSClos` in Mini-TT, normal form closures.
-pub type NormalCaseTree = Box<GenericBranch<NormalCase>>;
+pub type NormalCaseTree = GenericBranch<NormalCase>;
 
 /// `NNeut` in Mini-TT, normal form neutral values.
 pub type NormalNeutral = GenericNeutral<NormalExpression>;
@@ -109,7 +109,7 @@ fn read_back_branches(index: u32, branches: CaseTree) -> NormalCaseTree {
     for (name, case) in branches.into_iter() {
         read_back_constructors.insert(name, Box::new(case.read_back(index)));
     }
-    Box::new(read_back_constructors)
+    read_back_constructors
 }
 
 impl ReadBack for Case {

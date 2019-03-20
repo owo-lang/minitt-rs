@@ -26,7 +26,7 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
             let context = tcs.context.clone();
             let inferred = Either::Left(check_infer(index, tcs, *expression)?);
             map.insert(name, Box::new(GenericCase::new(inferred, context)));
-            Ok(Value::Sum(Box::new(map)))
+            Ok(Value::Sum(map))
         }
         Pair(left, right) => {
             let left = check_infer(index, tcs_borrow!(tcs), *left)?;

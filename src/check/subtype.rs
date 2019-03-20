@@ -21,12 +21,7 @@ pub fn check_subtype(
                 Err(TCE::TypeMismatch(Type(sub_level), Type(super_level)))
             }
         }
-        (Sum(sub_tree), Sum(super_tree)) => {
-            let super_eval = |sup: Box<Case>| sup.reduce_to_value();
-            let sub_eval = |sub: Box<Case>| sub.reduce_to_value();
-            // TODO: this no longer need to be generic
-            check_subtype_sum(index, tcs, *sub_tree, *super_tree, sub_eval, super_eval)
-        }
+        (Sum(sub_tree), Sum(super_tree)) => check_subtype_sum(index, tcs, sub_tree, super_tree),
         (Pi(sub_param, sub_closure), Pi(super_param, super_closure))
         | (Sigma(sub_param, sub_closure), Sigma(super_param, super_closure)) => {
             let tcs = check_subtype(index, tcs, *super_param, *sub_param, true)?;
@@ -59,20 +54,18 @@ pub fn check_subtype(
 ///
 /// A bug report is expected to prove this to be false.
 #[inline]
-pub fn check_subtype_sum<Sub, Super>(
+pub fn check_subtype_sum(
     index: u32,
     tcs: TCS,
-    sub_tree: BTreeMap<String, Sub>,
-    mut super_tree: BTreeMap<String, Super>,
-    sub_tree_eval: impl Fn(Sub) -> Value,
-    super_tree_eval: impl Fn(Super) -> Value,
+    sub_tree: BTreeMap<String, Box<Case>>,
+    mut super_tree: BTreeMap<String, Box<Case>>,
 ) -> TCM<TCS> {
     for (constructor, sub_parameter) in sub_tree.into_iter() {
         let super_parameter = super_tree
             .remove(constructor.as_str())
             .ok_or_else(|| TCE::UnexpectedCases(constructor))?;
-        let sub_parameter = sub_tree_eval(sub_parameter);
-        let super_parameter = super_tree_eval(super_parameter);
+        let sub_parameter = sub_parameter.reduce_to_value();
+        let super_parameter = super_parameter.reduce_to_value();
         compare_normal(
             index,
             tcs_borrow!(tcs),
