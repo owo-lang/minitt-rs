@@ -1,4 +1,3 @@
-use crate::ast::MaybeLevel::SomeLevel;
 use crate::ast::*;
 use crate::check::read_back::*;
 use core::fmt::Write;
@@ -373,8 +372,8 @@ impl Display for NormalExpression {
 impl Display for MaybeLevel {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            SomeLevel(level) => level.fmt(f),
-            NoLevel => f.write_str("<no_level>"),
+            MaybeLevel::SomeLevel(level) => level.fmt(f),
+            MaybeLevel::NoLevel => Ok(()),
         }
     }
 }

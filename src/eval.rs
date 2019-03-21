@@ -1,5 +1,6 @@
 use crate::ast::MaybeLevel::{NoLevel, SomeLevel};
 use crate::ast::*;
+use std::cmp::max;
 
 impl Pattern {
     /// `inPat` in Mini-TT.
@@ -92,13 +93,7 @@ impl Value {
         match self {
             Value::One => SomeLevel(0),
             Value::Type(level) => SomeLevel(1 + level),
-            // TODO: implement
-            Value::Pi(_, _, level) => SomeLevel(*level),
-            // TODO: implement
-            Value::Sigma(_, _, level) => SomeLevel(*level),
-            // TODO: implement
-            Value::Sum(_, level) => SomeLevel(*level),
-            // TODO: introduce new neutral as well?
+            Value::Pi(_, _, level) | Value::Sigma(_, _, level) | Value::Sum(_, level) => SomeLevel(*level),
             _ => NoLevel,
         }
     }
@@ -108,6 +103,14 @@ impl Value {
         match self.level_safe() {
             SomeLevel(level) => level,
             _ => panic!("Cannot calculate the level of: {}", self),
+        }
+    }
+
+    // todo: dont know how to name it yet
+    pub fn suc_level(&self) -> u32 {
+        match self.level_safe() {
+            SomeLevel(level) => level,
+            _ => 0,
         }
     }
 
@@ -187,21 +190,23 @@ impl Expression {
                 .resolve(&name)
                 .map_err(|err| eprintln!("{}", err))
                 .unwrap(),
+            // todo: inferring real level
             E::Sum(constructors, level) => V::Sum(branch_to_righted(constructors, context), 0),
             E::Merge(left, right) => {
-                let mut left = match left.eval(context.clone()) {
-                    V::Sum(constructors, level) => constructors,
+                let (mut left, left_level) = match left.eval(context.clone()) {
+                    V::Sum(constructors, level) => (constructors, level),
                     otherwise => panic!("Not a Sum expression: `{}`.", otherwise),
                 };
-                let mut right = match right.eval(context) {
-                    V::Sum(constructors, level) => constructors,
+                let (mut right, right_level) = match right.eval(context) {
+                    V::Sum(constructors, level) => (constructors, level),
                     otherwise => panic!("Not a Sum expression: `{}`.", otherwise),
                 };
                 // TODO: check overlap
                 left.append(&mut right);
-                V::Sum(left, 0)
+                V::Sum(left, max(left_level, right_level))
             }
             E::Split(case_tree) => V::Split(branch_to_righted(case_tree, context)),
+            // todo: inferring real level
             E::Pi(input, output, _) => {
                 let pattern = input.pattern;
                 let input = Box::new(input.expression.eval(context.clone()));

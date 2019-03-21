@@ -1,4 +1,3 @@
-use crate::ast::MaybeLevel::{NoLevel, SomeLevel};
 use crate::ast::*;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
@@ -114,7 +113,8 @@ pub fn first_to_expression(the_rule: Tok) -> Expression {
 /// ```
 pub fn function_type_to_expression(the_rule: Tok) -> Expression {
     let (input, output) = atom_and_expression_to_tuple(the_rule);
-    Expression::Pi(Typed::new(Pattern::Unit, input), Box::new(output), NoLevel)
+    let level = MaybeLevel::NoLevel;
+    Expression::Pi(Typed::new(Pattern::Unit, input), Box::new(output), level)
 }
 
 /// ```ignore
@@ -123,7 +123,8 @@ pub fn function_type_to_expression(the_rule: Tok) -> Expression {
 /// ```
 pub fn pair_type_to_expression(the_rule: Tok) -> Expression {
     let (first, second) = atom_and_expression_to_tuple(the_rule);
-    Expression::Sigma(Typed::new(Pattern::Unit, first), Box::new(second), NoLevel)
+    let level = MaybeLevel::NoLevel;
+    Expression::Sigma(Typed::new(Pattern::Unit, first), Box::new(second), level)
 }
 
 /// Helper, extracted.
@@ -266,7 +267,7 @@ pub fn atom_to_expression(rules: Tok) -> Expression {
         Rule::constructor => constructor_to_expression(the_rule),
         Rule::variable => variable_to_expression(the_rule),
         Rule::split => Expression::Split(choices_to_tree_map(the_rule)),
-        Rule::sum => Expression::Sum(branches_to_tree_map(the_rule), NoLevel),
+        Rule::sum => Expression::Sum(branches_to_tree_map(the_rule), MaybeLevel::NoLevel),
         Rule::one => Expression::One,
         Rule::unit => Expression::Unit,
         Rule::pi_type => pi_type_to_expression(the_rule),
@@ -350,8 +351,8 @@ pub fn type_level(inner: &mut Tik) -> MaybeLevel {
         .as_str()
         .parse()
     {
-        Ok(level) => SomeLevel(level),
-        Err(_) => NoLevel,
+        Ok(level) => MaybeLevel::SomeLevel(level),
+        Err(_) => MaybeLevel::NoLevel,
     }
 }
 

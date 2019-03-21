@@ -6,7 +6,7 @@ pub type Level = u32;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum MaybeLevel {
-    SomeLevel(u32),
+    SomeLevel(Level),
     NoLevel,
 }
 
