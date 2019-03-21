@@ -2,6 +2,14 @@ use either::Either;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
+pub type Level = u32;
+
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum MaybeLevel {
+    SomeLevel(u32),
+    NoLevel,
+}
+
 /// `Exp` in Mini-TT.
 /// Expression language for Mini-TT.
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -17,14 +25,14 @@ pub enum Expression {
     /// `bla`
     Var(String),
     /// `Sum { Bla x }`
-    Sum(Branch),
+    Sum(Branch, MaybeLevel),
     /// `split { Bla x => y }`
     Split(Branch),
     Merge(Box<Self>, Box<Self>),
     /// `\Pi a: b. c`
-    Pi(Typed, Box<Self>),
+    Pi(Typed, Box<Self>, MaybeLevel),
     /// `\Sigma a: b. c`
-    Sigma(Typed, Box<Self>),
+    Sigma(Typed, Box<Self>, MaybeLevel),
     /// `\lambda a. c`, the optional value is the type of the argument.<br/>
     /// This cannot be specified during parsing because it's used for generated intermediate values
     /// during type-checking.
@@ -105,9 +113,9 @@ pub enum Value {
     /// Canonical form: type universe.
     Type(u32),
     /// Canonical form: pi type (type for dependent functions).
-    Pi(Box<Self>, Closure),
+    Pi(Box<Self>, Closure, Level),
     /// Canonical form: sigma type (type for dependent pair).
-    Sigma(Box<Self>, Closure),
+    Sigma(Box<Self>, Closure, Level),
     /// Canonical form: Pair value (value for sigma).
     Pair(Box<Self>, Box<Self>),
     /// Canonical form: call to a constructor.
@@ -115,7 +123,7 @@ pub enum Value {
     /// Canonical form: case-split.
     Split(CaseTree),
     /// Canonical form: sum type.
-    Sum(CaseTree),
+    Sum(CaseTree, Level),
     /// Neutral form.
     Neutral(Neutral),
 }

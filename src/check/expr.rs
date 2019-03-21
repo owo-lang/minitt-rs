@@ -2,6 +2,7 @@ use std::collections::BTreeMap;
 
 use either::Either;
 
+use crate::ast::MaybeLevel::SomeLevel;
 use crate::ast::{up_var_rc, Branch, Closure, Expression, GenericCase, Pattern, Value};
 use crate::check::decl::check_declaration;
 use crate::check::read_back::generate_value;
@@ -26,26 +27,26 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
             let context = tcs.context.clone();
             let inferred = Either::Left(check_infer(index, tcs, *expression)?);
             map.insert(name, Box::new(GenericCase::new(inferred, context)));
-            Ok(Value::Sum(map))
+            Ok(Value::Sum(map, 0))
         }
         Pair(left, right) => {
             let left = check_infer(index, tcs_borrow!(tcs), *left)?;
             let right = check_infer(index, tcs_borrow!(tcs), *right)?;
             let right = Closure::Value(Box::new(right));
-            Ok(Value::Sigma(Box::new(left), right))
+            Ok(Value::Sigma(Box::new(left), right, 0))
         }
         First(pair) => match check_infer(index, tcs, *pair)? {
-            Value::Sigma(first, _) => Ok(*first),
+            Value::Sigma(first, _, _) => Ok(*first),
             e => Err(TCE::WantSigmaBut(e)),
         },
         Second(pair) => {
             let TCS { gamma, context } = tcs;
             match check_infer(index, TCS::new(gamma, context.clone()), *pair.clone())? {
-                Value::Sigma(_, second) => Ok(second.instantiate(pair.eval(context).first())),
+                Value::Sigma(_, second, _) => Ok(second.instantiate(pair.eval(context).first())),
                 e => Err(TCE::WantSigmaBut(e)),
             }
         }
-        Sum(branches) => {
+        Sum(branches, _) => {
             let mut max = 0u32;
             for (_name, branch) in branches.into_iter() {
                 let (level, new) = check_type(index, tcs, *branch)?;
@@ -56,7 +57,7 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
             }
             Ok(Value::Type(max))
         }
-        Pi((pattern, input), output) | Sigma((pattern, input), output) => {
+        Pi((pattern, input), output, _) | Sigma((pattern, input), output, _) => {
             let (level, tcs) = check_type(index, tcs, *input.clone())?;
             let input_type = input.eval(tcs.context());
             let generated = generate_value(index);
@@ -75,7 +76,7 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
                 check_infer(index + 1, TCS::new(gamma, context), *return_value)
             }
             f => match check_infer(index, tcs_borrow!(tcs), f)? {
-                Value::Pi(input, output) => {
+                Value::Pi(input, output, _) => {
                     let context = tcs.context();
                     check(index, tcs, *argument.clone(), *input)?;
                     Ok(output.instantiate(argument.eval(context)))
@@ -93,20 +94,18 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
 pub fn check_type(index: u32, tcs: TCS, expression: Expression) -> TCM<(u32, TCS)> {
     use crate::ast::Expression::*;
     match expression {
-        Sum(constructors) => check_sum_type(index, tcs, constructors),
-        Pi((pattern, first), second) | Sigma((pattern, first), second) => {
+        Sum(constructors, level) => check_sum_type(index, tcs, constructors),
+        Pi((pattern, first), second, level) | Sigma((pattern, first), second, level) => {
             check_telescoped(index, tcs, pattern, *first, *second)
         }
         Type(level) => Ok((level + 1, tcs)),
         Void | One => Ok((0, tcs)),
         expression => {
             let inferred = check_infer(index, tcs_borrow!(tcs), expression)?;
-            inferred
-                .level_safe()
-                // If `inferred` is a type expression, its own type must be > 0
-                .filter(|level| *level > 0)
-                .map(|level| (level - 1, tcs))
-                .ok_or_else(|| TCE::NotTypeType(inferred))
+            match inferred.level_safe() {
+                SomeLevel(level) if level > 0 => Ok((level - 1, tcs)),
+                _ => Err(TCE::NotTypeType(inferred)),
+            }
         }
     }
 }
@@ -127,7 +126,7 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
         }
         // There's nothing left to check.
         (E::Void, _) => Ok(tcs),
-        (E::Lambda(pattern, _, body), V::Pi(signature, closure)) => {
+        (E::Lambda(pattern, _, body), V::Pi(signature, closure, _)) => {
             let TCS { gamma, context } = tcs_borrow!(tcs);
             let generated = generate_value(index);
             let gamma = update_gamma_borrow(gamma, &pattern, *signature, &generated)?;
@@ -139,7 +138,7 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
             )?;
             Ok(tcs)
         }
-        (E::Pair(first, second), V::Sigma(first_type, second_type)) => {
+        (E::Pair(first, second), V::Sigma(first_type, second_type, _)) => {
             tcs = check(index, tcs, *first.clone(), *first_type)?;
             let context = tcs.context();
             check(
@@ -149,7 +148,7 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
                 second_type.instantiate(first.eval(context)),
             )
         }
-        (E::Constructor(name, body), V::Sum(constructors)) => {
+        (E::Constructor(name, body), V::Sum(constructors, _)) => {
             let constructor = constructors
                 .get(&name)
                 .ok_or_else(|| TCE::InvalidConstructor(name))?
@@ -157,11 +156,11 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
                 .reduce_to_value();
             check(index, tcs, *body, constructor)
         }
-        (E::Sum(constructors), V::Type(level)) => {
+        (E::Sum(constructors, _), V::Type(level)) => {
             check_level(level, check_sum_type(index, tcs, constructors)?)
         }
-        (E::Sigma((pattern, first), second), V::Type(level))
-        | (E::Pi((pattern, first), second), V::Type(level)) => check_level(
+        (E::Sigma((pattern, first), second, _), V::Type(level))
+        | (E::Pi((pattern, first), second, _), V::Type(level)) => check_level(
             level,
             check_telescoped(index, tcs, pattern, *first, *second)?,
         ),
@@ -179,8 +178,8 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
             Ok(tcs)
         }
         // I really wish to have box pattern here :(
-        (E::Split(mut branches), V::Pi(sum, closure)) => match *sum {
-            V::Sum(sum_branches) => {
+        (E::Split(mut branches), V::Pi(sum, closure, _)) => match *sum {
+            V::Sum(sum_branches, level) => {
                 for (name, branch) in sum_branches.into_iter() {
                     let pattern_match = match branches.remove(&name) {
                         Some(pattern_match) => *pattern_match,
@@ -189,6 +188,7 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
                     let signature = V::Pi(
                         Box::new(branch.reduce_to_value()),
                         Closure::Choice(Box::new(closure.clone()), name.clone()),
+                        0,
                     );
                     tcs = check(index, tcs, pattern_match, signature)?;
                 }
@@ -203,7 +203,7 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
                 index,
                 tcs,
                 E::Split(branches),
-                V::Pi(Box::new(not_sum_so_fall_through), closure),
+                V::Pi(Box::new(not_sum_so_fall_through), closure, 0),
             ),
         },
         (expression, value) => check_fallback(index, tcs, expression, value),

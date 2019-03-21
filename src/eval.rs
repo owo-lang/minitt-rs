@@ -1,3 +1,4 @@
+use crate::ast::MaybeLevel::{NoLevel, SomeLevel};
 use crate::ast::*;
 
 impl Pattern {
@@ -87,25 +88,27 @@ impl Closure {
 
 impl Value {
     /// Calculate the level of `self`, return `None` if it's not a type value.
-    pub fn level_safe(&self) -> Option<u32> {
+    pub fn level_safe(&self) -> MaybeLevel {
         match self {
-            Value::One => Some(0),
-            Value::Type(level) => Some(1 + level),
+            Value::One => SomeLevel(0),
+            Value::Type(level) => SomeLevel(1 + level),
             // TODO: implement
-            Value::Pi(_, _) => Some(0),
+            Value::Pi(_, _, level) => SomeLevel(*level),
             // TODO: implement
-            Value::Sigma(_, _) => Some(0),
+            Value::Sigma(_, _, level) => SomeLevel(*level),
             // TODO: implement
-            Value::Sum(_) => Some(0),
+            Value::Sum(_, level) => SomeLevel(*level),
             // TODO: introduce new neutral as well?
-            _ => None,
+            _ => NoLevel,
         }
     }
 
     /// This is called `levelView` in Agda.
     pub fn level(&self) -> u32 {
-        self.level_safe()
-            .unwrap_or_else(|| panic!("Cannot calculate the level of: `{}`.", self))
+        match self.level_safe() {
+            SomeLevel(level) => level,
+            _ => panic!("Cannot calculate the level of: {}", self),
+        }
     }
 
     /// `vfst` in Mini-TT.<br/>
@@ -184,32 +187,32 @@ impl Expression {
                 .resolve(&name)
                 .map_err(|err| eprintln!("{}", err))
                 .unwrap(),
-            E::Sum(constructors) => V::Sum(branch_to_righted(constructors, context)),
+            E::Sum(constructors, level) => V::Sum(branch_to_righted(constructors, context), 0),
             E::Merge(left, right) => {
                 let mut left = match left.eval(context.clone()) {
-                    V::Sum(constructors) => constructors,
+                    V::Sum(constructors, level) => constructors,
                     otherwise => panic!("Not a Sum expression: `{}`.", otherwise),
                 };
                 let mut right = match right.eval(context) {
-                    V::Sum(constructors) => constructors,
+                    V::Sum(constructors, level) => constructors,
                     otherwise => panic!("Not a Sum expression: `{}`.", otherwise),
                 };
                 // TODO: check overlap
                 left.append(&mut right);
-                V::Sum(left)
+                V::Sum(left, 0)
             }
             E::Split(case_tree) => V::Split(branch_to_righted(case_tree, context)),
-            E::Pi((pattern, first), second) => {
+            E::Pi((pattern, first), second, _) => {
                 let first = Box::new(first.eval(context.clone()));
                 let second =
                     Closure::Abstraction(pattern, Some(first.clone()), *second, Box::new(context));
-                V::Pi(first, second)
+                V::Pi(first, second, 0)
             }
-            E::Sigma((pattern, first), second) => {
+            E::Sigma((pattern, first), second, level) => {
                 let first = Box::new(first.eval(context.clone()));
                 let second =
                     Closure::Abstraction(pattern, Some(first.clone()), *second, Box::new(context));
-                V::Sigma(first, second)
+                V::Sigma(first, second, 0)
             }
             E::Lambda(pattern, parameter_type, body) => V::Lambda(Closure::Abstraction(
                 pattern,

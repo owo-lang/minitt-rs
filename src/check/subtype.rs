@@ -21,9 +21,14 @@ pub fn check_subtype(
                 Err(TCE::TypeMismatch(Type(sub_level), Type(super_level)))
             }
         }
-        (Sum(sub_tree), Sum(super_tree)) => check_subtype_sum(index, tcs, sub_tree, super_tree),
-        (Pi(sub_param, sub_closure), Pi(super_param, super_closure))
-        | (Sigma(sub_param, sub_closure), Sigma(super_param, super_closure)) => {
+        (Sum(sub_tree, sub_level), Sum(super_tree, super_level)) => {
+            check_subtype_sum(index, tcs, sub_tree, super_tree)
+        }
+        (Pi(sub_param, sub_closure, sub_level), Pi(super_param, super_closure, super_level))
+        | (
+            Sigma(sub_param, sub_closure, sub_level),
+            Sigma(super_param, super_closure, super_level),
+        ) => {
             let tcs = check_subtype(index, tcs, *super_param, *sub_param, true)?;
             let generated = generate_value(index);
             check_subtype(

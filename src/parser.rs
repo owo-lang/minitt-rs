@@ -1,3 +1,4 @@
+use crate::ast::MaybeLevel::{NoLevel, SomeLevel};
 use crate::ast::*;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
@@ -113,7 +114,7 @@ pub fn first_to_expression(the_rule: Tok) -> Expression {
 /// ```
 pub fn function_type_to_expression(the_rule: Tok) -> Expression {
     let (input, output) = atom_and_expression_to_tuple(the_rule);
-    Expression::Pi((Pattern::Unit, Box::new(input)), Box::new(output))
+    Expression::Pi((Pattern::Unit, Box::new(input)), Box::new(output), NoLevel)
 }
 
 /// ```ignore
@@ -122,7 +123,7 @@ pub fn function_type_to_expression(the_rule: Tok) -> Expression {
 /// ```
 pub fn pair_type_to_expression(the_rule: Tok) -> Expression {
     let (first, second) = atom_and_expression_to_tuple(the_rule);
-    Expression::Sigma((Pattern::Unit, Box::new(first)), Box::new(second))
+    Expression::Sigma((Pattern::Unit, Box::new(first)), Box::new(second), NoLevel)
 }
 
 /// Helper, extracted.
@@ -265,7 +266,7 @@ pub fn atom_to_expression(rules: Tok) -> Expression {
         Rule::constructor => constructor_to_expression(the_rule),
         Rule::variable => variable_to_expression(the_rule),
         Rule::split => Expression::Split(choices_to_tree_map(the_rule)),
-        Rule::sum => Expression::Sum(branches_to_tree_map(the_rule)),
+        Rule::sum => Expression::Sum(branches_to_tree_map(the_rule), NoLevel),
         Rule::one => Expression::One,
         Rule::unit => Expression::Unit,
         Rule::pi_type => pi_type_to_expression(the_rule),
@@ -315,32 +316,52 @@ pub fn choices_to_tree_map(the_rule: Tok) -> Branch {
 }
 
 /// ```ignore
-/// pi = _{ Pi unicode | "\\Pi" }
-/// pi_type = { pi ~ typed_abstraction }
+/// pi = ${ ("\\Pi" | "\u{03A0}") ~ level }
+/// pi_type = { pi ~ level ~ typed_abstraction }
 /// ```
 pub fn pi_type_to_expression(the_rule: Tok) -> Expression {
-    let (first_name, first_type, second) = typed_abstraction_to_tuple(the_rule);
-    Expression::Pi((first_name, Box::new(first_type)), Box::new(second))
+    let mut inner = the_rule.into_inner();
+    let level = type_level(&mut inner);
+    let (first_name, first_type, second) = typed_abstraction_to_tuple(&mut inner);
+    end_of_rule(&mut inner);
+    Expression::Pi((first_name, Box::new(first_type)), Box::new(second), level)
 }
 
 /// ```ignore
-/// pi = _{ Pi unicode | "\\Pi" }
+/// sigma = ${ ("\\Sigma" | "\u{03A3}") ~ level }
 /// pi_type = { pi ~ typed_abstraction }
 /// ```
 pub fn sigma_type_to_expression(the_rule: Tok) -> Expression {
-    let (input_name, input_type, output) = typed_abstraction_to_tuple(the_rule);
-    Expression::Sigma((input_name, Box::new(input_type)), Box::new(output))
+    let mut inner = the_rule.into_inner();
+    let level = type_level(&mut inner);
+    let (input_name, input_type, output) = typed_abstraction_to_tuple(&mut inner);
+    end_of_rule(&mut inner);
+    Expression::Sigma((input_name, Box::new(input_type)), Box::new(output), level)
+}
+
+/// parse next token as level
+pub fn type_level(inner: &mut Tik) -> MaybeLevel {
+    match inner
+        .next()
+        .unwrap()
+        .into_inner()
+        .next()
+        .unwrap()
+        .as_str()
+        .parse()
+    {
+        Ok(level) => SomeLevel(level),
+        Err(_) => NoLevel,
+    }
 }
 
 /// ```ignore
 /// typed_abstraction = _{ pattern ~ ":" ~ expression ~ "." ~ expression }
 /// ```
-pub fn typed_abstraction_to_tuple(the_rule: Tok) -> (Pattern, Expression, Expression) {
-    let mut inner: Tik = the_rule.into_inner();
+pub fn typed_abstraction_to_tuple(mut inner: &mut Tik) -> (Pattern, Expression, Expression) {
     let input_name = next_pattern(&mut inner);
     let input_type = next_expression(&mut inner);
     let output = next_expression(&mut inner);
-    end_of_rule(&mut inner);
     (input_name, input_type, output)
 }
 
