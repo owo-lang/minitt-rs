@@ -30,9 +30,12 @@ pub fn check_lift_parameters<'a>(
     if parameters.is_empty() {
         return check_body(tcs);
     }
-    let (pattern, expression) = parameters.remove(0);
+    let parameter = parameters.remove(0);
+    // Forgive me, I failed find a better name.
+    let clone = parameter.clone();
+    let (pattern, expression) = parameter.destruct();
     // TODO: this level might be the pi level
-    let (_level, TCS { gamma, context }) = check_type(index, tcs, *expression.clone())?;
+    let (_level, TCS { gamma, context }) = check_type(index, tcs, expression.clone())?;
     let generated = generate_value(index);
     let type_val = expression.clone().eval(context.clone());
     let gamma = update_gamma_borrow(gamma, &pattern, type_val.clone(), &generated)?;
@@ -44,11 +47,7 @@ pub fn check_lift_parameters<'a>(
     let (signature, body, tcs) = check_lift_parameters(index + 1, tcs, parameters, check_body)?;
 
     Ok((
-        Expression::Pi(
-            (pattern.clone(), Box::new(*expression)),
-            Box::new(signature),
-            SomeLevel(0),
-        ),
+        Expression::Pi(clone, Box::new(signature), SomeLevel(0)),
         Expression::Lambda(pattern, AnonymousValue::some(type_val), Box::new(body)),
         tcs,
     ))

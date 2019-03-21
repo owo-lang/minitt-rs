@@ -57,11 +57,11 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
             }
             Ok(Value::Type(max))
         }
-        Pi((pattern, input), output, _) | Sigma((pattern, input), output, _) => {
-            let (level, tcs) = check_type(index, tcs, *input.clone())?;
-            let input_type = input.eval(tcs.context());
+        Pi(input, output, _) | Sigma(input, output, _) => {
+            let (level, tcs) = check_type(index, tcs, *input.expression.clone())?;
+            let input_type = input.expression.eval(tcs.context());
             let generated = generate_value(index);
-            let gamma = update_gamma(tcs.gamma, &pattern, input_type, generated)?;
+            let gamma = update_gamma(tcs.gamma, &input.pattern, input_type, generated)?;
             check_type(index + 1, TCS::new(gamma, tcs.context), *output)?;
             // Does this need to depend on the level of the return type?
             Ok(Value::Type(level))
@@ -95,8 +95,8 @@ pub fn check_type(index: u32, tcs: TCS, expression: Expression) -> TCM<(u32, TCS
     use crate::ast::Expression::*;
     match expression {
         Sum(constructors, level) => check_sum_type(index, tcs, constructors),
-        Pi((pattern, first), second, level) | Sigma((pattern, first), second, level) => {
-            check_telescoped(index, tcs, pattern, *first, *second)
+        Pi(first, second, level) | Sigma(first, second, level) => {
+            check_telescoped(index, tcs, first.pattern, *first.expression, *second)
         }
         Type(level) => Ok((level + 1, tcs)),
         Void | One => Ok((0, tcs)),
@@ -159,10 +159,10 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
         (E::Sum(constructors, _), V::Type(level)) => {
             check_level(level, check_sum_type(index, tcs, constructors)?)
         }
-        (E::Sigma((pattern, first), second, _), V::Type(level))
-        | (E::Pi((pattern, first), second, _), V::Type(level)) => check_level(
+        (E::Sigma(first, second, _), V::Type(level))
+        | (E::Pi(first, second, _), V::Type(level)) => check_level(
             level,
-            check_telescoped(index, tcs, pattern, *first, *second)?,
+            check_telescoped(index, tcs, first.pattern, *first.expression, *second)?,
         ),
         (E::Declaration(declaration, rest), rest_type) => {
             let tcs = check_declaration(index, tcs, *declaration)?;

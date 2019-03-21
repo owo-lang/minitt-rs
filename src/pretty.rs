@@ -106,12 +106,10 @@ impl Display for Expression {
             }
             Expression::Unit => f.write_str("0"),
             Expression::One => f.write_str("1"),
-            Expression::Pi((pattern, input), output, level) => {
+            Expression::Pi(input, output, level) => {
                 f.write_str("\u{03A0}")?;
                 level.fmt(f)?;
                 f.write_str(" ")?;
-                pattern.fmt(f)?;
-                f.write_str(": ")?;
                 input.fmt(f)?;
                 f.write_str(". ")?;
                 output.fmt(f)
@@ -120,12 +118,10 @@ impl Display for Expression {
                 f.write_str("Type")?;
                 level.fmt(f)
             }
-            Expression::Sigma((pattern, first), second, level) => {
+            Expression::Sigma(first, second, level) => {
                 f.write_str("\u{03A3}")?;
                 level.fmt(f)?;
                 f.write_str(" ")?;
-                pattern.fmt(f)?;
-                f.write_str(": ")?;
                 first.fmt(f)?;
                 f.write_str(". ")?;
                 second.fmt(f)
@@ -177,6 +173,14 @@ impl<Expr: Display, Value: Clone + Display> Display for GenericCase<Expr, Value>
     }
 }
 
+impl Display for Typed {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.pattern.fmt(f)?;
+        f.write_str(": ")?;
+        self.expression.fmt(f)
+    }
+}
+
 fn fmt_branch<E: Display>(branch: &GenericBranch<E>, f: &mut Formatter) -> Result<(), FmtError> {
     let mut started = false;
     for (name, clause) in branch.iter() {
@@ -213,11 +217,9 @@ impl Display for Declaration {
         f.write_str(if self.is_recursive { "rec" } else { "let" })?;
         f.write_char(' ')?;
         self.pattern.fmt(f)?;
-        for (pattern, prefix_parameter_type) in self.prefix_parameters.iter() {
+        for typed in self.prefix_parameters.iter() {
             f.write_str(" (")?;
-            pattern.fmt(f)?;
-            f.write_str(": ")?;
-            prefix_parameter_type.fmt(f)?;
+            typed.fmt(f)?;
             f.write_char(')')?;
         }
         f.write_str(": ")?;

@@ -5,6 +5,7 @@
 + Remove `GenericCaseTree`, add `GenericCase` because now each case in the
   case tree have their own telescope
 + Remove `DeclarationType`, use `is_recursive: bool` instead
++ `Typed` is refactored to a struct
 
 # 0.2.5
 

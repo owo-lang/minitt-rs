@@ -114,7 +114,7 @@ pub fn first_to_expression(the_rule: Tok) -> Expression {
 /// ```
 pub fn function_type_to_expression(the_rule: Tok) -> Expression {
     let (input, output) = atom_and_expression_to_tuple(the_rule);
-    Expression::Pi((Pattern::Unit, Box::new(input)), Box::new(output), NoLevel)
+    Expression::Pi(Typed::new(Pattern::Unit, input), Box::new(output), NoLevel)
 }
 
 /// ```ignore
@@ -123,7 +123,7 @@ pub fn function_type_to_expression(the_rule: Tok) -> Expression {
 /// ```
 pub fn pair_type_to_expression(the_rule: Tok) -> Expression {
     let (first, second) = atom_and_expression_to_tuple(the_rule);
-    Expression::Sigma((Pattern::Unit, Box::new(first)), Box::new(second), NoLevel)
+    Expression::Sigma(Typed::new(Pattern::Unit, first), Box::new(second), NoLevel)
 }
 
 /// Helper, extracted.
@@ -177,7 +177,7 @@ pub fn prefix_parameters_to_vec(the_rule: Tok) -> Vec<Typed> {
         let mut inner: Tik = prefix_parameter.into_inner();
         let pattern = next_pattern(&mut inner);
         let parameter_type = next_expression(&mut inner);
-        map.push((pattern, Box::new(parameter_type)));
+        map.push(Typed::new(pattern, parameter_type));
     }
     map
 }
@@ -324,7 +324,7 @@ pub fn pi_type_to_expression(the_rule: Tok) -> Expression {
     let level = type_level(&mut inner);
     let (first_name, first_type, second) = typed_abstraction_to_tuple(&mut inner);
     end_of_rule(&mut inner);
-    Expression::Pi((first_name, Box::new(first_type)), Box::new(second), level)
+    Expression::Pi(Typed::new(first_name, first_type), Box::new(second), level)
 }
 
 /// ```ignore
@@ -336,7 +336,7 @@ pub fn sigma_type_to_expression(the_rule: Tok) -> Expression {
     let level = type_level(&mut inner);
     let (input_name, input_type, output) = typed_abstraction_to_tuple(&mut inner);
     end_of_rule(&mut inner);
-    Expression::Sigma((input_name, Box::new(input_type)), Box::new(output), level)
+    Expression::Sigma(Typed::new(input_name, input_type), Box::new(output), level)
 }
 
 /// parse next token as level

@@ -98,7 +98,26 @@ pub fn branch_to_righted(branch: Branch, context: Telescope) -> CaseTree {
 }
 
 /// Pattern with type explicitly specified
-pub type Typed = (Pattern, Box<Expression>);
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct Typed {
+    pub pattern: Pattern,
+    pub expression: Box<Expression>,
+}
+
+impl Typed {
+    pub fn new(pattern: Pattern, expression: Expression) -> Self {
+        Self {
+            pattern,
+            expression: Box::new(expression),
+        }
+    }
+
+    pub fn destruct(self) -> (Pattern, Expression) {
+        let pattern = self.pattern;
+        let expression = *self.expression;
+        (pattern, expression)
+    }
+}
 
 /// `Val` in Mini-TT, value term.<br/>
 /// Terms are either of canonical form or neutral form.

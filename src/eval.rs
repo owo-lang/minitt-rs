@@ -202,16 +202,18 @@ impl Expression {
                 V::Sum(left, 0)
             }
             E::Split(case_tree) => V::Split(branch_to_righted(case_tree, context)),
-            E::Pi((pattern, first), second, _) => {
-                let first = Box::new(first.eval(context.clone()));
-                let second =
-                    Closure::Abstraction(pattern, Some(first.clone()), *second, Box::new(context));
-                V::Pi(first, second, 0)
+            E::Pi(input, output, _) => {
+                let pattern = input.pattern;
+                let input = Box::new(input.expression.eval(context.clone()));
+                let extra_info = Some(input.clone());
+                let second = Closure::Abstraction(pattern, extra_info, *output, Box::new(context));
+                V::Pi(input, second, 0)
             }
-            E::Sigma((pattern, first), second, level) => {
-                let first = Box::new(first.eval(context.clone()));
-                let second =
-                    Closure::Abstraction(pattern, Some(first.clone()), *second, Box::new(context));
+            E::Sigma(first, second, level) => {
+                let pattern = first.pattern;
+                let first = Box::new(first.expression.eval(context.clone()));
+                let extra_info = Some(first.clone());
+                let second = Closure::Abstraction(pattern, extra_info, *second, Box::new(context));
                 V::Sigma(first, second, 0)
             }
             E::Lambda(pattern, parameter_type, body) => V::Lambda(Closure::Abstraction(
