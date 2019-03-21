@@ -37,5 +37,5 @@ path = "src/lib.rs"
 
 [[bin]]
 name = "minittc"
-path = "src/main.rs"
+path = "src/cli/mod.rs"
 required-features = ["cli", "parser", "pretty"]

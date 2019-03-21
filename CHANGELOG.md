@@ -6,6 +6,7 @@
   case tree have their own telescope
 + Remove `DeclarationType`, use `is_recursive: bool` instead
 + `Typed` is refactored to a struct
++ Remove `src/main.rs`
 
 # 0.2.5
 

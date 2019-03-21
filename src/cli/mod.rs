@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate minitt;
+
 /// CLI arguments. Based on structopt (clap)
 mod args;
 

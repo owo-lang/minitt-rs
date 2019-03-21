@@ -1,4 +1,4 @@
-use crate::cli::util::parse_file;
+use crate::util::parse_file;
 use minitt::ast::{Expression, GenericTelescope, Telescope, Value};
 use minitt::check::read_back::ReadBack;
 use minitt::check::tcm::{TCE, TCS};
