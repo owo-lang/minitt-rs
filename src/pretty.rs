@@ -1,8 +1,8 @@
+use crate::ast::MaybeLevel::SomeLevel;
 use crate::ast::*;
 use crate::check::read_back::*;
 use core::fmt::Write;
 use std::fmt::{Display, Error as FmtError, Formatter};
-use crate::ast::MaybeLevel::SomeLevel;
 
 impl Display for Value {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
@@ -44,7 +44,7 @@ impl Display for Value {
             // Don't print context
             Value::Split(branches) => {
                 f.write_str("split {")?;
-                branches.fmt(f)?;
+                fmt_branch(branches, f)?;
                 f.write_char('}')
             }
             // Don't print the context
@@ -52,7 +52,7 @@ impl Display for Value {
                 f.write_str("Sum")?;
                 level.fmt(f)?;
                 f.write_str(" {")?;
-                constructors.fmt(f)?;
+                fmt_branch(constructors, f)?;
                 f.write_char('}')
             }
             Value::Neutral(neutral) => {
@@ -162,13 +162,18 @@ impl Display for Expression {
                 rest.fmt(f)
             }
             Expression::Void => Ok(()),
+            Expression::Merge(lhs, rhs) => {
+                lhs.fmt(f)?;
+                f.write_str(" ++ ")?;
+                rhs.fmt(f)
+            }
         }
     }
 }
 
-impl<Expr: Display, Value: Clone + Display> Display for GenericCaseTree<Expr, Value> {
+impl<Expr: Display, Value: Clone + Display> Display for GenericCase<Expr, Value> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        fmt_branch(&*self.branches, f)
+        self.expression.fmt(f)
     }
 }
 
@@ -205,10 +210,7 @@ impl Display for Pattern {
 
 impl Display for Declaration {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        f.write_str(match self.declaration_type {
-            DeclarationType::Simple => "let",
-            DeclarationType::Recursive => "rec",
-        })?;
+        f.write_str(if self.is_recursive { "rec" } else { "let" })?;
         f.write_char(' ')?;
         self.pattern.fmt(f)?;
         for (pattern, prefix_parameter_type) in self.prefix_parameters.iter() {
@@ -289,7 +291,7 @@ impl<Value: Display + Clone> Display for GenericNeutral<Value> {
                 f.write_str("app ")?;
                 argument.fmt(f)?;
                 f.write_str(" {")?;
-                clauses.fmt(f)?;
+                fmt_branch(clauses, f)?;
                 f.write_char('}')
             }
         }
@@ -346,7 +348,7 @@ impl Display for NormalExpression {
             }
             Expression::Split(clauses) => {
                 f.write_str("split {")?;
-                clauses.fmt(f)?;
+                fmt_branch(clauses, f)?;
                 f.write_char('}')
             }
             // Don't print the context
@@ -354,7 +356,7 @@ impl Display for NormalExpression {
                 f.write_str("Sum")?;
                 level.fmt(f)?;
                 f.write_str(" {")?;
-                constructors.fmt(f)?;
+                fmt_branch(constructors, f)?;
                 f.write_char('}')
             }
             Expression::Neutral(neutral) => {
@@ -370,7 +372,7 @@ impl Display for MaybeLevel {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             SomeLevel(level) => level.fmt(f),
-            NoLevel => f.write_str("<no_level>")
+            NoLevel => f.write_str("<no_level>"),
         }
     }
 }

@@ -7,10 +7,10 @@ use std::rc::Rc;
 /// `NRho` in Mini-TT, normal form telescopes (contexts).
 pub type NormalTelescope = Rc<GenericTelescope<NormalExpression>>;
 
+pub type NormalCase = GenericCase<Either<NormalExpression, Expression>, NormalExpression>;
+
 /// `NSClos` in Mini-TT, normal form closures.
-///
-/// TODO: consider replacing `Expression`
-pub type NormalCaseTree = GenericCaseTree<Either<NormalExpression, Expression>, NormalExpression>;
+pub type NormalCaseTree = GenericBranch<NormalCase>;
 
 /// `NNeut` in Mini-TT, normal form neutral values.
 pub type NormalNeutral = GenericNeutral<NormalExpression>;
@@ -97,31 +97,28 @@ impl ReadBack for Value {
                 Box::new(second.read_back(index)),
             ),
             Value::Constructor(name, body) => Constructor(name, Box::new(body.read_back(index))),
-            Value::Split(case_tree) => Split(case_tree.read_back(index)),
-            Value::Sum(constructors, _) => Sum(constructors.read_back(index), 0),
+            Value::Split(case_tree) => Split(read_back_branches(index, case_tree)),
+            Value::Sum(constructors, _) => Sum(read_back_branches(index, constructors), 0),
             Value::Neutral(neutral) => Neutral(neutral.read_back(index)),
         }
     }
 }
 
-fn read_back_branches(
-    index: u32,
-    branches: GenericBranch<Either<Value, Expression>>,
-) -> GenericBranch<Either<NormalExpression, Expression>> {
+fn read_back_branches(index: u32, branches: CaseTree) -> NormalCaseTree {
     let mut read_back_constructors = BTreeMap::new();
-    for (name, value) in branches.into_iter() {
-        read_back_constructors.insert(name, Box::new(value.map_left(|l| l.read_back(index))));
+    for (name, case) in branches.into_iter() {
+        read_back_constructors.insert(name, Box::new(case.read_back(index)));
     }
     read_back_constructors
 }
 
-impl ReadBack for CaseTree {
-    type NormalForm = NormalCaseTree;
+impl ReadBack for Case {
+    type NormalForm = NormalCase;
 
     fn read_back(self, index: u32) -> Self::NormalForm {
-        Self::NormalForm::boxing(
-            read_back_branches(index, *self.branches),
-            self.environment.read_back(index),
+        Self::NormalForm::new(
+            self.expression.map_left(|l| l.read_back(index)),
+            self.context.read_back(index),
         )
     }
 }
@@ -160,9 +157,10 @@ impl ReadBack for Neutral {
             ),
             First(neutral) => First(Box::new(neutral.read_back(index))),
             Second(neutral) => Second(Box::new(neutral.read_back(index))),
-            Split(case_tree, body) => {
-                Split(case_tree.read_back(index), Box::new(body.read_back(index)))
-            }
+            Split(case_tree, body) => Split(
+                read_back_branches(index, case_tree),
+                Box::new(body.read_back(index)),
+            ),
         }
     }
 }

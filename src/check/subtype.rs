@@ -1,8 +1,8 @@
-use crate::ast::{reduce_to_value, Expression, Value};
+use std::collections::BTreeMap;
+
+use crate::ast::{Case, Value};
 use crate::check::read_back::{generate_value, ReadBack};
 use crate::check::tcm::{TCE, TCM, TCS};
-use either::Either;
-use std::collections::BTreeMap;
 
 /// Check if `subtype` is the subtype of `supertype`.
 pub fn check_subtype(
@@ -21,19 +21,14 @@ pub fn check_subtype(
                 Err(TCE::TypeMismatch(Type(sub_level), Type(super_level)))
             }
         }
-        (Sum(sub_tree, _), Sum(super_tree, _)) => {
-            let (super_tree, super_environment) = super_tree.destruct();
-            let (sub_tree, sub_environment) = sub_tree.destruct();
-            let super_eval = |sup: Box<Either<Value, Expression>>| {
-                reduce_to_value(*sup, super_environment.clone())
-            };
-            let sub_eval = |sub: Box<Either<Value, Expression>>| {
-                reduce_to_value(*sub, sub_environment.clone())
-            };
-            check_subtype_sum(index, tcs, sub_tree, super_tree, sub_eval, super_eval)
+        (Sum(sub_tree, sub_level), Sum(super_tree, super_level)) => {
+            check_subtype_sum(index, tcs, sub_tree, super_tree)
         }
-        (Pi(sub_param, sub_closure, _), Pi(super_param, super_closure, _))
-        | (Sigma(sub_param, sub_closure, _), Sigma(super_param, super_closure, _)) => {
+        (Pi(sub_param, sub_closure, sub_level), Pi(super_param, super_closure, super_level))
+        | (
+            Sigma(sub_param, sub_closure, sub_level),
+            Sigma(super_param, super_closure, super_level),
+        ) => {
             let tcs = check_subtype(index, tcs, *super_param, *sub_param, true)?;
             let generated = generate_value(index);
             check_subtype(
@@ -64,35 +59,33 @@ pub fn check_subtype(
 ///
 /// A bug report is expected to prove this to be false.
 #[inline]
-pub fn check_subtype_sum<Sub, Super>(
+pub fn check_subtype_sum(
     index: u32,
     tcs: TCS,
-    sub_tree: BTreeMap<String, Sub>,
-    mut super_tree: BTreeMap<String, Super>,
-    sub_tree_eval: impl Fn(Sub) -> Value,
-    super_tree_eval: impl Fn(Super) -> Value,
+    sub_tree: BTreeMap<String, Box<Case>>,
+    mut super_tree: BTreeMap<String, Box<Case>>,
 ) -> TCM<TCS> {
     for (constructor, sub_parameter) in sub_tree.into_iter() {
         let super_parameter = super_tree
             .remove(constructor.as_str())
             .ok_or_else(|| TCE::UnexpectedCases(constructor))?;
-        let sub_parameter = sub_tree_eval(sub_parameter);
-        let super_parameter = super_tree_eval(super_parameter);
+        let sub_parameter = sub_parameter.reduce_to_value();
+        let super_parameter = super_parameter.reduce_to_value();
         compare_normal(
             index,
             tcs_borrow!(tcs),
             sub_parameter.clone(),
             super_parameter.clone(),
         )
-            .or_else(|_err| {
-                check_subtype(
-                    index,
-                    tcs_borrow!(tcs),
-                    sub_parameter,
-                    super_parameter,
-                    false,
-                )
-            })?;
+        .or_else(|_err| {
+            check_subtype(
+                index,
+                tcs_borrow!(tcs),
+                sub_parameter,
+                super_parameter,
+                false,
+            )
+        })?;
     }
     Ok(tcs)
 }

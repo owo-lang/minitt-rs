@@ -1,10 +1,10 @@
 use std::borrow::Cow;
 
+use crate::ast::MaybeLevel::SomeLevel;
 use crate::ast::{up_dec_rc, up_var_rc, AnonymousValue, Declaration, Expression, Pattern, Typed};
 use crate::check::expr::{check, check_type};
 use crate::check::read_back::generate_value;
 use crate::check::tcm::{update_gamma_borrow, update_gamma_lazy, Gamma, TCE, TCM, TCS};
-use crate::ast::MaybeLevel::SomeLevel;
 
 macro_rules! try_locate {
     ($err:expr, $pattern:expr) => {
@@ -69,7 +69,7 @@ pub fn check_recursive_declaration(index: u32, tcs: TCS, declaration: Declaratio
         signature.clone(),
         &generated,
     )
-        .map_err(|err| try_locate!(err, pattern))?;
+    .map_err(|err| try_locate!(err, pattern))?;
     let fake_context = up_var_rc(context.clone(), pattern.clone(), generated);
     check(
         index + 1,
@@ -77,14 +77,14 @@ pub fn check_recursive_declaration(index: u32, tcs: TCS, declaration: Declaratio
         declaration.body.clone(),
         signature.clone(),
     )
-        .map_err(|err| try_locate!(err, pattern))?;
+    .map_err(|err| try_locate!(err, pattern))?;
     update_gamma_lazy(gamma, &pattern, signature, || {
         declaration
             .body
             .clone()
             .eval(up_dec_rc(context, declaration))
     })
-        .map_err(|err| try_locate!(err, pattern))
+    .map_err(|err| try_locate!(err, pattern))
 }
 
 /// Extracted from `checkD` in Mini-TT.<br/>
@@ -110,20 +110,20 @@ pub fn check_simple_declaration(
 /// prefixed parameters :)<br/>
 /// Check if a declaration is well-typed and update the context.
 pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<TCS> {
-    use crate::ast::DeclarationType::*;
     if declaration.prefix_parameters.is_empty() {
         let context = tcs.context();
-        return match &declaration.declaration_type {
-            Simple => check_simple_declaration(
+        return if !declaration.is_recursive {
+            check_simple_declaration(
                 index,
                 tcs,
                 declaration.pattern.clone(),
                 declaration.signature.clone(),
                 declaration.body.clone(),
-            ),
-            Recursive => check_recursive_declaration(index, tcs, declaration.clone()),
+            )
+        } else {
+            check_recursive_declaration(index, tcs, declaration.clone())
         }
-            .map(|gamma| TCS::new(gamma, up_dec_rc(context, declaration)));
+        .map(|gamma| TCS::new(gamma, up_dec_rc(context, declaration)));
     }
     let (pattern, signature, body) = match declaration {
         Declaration {
@@ -131,7 +131,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
             prefix_parameters,
             signature,
             body,
-            declaration_type: Simple,
+            is_recursive: false,
         } => check_lift_parameters(index, tcs_borrow!(tcs), prefix_parameters, |tcs| {
             // TODO: this level might be the pi level
             let (_level, tcs) = check_type(index, tcs, signature.clone())
@@ -141,7 +141,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
                 .map_err(|err| try_locate!(err, pattern))?;
             Ok((signature, body, tcs))
         })
-            .map(|(signature, body, _)| (pattern, signature, body))?,
+        .map(|(signature, body, _)| (pattern, signature, body))?,
         declaration => {
             let pattern = declaration.pattern.clone();
             check_lift_parameters(
@@ -162,7 +162,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
                         signature.clone(),
                         &generated,
                     )
-                        .map_err(|err| try_locate!(err, pattern))?;
+                    .map_err(|err| try_locate!(err, pattern))?;
                     let fake_context = up_var_rc(context.clone(), pattern.clone(), generated);
                     check(
                         index + 1,
@@ -170,7 +170,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
                         declaration.body.clone(),
                         signature,
                     )
-                        .map_err(|err| try_locate!(err, pattern))?;
+                    .map_err(|err| try_locate!(err, pattern))?;
                     Ok((
                         declaration.signature.clone(),
                         declaration.body.clone(),
@@ -178,7 +178,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
                     ))
                 },
             )
-                .map(|(signature, body, _)| (pattern, signature, body))?
+            .map(|(signature, body, _)| (pattern, signature, body))?
         }
     };
 

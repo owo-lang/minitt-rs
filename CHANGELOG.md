@@ -2,6 +2,10 @@
 
 # 0.2.6
 
++ Remove `GenericCaseTree`, add `GenericCase` because now each case in the
+  case tree have their own telescope
++ Remove `DeclarationType`, use `is_recursive: bool` instead
+
 # 0.2.5
 
 + Rename `U` to `Type`, `sum` to `Sum`

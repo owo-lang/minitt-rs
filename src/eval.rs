@@ -1,5 +1,5 @@
+use crate::ast::MaybeLevel::{NoLevel, SomeLevel};
 use crate::ast::*;
-use crate::ast::MaybeLevel::{SomeLevel, NoLevel};
 
 impl Pattern {
     /// `inPat` in Mini-TT.
@@ -28,7 +28,7 @@ impl Pattern {
                     Ok(val)
                 } else {
                     Err(format!(
-                        "Expected projection: `{}`, found: `{}`",
+                        "Expected projection: `{}`, found: `{}`.",
                         pattern_name, name
                     ))
                 }
@@ -41,22 +41,19 @@ impl Pattern {
 impl TelescopeRaw {
     /// `getRho` in Mini-TT.
     pub fn resolve(&self, name: &str) -> Result<Value, String> {
-        use crate::ast::DeclarationType::*;
         use crate::ast::GenericTelescope::*;
         match self {
-            Nil => Err(format!("Unresolved reference: `{}`", name)),
+            Nil => Err(format!("Unresolved reference: `{}`.", name)),
             UpDec(context, declaration) => {
                 let pattern = &declaration.pattern;
                 if pattern.contains(name) {
                     pattern.project(
                         name,
-                        declaration
-                            .body
-                            .clone()
-                            .eval(match declaration.declaration_type {
-                                Simple => context.clone(),
-                                Recursive => up_dec_rc(context.clone(), declaration.clone()),
-                            }),
+                        declaration.body.clone().eval(if declaration.is_recursive {
+                            up_dec_rc(context.clone(), declaration.clone())
+                        } else {
+                            context.clone()
+                        }),
                     )
                 } else {
                     context.resolve(name)
@@ -108,9 +105,9 @@ impl Value {
 
     /// This is called `levelView` in Agda.
     pub fn level(&self) -> u32 {
-        match self.level_safe(){
+        match self.level_safe() {
             SomeLevel(level) => level,
-            _ => panic!("Cannot calculate the level of: {}", self)
+            _ => panic!("Cannot calculate the level of: {}", self),
         }
     }
 
@@ -121,7 +118,7 @@ impl Value {
         match self {
             Value::Pair(first, _) => *first,
             Value::Neutral(neutral) => Value::Neutral(Neutral::First(Box::new(neutral))),
-            e => panic!("Cannot first: {}", e),
+            e => panic!("Cannot first: `{}`.", e),
         }
     }
 
@@ -132,7 +129,7 @@ impl Value {
         match self {
             Value::Pair(_, second) => *second,
             Value::Neutral(neutral) => Value::Neutral(Neutral::Second(Box::new(neutral))),
-            e => panic!("Cannot second: {}", e),
+            e => panic!("Cannot second: `{}`.", e),
         }
     }
 
@@ -146,7 +143,7 @@ impl Value {
                 Value::Neutral(Neutral::First(Box::new(neutral.clone()))),
                 Value::Neutral(Neutral::Second(Box::new(neutral))),
             ),
-            e => panic!("Cannot destruct: {}", e),
+            e => panic!("Cannot destruct: `{}`.", e),
         }
     }
 
@@ -156,24 +153,21 @@ impl Value {
         match self {
             Value::Lambda(closure) => closure.instantiate(argument),
             Value::Split(case_tree) => match argument {
-                Value::Constructor(name, body) => reduce_to_value(
-                    *case_tree
-                        .branches
-                        .get(&name)
-                        .unwrap_or_else(|| panic!("Cannot find constructor `{}`.", name))
-                        .clone(),
-                    *case_tree.environment,
-                )
+                Value::Constructor(name, body) => case_tree
+                    .get(&name)
+                    .unwrap_or_else(|| panic!("Cannot find constructor `{}`.", name))
+                    .clone()
+                    .reduce_to_value()
                     .apply(*body),
                 Value::Neutral(neutral) => {
                     Value::Neutral(Neutral::Split(case_tree, Box::new(neutral)))
                 }
-                e => panic!("Cannot apply a: {}", e),
+                e => panic!("Cannot apply a: `{}`.", e),
             },
             Value::Neutral(neutral) => {
                 Value::Neutral(Neutral::Application(Box::new(neutral), Box::new(argument)))
             }
-            e => panic!("Cannot apply on: {}", e),
+            e => panic!("Cannot apply on: `{}`.", e),
         }
     }
 }
@@ -193,14 +187,21 @@ impl Expression {
                 .resolve(&name)
                 .map_err(|err| eprintln!("{}", err))
                 .unwrap(),
-            E::Sum(constructors, level) => V::Sum(GenericCaseTree::boxing(
-                branch_to_righted(constructors),
-                context,
-            ), 0),
-            E::Split(case_tree) => V::Split(GenericCaseTree::boxing(
-                branch_to_righted(case_tree),
-                context,
-            )),
+            E::Sum(constructors, level) => V::Sum(branch_to_righted(constructors, context), 0),
+            E::Merge(left, right) => {
+                let mut left = match left.eval(context.clone()) {
+                    V::Sum(constructors, level) => constructors,
+                    otherwise => panic!("Not a Sum expression: `{}`.", otherwise),
+                };
+                let mut right = match right.eval(context) {
+                    V::Sum(constructors, level) => constructors,
+                    otherwise => panic!("Not a Sum expression: `{}`.", otherwise),
+                };
+                // TODO: check overlap
+                left.append(&mut right);
+                V::Sum(left, 0)
+            }
+            E::Split(case_tree) => V::Split(branch_to_righted(case_tree, context)),
             E::Pi((pattern, first), second, _) => {
                 let first = Box::new(first.eval(context.clone()));
                 let second =

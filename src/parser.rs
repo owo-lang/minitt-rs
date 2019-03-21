@@ -1,8 +1,8 @@
+use crate::ast::MaybeLevel::{NoLevel, SomeLevel};
 use crate::ast::*;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
-use crate::ast::MaybeLevel::{SomeLevel, NoLevel};
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
@@ -72,6 +72,7 @@ fn end_of_rule(inner: &mut Tik) {
 /// expression =
 ///  { declaration
 ///  | const_declaration
+///  | merge_sum
 ///  | application
 ///  | function_type
 ///  | pair_type
@@ -86,6 +87,7 @@ pub fn expression_to_expression(rules: Tok) -> Expression {
     match the_rule.as_rule() {
         Rule::declaration => declaration_to_expression(the_rule),
         Rule::const_declaration => const_declaration_to_expression(the_rule),
+        Rule::merge_sum => merge_sum_to_expression(the_rule),
         Rule::application => application_to_expression(the_rule),
         Rule::function_type => function_type_to_expression(the_rule),
         Rule::pair_type => pair_type_to_expression(the_rule),
@@ -207,12 +209,7 @@ pub fn declaration_to_expression(the_rule: Tok) -> Expression {
         .map(expression_to_expression)
         .unwrap_or(Expression::Void);
     end_of_rule(&mut inner);
-    let declaration_type = if rec {
-        DeclarationType::Recursive
-    } else {
-        DeclarationType::Simple
-    };
-    let declaration = Declaration::new(name, prefix_parameters, signature, body, declaration_type);
+    let declaration = Declaration::new(name, prefix_parameters, signature, body, rec);
     Expression::Declaration(Box::new(declaration), Box::new(rest))
 }
 
@@ -234,6 +231,17 @@ pub fn const_declaration_to_expression(the_rule: Tok) -> Expression {
         .unwrap_or(Expression::Void);
     end_of_rule(&mut inner);
     Expression::Constant(name, Box::new(body), Box::new(rest))
+}
+
+/// ```ignore
+/// merge_sum = { atom ~ "++" ~ expression }
+/// ```
+pub fn merge_sum_to_expression(the_rule: Tok) -> Expression {
+    let mut inner: Tik = the_rule.into_inner();
+    let lhs = next_atom(&mut inner);
+    let rhs = next_expression(&mut inner);
+    end_of_rule(&mut inner);
+    Expression::Merge(Box::new(lhs), Box::new(rhs))
 }
 
 /// ```ignore
@@ -333,9 +341,17 @@ pub fn sigma_type_to_expression(the_rule: Tok) -> Expression {
 
 /// parse next token as level
 pub fn type_level(inner: &mut Tik) -> MaybeLevel {
-    match inner.next().unwrap().into_inner().next().unwrap().as_str().parse() {
+    match inner
+        .next()
+        .unwrap()
+        .into_inner()
+        .next()
+        .unwrap()
+        .as_str()
+        .parse()
+    {
         Ok(level) => SomeLevel(level),
-        Err(_) => NoLevel
+        Err(_) => NoLevel,
     }
 }
 

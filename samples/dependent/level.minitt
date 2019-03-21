@@ -1,8 +1,0 @@
-const bool = Sum { True | False };
-
-const Con2 = Sum
- { One Type1
- | Two Type2
- };
-
-let return_type:
