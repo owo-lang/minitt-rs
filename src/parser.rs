@@ -500,14 +500,17 @@ mod tests {
         successful_test_case("let unit_one : 1 = 0;\nlet type_one : Type0 = unit_one;");
         successful_test_case("let application : k = f e;");
         successful_test_case("let pair_first_second : k = ((x, y).1).2;");
-        successful_test_case("let sigma_type : \\Sigma x : x_type . y = x, y;");
+        successful_test_case("let sigma_type : \\Sigma0 x : x_type . y = x, y;");
         successful_test_case("let constructor : C k = C e;");
-        successful_test_case("let pi_lambda : \\Pi a : b . c = \\lambda a . expr;");
-        successful_test_case("let pat, pat2 : \\Pi _ : b . c = \\lambda _ . expr;");
+        successful_test_case("let pi_lambda : \\Pi0 a : b . c = \\lambda a . expr;");
+        successful_test_case("let pat, pat2 : \\Pi0 _ : b . c = \\lambda _ . expr;");
     }
 
     #[test]
     fn no_reparse() {
+        successful_no_reparse("let sigma_type : \\Sigma x : x_type . y = x, y;");
+        successful_no_reparse("let pi_lambda : \\Pi a : b . c = \\lambda a . expr;");
+        successful_no_reparse("let pat, pat2 : \\Pi _ : b . c = \\lambda _ . expr;");
         successful_no_reparse("let function : Sum {C e} = split {C _ => e};");
         successful_no_reparse("let function (x : a) : bla = rua;");
     }
