@@ -1,0 +1,1 @@
+let error_type: \Sigma1 a: Type1. Type1 = Type0, Type0;

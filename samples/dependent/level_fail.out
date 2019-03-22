@@ -1,0 +1,4 @@
+Parse successful.
+Expected a type expression at level `2`, instead got one at level: `1`.
+When checking the declaration of `error_type`.
+Type-Check failed.

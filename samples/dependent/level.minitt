@@ -1,6 +1,3 @@
 let pair2: \Sigma2 a: Type1. Type1 = Type0, Type0;
 let pair1: \Sigma1 a: Type0. Type0 = 1, 1;
 let pair0: \Sigma0 a: 1. 1 = 0, 0;
-
--- let error_type: \Sigma1 a: Type1. Type1 = Type0, Type0;
--- let error_type: \Sigma2 a: Type1. Type1 = Type0, Type1;
