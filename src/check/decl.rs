@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 
-use crate::ast::MaybeLevel::SomeLevel;
 use crate::ast::{up_dec_rc, up_var_rc, AnonymousValue, Declaration, Expression, Pattern, Typed};
 use crate::check::expr::{check, check_type};
 use crate::check::read_back::generate_value;
@@ -46,7 +45,7 @@ pub fn check_lift_parameters<'a>(
     let (signature, body, tcs) = check_lift_parameters(index + 1, tcs, parameters, check_body)?;
 
     Ok((
-        Expression::Pi(clone, Box::new(signature), SomeLevel(level)),
+        Expression::Pi(clone, Box::new(signature), Some(level)),
         Expression::Lambda(pattern, AnonymousValue::some(type_val), Box::new(body)),
         tcs,
     ))

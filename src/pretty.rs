@@ -107,7 +107,7 @@ impl Display for Expression {
             Expression::One => f.write_str("1"),
             Expression::Pi(input, output, level) => {
                 f.write_str("\u{03A0}")?;
-                level.fmt(f)?;
+                level.unwrap_or(0).fmt(f)?;
                 f.write_str(" ")?;
                 input.fmt(f)?;
                 f.write_str(". ")?;
@@ -119,7 +119,7 @@ impl Display for Expression {
             }
             Expression::Sigma(first, second, level) => {
                 f.write_str("\u{03A3}")?;
-                level.fmt(f)?;
+                level.unwrap_or(0).fmt(f)?;
                 f.write_str(" ")?;
                 first.fmt(f)?;
                 f.write_str(". ")?;
@@ -138,7 +138,7 @@ impl Display for Expression {
             // Don't print the context
             Expression::Sum(constructors, level) => {
                 f.write_str("Sum")?;
-                level.fmt(f)?;
+                level.unwrap_or(0).fmt(f)?;
                 f.write_str(" {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
@@ -365,15 +365,6 @@ impl Display for NormalExpression {
                 neutral.fmt(f)?;
                 f.write_char(']')
             }
-        }
-    }
-}
-
-impl Display for MaybeLevel {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            MaybeLevel::SomeLevel(level) => level.fmt(f),
-            MaybeLevel::NoLevel => Ok(()),
         }
     }
 }

@@ -37,7 +37,7 @@ foreach my $fixture (map {substr $_, 0, -1}
             push @failure, $case;
             say red(" Failed $case:");
             map {say red("  $_")} split /\n/, $diff;
-            next if $isCI;
+            next if $isCI != 0;
             print colored('  Update the golden value (y/N)? ', 'cyan');
             (readline =~ s/[\n\r]//rg) eq 'y' ? `$cmd > $out 2>&1`
                 : say colored(<<"HINT", 'bold yellow');
@@ -56,7 +56,7 @@ my $failed = scalar @failure;
 say 'Result: ', $failed ? redy('FAILED.') : ntr('ok.'),
     ntr(" $success passed,"),
     colored(" $failed failed.", $failed ? 'bold red' : 'white');
-if ($failed) {
+if ($failed != 0) {
     my $pretty = join "\n ", @failure;
     say red("Failing tests:\n $pretty");
     die;

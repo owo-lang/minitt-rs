@@ -4,7 +4,7 @@ const myTrue = True;
 -- Sum subtyping
 let check: bool = myTrue;
 
-rec nat: Type = Sum { Zero | Suc nat };
+rec nat: Type1 = Sum { Zero | Suc nat };
 
 const myZero = Zero;
 -- Yes, minitt supports shadowing

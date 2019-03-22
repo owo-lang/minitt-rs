@@ -113,8 +113,7 @@ pub fn first_to_expression(the_rule: Tok) -> Expression {
 /// ```
 pub fn function_type_to_expression(the_rule: Tok) -> Expression {
     let (input, output) = atom_and_expression_to_tuple(the_rule);
-    let level = MaybeLevel::NoLevel;
-    Expression::Pi(Typed::new(Pattern::Unit, input), Box::new(output), level)
+    Expression::Pi(Typed::new(Pattern::Unit, input), Box::new(output), None)
 }
 
 /// ```ignore
@@ -123,8 +122,7 @@ pub fn function_type_to_expression(the_rule: Tok) -> Expression {
 /// ```
 pub fn pair_type_to_expression(the_rule: Tok) -> Expression {
     let (first, second) = atom_and_expression_to_tuple(the_rule);
-    let level = MaybeLevel::NoLevel;
-    Expression::Sigma(Typed::new(Pattern::Unit, first), Box::new(second), level)
+    Expression::Sigma(Typed::new(Pattern::Unit, first), Box::new(second), None)
 }
 
 /// Helper, extracted.
@@ -267,7 +265,7 @@ pub fn atom_to_expression(rules: Tok) -> Expression {
         Rule::constructor => constructor_to_expression(the_rule),
         Rule::variable => variable_to_expression(the_rule),
         Rule::split => Expression::Split(choices_to_tree_map(the_rule)),
-        Rule::sum => Expression::Sum(branches_to_tree_map(the_rule), MaybeLevel::NoLevel),
+        Rule::sum => Expression::Sum(branches_to_tree_map(the_rule), None),
         Rule::one => Expression::One,
         Rule::unit => Expression::Unit,
         Rule::pi_type => pi_type_to_expression(the_rule),
@@ -341,8 +339,8 @@ pub fn sigma_type_to_expression(the_rule: Tok) -> Expression {
 }
 
 /// parse next token as level
-pub fn type_level(inner: &mut Tik) -> MaybeLevel {
-    match inner
+pub fn type_level(inner: &mut Tik) -> Option<Level> {
+    inner
         .next()
         .unwrap()
         .into_inner()
@@ -350,10 +348,7 @@ pub fn type_level(inner: &mut Tik) -> MaybeLevel {
         .unwrap()
         .as_str()
         .parse()
-    {
-        Ok(level) => MaybeLevel::SomeLevel(level),
-        Err(_) => MaybeLevel::NoLevel,
-    }
+        .ok()
 }
 
 /// ```ignore

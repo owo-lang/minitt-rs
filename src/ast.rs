@@ -4,12 +4,6 @@ use std::rc::Rc;
 
 pub type Level = u32;
 
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub enum MaybeLevel {
-    SomeLevel(Level),
-    NoLevel,
-}
-
 /// `Exp` in Mini-TT.
 /// Expression language for Mini-TT.
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -25,14 +19,14 @@ pub enum Expression {
     /// `bla`
     Var(String),
     /// `Sum { Bla x }`
-    Sum(Branch, MaybeLevel),
+    Sum(Branch, Option<Level>),
     /// `split { Bla x => y }`
     Split(Branch),
     Merge(Box<Self>, Box<Self>),
     /// `\Pi a: b. c`
-    Pi(Typed, Box<Self>, MaybeLevel),
+    Pi(Typed, Box<Self>, Option<Level>),
     /// `\Sigma a: b. c`
-    Sigma(Typed, Box<Self>, MaybeLevel),
+    Sigma(Typed, Box<Self>, Option<Level>),
     /// `\lambda a. c`, the optional value is the type of the argument.<br/>
     /// This cannot be specified during parsing because it's used for generated intermediate values
     /// during type-checking.

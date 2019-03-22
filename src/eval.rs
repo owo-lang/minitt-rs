@@ -1,6 +1,7 @@
-use crate::ast::MaybeLevel::{NoLevel, SomeLevel};
-use crate::ast::*;
 use std::cmp::max;
+
+use crate::ast::*;
+use crate::check::read_back::generate_value;
 
 impl Pattern {
     /// `inPat` in Mini-TT.
@@ -89,31 +90,21 @@ impl Closure {
 
 impl Value {
     /// Calculate the level of `self`, return `None` if it's not a type value.
-    pub fn level_safe(&self) -> MaybeLevel {
+    pub fn level_safe(&self) -> Option<Level> {
         match self {
-            Value::One => SomeLevel(0),
-            Value::Type(level) => SomeLevel(1 + level),
+            Value::One => Some(0),
+            Value::Type(level) => Some(1 + level),
             Value::Pi(_, _, level) | Value::Sigma(_, _, level) | Value::Sum(_, level) => {
-                SomeLevel(*level)
+                Some(*level)
             }
-            _ => NoLevel,
+            _ => None,
         }
     }
 
     /// This is called `levelView` in Agda.
     pub fn level(&self) -> u32 {
-        match self.level_safe() {
-            SomeLevel(level) => level,
-            _ => panic!("Cannot calculate the level of: {}", self),
-        }
-    }
-
-    // todo: dont know how to name it yet
-    pub fn suc_level(&self) -> u32 {
-        match self.level_safe() {
-            SomeLevel(level) => level,
-            _ => 0,
-        }
+        self.level_safe()
+            .unwrap_or_else(|| panic!("Cannot calculate the level of: `{}`.", self))
     }
 
     /// `vfst` in Mini-TT.<br/>
@@ -192,8 +183,18 @@ impl Expression {
                 .resolve(&name)
                 .map_err(|err| eprintln!("{}", err))
                 .unwrap(),
-            // todo: inferring real level
-            E::Sum(constructors, _level) => V::Sum(branch_to_righted(constructors, context), 0),
+            // FIXME: this will cause infinite loop when type-checking recursive sum
+            E::Sum(constructors, level) => {
+                let level = level.unwrap_or_else(|| {
+                    let mut max_level: Level = 0;
+                    // for (_name, case) in constructors.iter() {
+                    //     let level = case.clone().eval(context.clone()).level();
+                    //     max_level = max(max_level, level);
+                    // }
+                    max_level
+                });
+                V::Sum(branch_to_righted(constructors, context), level)
+            }
             E::Merge(left, right) => {
                 let (mut left, left_level) = match left.eval(context.clone()) {
                     V::Sum(constructors, level) => (constructors, level),
@@ -203,26 +204,33 @@ impl Expression {
                     V::Sum(constructors, level) => (constructors, level),
                     otherwise => panic!("Not a Sum expression: `{}`.", otherwise),
                 };
-                // TODO: check overlap
                 left.append(&mut right);
                 V::Sum(left, max(left_level, right_level))
             }
             E::Split(case_tree) => V::Split(branch_to_righted(case_tree, context)),
-            // todo: inferring real level
-            E::Pi(input, output, _) => {
+            E::Pi(input, output, level) => {
                 let pattern = input.pattern;
                 let input = Box::new(input.expression.eval(context.clone()));
                 let extra_info = Some(input.clone());
-                let second = Closure::Abstraction(pattern, extra_info, *output, Box::new(context));
-                V::Pi(input, second, 0)
+                let output = Closure::Abstraction(pattern, extra_info, *output, Box::new(context));
+                let level = level.unwrap_or_else(|| {
+                    // let output_level = output.clone().instantiate(generate_value(0)).level();
+                    // max(input.level(), output_level)
+                    0
+                });
+                V::Pi(input, output, level)
             }
-            // todo: check level
-            E::Sigma(first, second, _level) => {
+            E::Sigma(first, second, level) => {
                 let pattern = first.pattern;
                 let first = Box::new(first.expression.eval(context.clone()));
                 let extra_info = Some(first.clone());
                 let second = Closure::Abstraction(pattern, extra_info, *second, Box::new(context));
-                V::Sigma(first, second, 0)
+                let level = level.unwrap_or_else(|| {
+                    // let second_level = second.clone().instantiate(generate_value(0)).level();
+                    // max(first.level(), second_level)
+                    0
+                });
+                V::Sigma(first, second, level)
             }
             E::Lambda(pattern, parameter_type, body) => V::Lambda(Closure::Abstraction(
                 pattern,

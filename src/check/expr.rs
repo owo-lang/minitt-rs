@@ -1,14 +1,13 @@
+use std::cmp::max;
 use std::collections::BTreeMap;
 
 use either::Either;
 
-use crate::ast::MaybeLevel::{NoLevel, SomeLevel};
-use crate::ast::{up_var_rc, Branch, Closure, Expression, GenericCase, MaybeLevel, Pattern, Value};
+use crate::ast::{up_var_rc, Branch, Closure, Expression, GenericCase, Level, Pattern, Value};
 use crate::check::decl::check_declaration;
 use crate::check::read_back::generate_value;
 use crate::check::subtype::check_subtype;
 use crate::check::tcm::{update_gamma, update_gamma_borrow, TCE, TCM, TCS};
-use std::cmp::max;
 
 /// `checkI` in Mini-TT.<br/>
 /// Type inference rule. More inferences are added here (maybe it's useful?).
@@ -27,7 +26,8 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
             let mut map = BTreeMap::new();
             let context = tcs.context.clone();
             let inferred = check_infer(index, tcs, *expression)?;
-            let level = inferred.suc_level();
+            // This should not panic
+            let level = inferred.level();
             let case = GenericCase::new(Either::Left(inferred), context);
             map.insert(name, Box::new(case));
             Ok(Value::Sum(map, level))
@@ -35,7 +35,8 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
         Pair(left, right) => {
             let left = check_infer(index, tcs_borrow!(tcs), *left)?;
             let right = check_infer(index, tcs_borrow!(tcs), *right)?;
-            let level = max(left.suc_level(), right.suc_level());
+            // This should not panic
+            let level = max(left.level(), right.level());
             let right = Closure::Value(Box::new(right));
             Ok(Value::Sigma(Box::new(left), right, level))
         }
@@ -107,7 +108,7 @@ pub fn check_type(index: u32, tcs: TCS, expression: Expression) -> TCM<(u32, TCS
         expression => {
             let inferred = check_infer(index, tcs_borrow!(tcs), expression)?;
             match inferred.level_safe() {
-                SomeLevel(level) if level > 0 => Ok((level - 1, tcs)),
+                Some(level) if level > 0 => Ok((level - 1, tcs)),
                 _ => Err(TCE::NotTypeType(inferred)),
             }
         }
@@ -192,15 +193,16 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
         }
         // I really wish to have box pattern here :(
         (E::Split(mut branches), V::Pi(sum, closure, pi_level)) => match *sum {
-            // todo: check level
-            V::Sum(sum_branches, _level) => {
+            V::Sum(sum_branches, level) => {
+                debug_assert!(level <= pi_level);
                 for (name, branch) in sum_branches.into_iter() {
                     let pattern_match = match branches.remove(&name) {
                         Some(pattern_match) => *pattern_match,
                         None => return Err(TCE::MissingCase(name)),
                     };
                     let branch_value = branch.reduce_to_value();
-                    let level = branch_value.suc_level();
+                    // FIXME: if `branch_value` a generated value, how can you calculate its level?
+                    // debug_assert!(branch_value.level() <= level);
                     let signature = V::Pi(
                         Box::new(branch_value),
                         Closure::Choice(Box::new(closure.clone()), name.clone()),
@@ -219,7 +221,7 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
                 index,
                 tcs,
                 E::Split(branches),
-                V::Pi(Box::new(not_sum_so_fall_through), closure, 0),
+                V::Pi(Box::new(not_sum_so_fall_through), closure, pi_level),
             ),
         },
         (expression, value) => check_fallback(index, tcs, expression, value),
@@ -247,20 +249,18 @@ pub fn check_sum_type(
     index: u32,
     mut tcs: TCS,
     constructors: Branch,
-    sum_level: MaybeLevel,
-) -> TCM<(u32, TCS)> {
-    let mut max = 0;
+    sum_level: Option<Level>,
+) -> TCM<(Level, TCS)> {
+    let mut max_level: Level = 0;
     for constructor in constructors.values().cloned() {
         let (level, new) = check_type(index, tcs, *constructor)?;
         tcs = new;
-        if level > max {
-            max = level
-        }
+        max_level = max(max_level, level);
     }
     match sum_level {
-        NoLevel => Ok((max, tcs)),
-        SomeLevel(sign_level) if sign_level == max => Ok((max, tcs)),
-        SomeLevel(mismatch_level) => Err(TCE::LevelMismatch(mismatch_level, max)),
+        None => Ok((max_level, tcs)),
+        Some(specified_level) if specified_level >= max_level => Ok((specified_level, tcs)),
+        Some(expected_level) => Err(TCE::LevelMismatch(max_level, expected_level)),
     }
 }
 
@@ -271,8 +271,8 @@ pub fn check_telescoped(
     pattern: Pattern,
     first: Expression,
     second: Expression,
-    sign_level: MaybeLevel,
-) -> TCM<(u32, TCS)> {
+    specified_level: Option<Level>,
+) -> TCM<(Level, TCS)> {
     let (_, new) = check_type(index, tcs, first.clone())?;
     tcs = new;
     let TCS { gamma, context } = tcs_borrow!(tcs);
@@ -288,8 +288,10 @@ pub fn check_telescoped(
         TCS::new(gamma, up_var_rc(context, pattern, generated)),
         second,
     )?;
-    match sign_level {
-        SomeLevel(err_level) if err_level < level => Err(TCE::LevelMismatch(err_level, level)),
+    match specified_level {
+        Some(expected_level) if expected_level < level => {
+            Err(TCE::LevelMismatch(level, expected_level))
+        }
         _ => Ok((level, tcs)),
     }
 }

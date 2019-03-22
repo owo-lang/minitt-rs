@@ -1,4 +1,4 @@
-use crate::ast::{nil_rc, Closure, Expression, Pattern, Telescope, Value};
+use crate::ast::{nil_rc, Closure, Expression, Level, Pattern, Telescope, Value};
 use crate::check::read_back::NormalExpression;
 use core::fmt::Write;
 use std::borrow::Cow;
@@ -32,7 +32,7 @@ pub enum TCE {
     /// Want a type's type, but unfortunately it's not
     NotTypeType(Value),
     /// Actually first level, expected second level
-    LevelMismatch(u32, u32),
+    LevelMismatch(Level, Level),
     /// First argument is inferred value, second is expected.
     ReadBackTypeMismatch(NormalExpression, NormalExpression),
     Located(Box<TCE>, Pattern),
