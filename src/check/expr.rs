@@ -2,8 +2,8 @@ use std::collections::BTreeMap;
 
 use either::Either;
 
-use crate::ast::MaybeLevel::{SomeLevel, NoLevel};
-use crate::ast::{up_var_rc, Branch, Closure, Expression, GenericCase, Pattern, Value, MaybeLevel};
+use crate::ast::MaybeLevel::{NoLevel, SomeLevel};
+use crate::ast::{up_var_rc, Branch, Closure, Expression, GenericCase, MaybeLevel, Pattern, Value};
 use crate::check::decl::check_declaration;
 use crate::check::read_back::generate_value;
 use crate::check::subtype::check_subtype;
@@ -166,7 +166,14 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
         (E::Sigma(first, second, sign_level), V::Type(level))
         | (E::Pi(first, second, sign_level), V::Type(level)) => check_level(
             level,
-            check_telescoped(index, tcs, first.pattern, *first.expression, *second, sign_level)?,
+            check_telescoped(
+                index,
+                tcs,
+                first.pattern,
+                *first.expression,
+                *second,
+                sign_level,
+            )?,
         ),
         (E::Declaration(declaration, rest), rest_type) => {
             let tcs = check_declaration(index, tcs, *declaration)?;
@@ -233,7 +240,12 @@ pub fn check_fallback(index: u32, tcs: TCS, body: Expression, signature: Value) 
 }
 
 /// To reuse code that checks if a sum type is well-typed between `check_type` and `check`
-pub fn check_sum_type(index: u32, mut tcs: TCS, constructors: Branch, sum_level: MaybeLevel) -> TCM<(u32, TCS)> {
+pub fn check_sum_type(
+    index: u32,
+    mut tcs: TCS,
+    constructors: Branch,
+    sum_level: MaybeLevel,
+) -> TCM<(u32, TCS)> {
     let mut max = 0;
     for constructor in constructors.values().cloned() {
         let (level, new) = check_type(index, tcs, *constructor)?;
@@ -245,7 +257,7 @@ pub fn check_sum_type(index: u32, mut tcs: TCS, constructors: Branch, sum_level:
     match sum_level {
         NoLevel => Ok((max, tcs)),
         SomeLevel(sign_level) if sign_level == max => Ok((max, tcs)),
-        SomeLevel(mismatch_level) => Err(TCE::LevelMismatch(mismatch_level, max))
+        SomeLevel(mismatch_level) => Err(TCE::LevelMismatch(mismatch_level, max)),
     }
 }
 

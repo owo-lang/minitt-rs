@@ -93,7 +93,9 @@ impl Value {
         match self {
             Value::One => SomeLevel(0),
             Value::Type(level) => SomeLevel(1 + level),
-            Value::Pi(_, _, level) | Value::Sigma(_, _, level) | Value::Sum(_, level) => SomeLevel(*level),
+            Value::Pi(_, _, level) | Value::Sigma(_, _, level) | Value::Sum(_, level) => {
+                SomeLevel(*level)
+            }
             _ => NoLevel,
         }
     }

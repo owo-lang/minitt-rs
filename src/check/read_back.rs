@@ -84,13 +84,23 @@ impl ReadBack for Value {
                 let output = output
                     .instantiate(generate_value(index))
                     .read_back(index + 1);
-                Pi(Box::new(input.read_back(index)), index, Box::new(output), level)
+                Pi(
+                    Box::new(input.read_back(index)),
+                    index,
+                    Box::new(output),
+                    level,
+                )
             }
             Value::Sigma(first, second, level) => {
                 let second = second
                     .instantiate(generate_value(index))
                     .read_back(index + 1);
-                Sigma(Box::new(first.read_back(index)), index, Box::new(second), level)
+                Sigma(
+                    Box::new(first.read_back(index)),
+                    index,
+                    Box::new(second),
+                    level,
+                )
             }
             Value::Pair(first, second) => Pair(
                 Box::new(first.read_back(index)),
