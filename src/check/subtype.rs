@@ -21,13 +21,15 @@ pub fn check_subtype(
                 Err(TCE::TypeMismatch(Type(sub_level), Type(super_level)))
             }
         }
-        (Sum(sub_tree, sub_level), Sum(super_tree, super_level)) => {
+        // todo: check level
+        (Sum(sub_tree, _sub_level), Sum(super_tree, _super_level)) => {
             check_subtype_sum(index, tcs, sub_tree, super_tree)
         }
-        (Pi(sub_param, sub_closure, sub_level), Pi(super_param, super_closure, super_level))
+        // todo: check level
+        (Pi(sub_param, sub_closure, _sub_level), Pi(super_param, super_closure, _super_level))
         | (
-            Sigma(sub_param, sub_closure, sub_level),
-            Sigma(super_param, super_closure, super_level),
+            Sigma(sub_param, sub_closure, _sub_level),
+            Sigma(super_param, super_closure, _super_level),
         ) => {
             let tcs = check_subtype(index, tcs, *super_param, *sub_param, true)?;
             let generated = generate_value(index);

@@ -130,7 +130,8 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
         }
         // There's nothing left to check.
         (E::Void, _) => Ok(tcs),
-        (E::Lambda(pattern, _, body), V::Pi(signature, closure, level)) => {
+        // todo: check level
+        (E::Lambda(pattern, _, body), V::Pi(signature, closure, _level)) => {
             let TCS { gamma, context } = tcs_borrow!(tcs);
             let generated = generate_value(index);
             let gamma = update_gamma_borrow(gamma, &pattern, *signature, &generated)?;
@@ -142,7 +143,8 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
             )?;
             Ok(tcs)
         }
-        (E::Pair(first, second), V::Sigma(first_type, second_type, level)) => {
+        // todo: check level
+        (E::Pair(first, second), V::Sigma(first_type, second_type, _level)) => {
             tcs = check(index, tcs, *first.clone(), *first_type)?;
             let context = tcs.context();
             check(
@@ -189,8 +191,9 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
             Ok(tcs)
         }
         // I really wish to have box pattern here :(
-        (E::Split(mut branches), V::Pi(sum, closure, _)) => match *sum {
-            V::Sum(sum_branches, level) => {
+        (E::Split(mut branches), V::Pi(sum, closure, pi_level)) => match *sum {
+            // todo: check level
+            V::Sum(sum_branches, _level) => {
                 for (name, branch) in sum_branches.into_iter() {
                     let pattern_match = match branches.remove(&name) {
                         Some(pattern_match) => *pattern_match,

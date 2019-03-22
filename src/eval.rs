@@ -193,7 +193,7 @@ impl Expression {
                 .map_err(|err| eprintln!("{}", err))
                 .unwrap(),
             // todo: inferring real level
-            E::Sum(constructors, level) => V::Sum(branch_to_righted(constructors, context), 0),
+            E::Sum(constructors, _level) => V::Sum(branch_to_righted(constructors, context), 0),
             E::Merge(left, right) => {
                 let (mut left, left_level) = match left.eval(context.clone()) {
                     V::Sum(constructors, level) => (constructors, level),
@@ -216,7 +216,8 @@ impl Expression {
                 let second = Closure::Abstraction(pattern, extra_info, *output, Box::new(context));
                 V::Pi(input, second, 0)
             }
-            E::Sigma(first, second, level) => {
+            // todo: check level
+            E::Sigma(first, second, _level) => {
                 let pattern = first.pattern;
                 let first = Box::new(first.expression.eval(context.clone()));
                 let extra_info = Some(first.clone());
