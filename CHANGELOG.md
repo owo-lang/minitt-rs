@@ -7,6 +7,7 @@
 + Remove `DeclarationType`, use `is_recursive: bool` instead
 + `Typed` is refactored to a struct
 + Remove `src/main.rs`
++ Improve level support
 
 # 0.2.5
 

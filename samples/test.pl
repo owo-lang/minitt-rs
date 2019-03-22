@@ -42,7 +42,7 @@ foreach my $fixture (map {substr $_, 0, -1}
             (readline =~ s/[\n\r]//rg) eq 'y' ? `$cmd > $out 2>&1`
                 : say colored(<<"HINT", 'bold yellow');
   Leaving it alone.
-  To update the golden value, run `test_runner.pl` in `src/test` directly.
+  To update the golden value, run `test.pl` in `samples` directly.
   Command: $cmd
 HINT
         } else {
