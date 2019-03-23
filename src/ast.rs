@@ -56,13 +56,13 @@ pub struct AnonymousValue {
 }
 
 impl AnonymousValue {
-    pub fn new(value: Value) -> AnonymousValue {
-        AnonymousValue {
+    pub fn new(value: Value) -> Self {
+        Self {
             internal: Box::new(value),
         }
     }
 
-    pub fn some(value: Value) -> Option<AnonymousValue> {
+    pub fn some(value: Value) -> Option<Self> {
         Some(Self::new(value))
     }
 }
@@ -70,7 +70,7 @@ impl AnonymousValue {
 impl Eq for AnonymousValue {}
 
 impl PartialEq<AnonymousValue> for AnonymousValue {
-    fn eq(&self, _other: &AnonymousValue) -> bool {
+    fn eq(&self, _other: &Self) -> bool {
         true
     }
 }
@@ -169,7 +169,7 @@ pub type Neutral = GenericNeutral<Value>;
 pub enum Pattern {
     /// Pair pattern. This sounds like trivial and useless, but we can achieve mutual recursion by
     /// using this pattern.
-    Pair(Box<Pattern>, Box<Pattern>),
+    Pair(Box<Self>, Box<Self>),
     /// Unit pattern, used for introducing anonymous definitions.
     Unit,
     /// Variable name pattern, the most typical pattern.

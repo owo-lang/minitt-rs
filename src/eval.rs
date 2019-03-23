@@ -109,7 +109,7 @@ impl Value {
 
     /// `vfst` in Mini-TT.<br/>
     /// Run `.1` on a Pair.
-    pub fn first(self) -> Value {
+    pub fn first(self) -> Self {
         use crate::ast::GenericNeutral as Neutral;
         match self {
             Value::Pair(first, _) => *first,
@@ -120,7 +120,7 @@ impl Value {
 
     /// `vsnd` in Mini-TT.<br/>
     /// Run `.2` on a Pair.
-    pub fn second(self) -> Value {
+    pub fn second(self) -> Self {
         use crate::ast::GenericNeutral as Neutral;
         match self {
             Value::Pair(_, second) => *second,
@@ -131,7 +131,7 @@ impl Value {
 
     /// Combination of `vsnd` and `vfst` in Mini-TT.<br/>
     /// Run `.2` on a Pair.
-    pub fn destruct(self) -> (Value, Value) {
+    pub fn destruct(self) -> (Self, Self) {
         use crate::ast::GenericNeutral as Neutral;
         match self {
             Value::Pair(first, second) => (*first, *second),
@@ -144,7 +144,7 @@ impl Value {
     }
 
     /// `app` in Mini-TT.
-    pub fn apply(self, argument: Value) -> Value {
+    pub fn apply(self, argument: Self) -> Self {
         use crate::ast::GenericNeutral as Neutral;
         match self {
             Value::Lambda(closure) => closure.instantiate(argument),
