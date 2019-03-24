@@ -3,11 +3,12 @@
 # 0.2.6
 
 + Remove `GenericCaseTree`, add `GenericCase` because now each case in the
-  case tree have their own telescope
+  case tree have their own telescope (#17)
 + Remove `DeclarationType`, use `is_recursive: bool` instead
 + `Typed` is refactored to a struct
 + Remove `src/main.rs`
 + Improve level support
++ Improve pretty printer for split (#16)
 
 # 0.2.5
 

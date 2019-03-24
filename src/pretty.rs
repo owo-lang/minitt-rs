@@ -49,7 +49,6 @@ impl Display for Value {
             // Don't print the context
             Value::Sum(constructors, level) => {
                 f.write_str("Sum")?;
-                level.fmt(f)?;
                 f.write_str(" {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
@@ -130,15 +129,31 @@ impl Display for Expression {
                 f.write_str(" ")?;
                 arguments.fmt(f)
             }
-            Expression::Split(branches) => {
+            Expression::Split(clauses) => {
                 f.write_str("split {")?;
-                fmt_branch(branches, f)?;
+                let mut started = false;
+                for (name, clause) in clauses.iter() {
+                    if started {
+                        f.write_str(" | ")?;
+                    } else {
+                        started = true;
+                    }
+                    name.fmt(f)?;
+                    f.write_char(' ')?;
+                    match &**clause {
+                        Expression::Lambda(pattern, _, body) => {
+                            pattern.fmt(f)?;
+                            f.write_str(" => ")?;
+                            body.fmt(f)
+                        }
+                        rest => rest.fmt(f),
+                    }?;
+                }
                 f.write_char('}')
             }
             // Don't print the context
             Expression::Sum(constructors, level) => {
                 f.write_str("Sum")?;
-                level.unwrap_or(0).fmt(f)?;
                 f.write_str(" {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
@@ -355,7 +370,6 @@ impl Display for NormalExpression {
             // Don't print the context
             Expression::Sum(constructors, level) => {
                 f.write_str("Sum")?;
-                level.fmt(f)?;
                 f.write_str(" {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
