@@ -7,7 +7,7 @@
 + Remove `DeclarationType`, use `is_recursive: bool` instead
 + `Typed` is refactored to a struct
 + Remove `src/main.rs`
-+ Improve level support
++ Improve level support (#13, #19)
 + Improve pretty printer for split (#16)
 
 # 0.2.5

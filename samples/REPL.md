@@ -33,9 +33,9 @@ boolean_id: Π Sum {False: 1 | True: 1}. _. bool
 not: Π Sum {False: 1 | True: 1}. _. bool
 => :context
 Current Telescope:
-let and: Π _: bool. Π _: bool. bool = split {False λ n. λ _. False n | True λ n. boolean_id};
+let and: Π _: bool. Π _: bool. bool = split {False n => λ _. False n | True _ => boolean_id};
 let boolean_id: Π _: bool. bool = λ n. n;
-let not: Π _: bool. bool = split {False λ n. True n | True λ n. False n};
+let not: Π _: bool. bool = split {False _ => True 0 | True _ => False 0};
 let bool: Type = Sum {False 1 | True 1};
 
 => :help
