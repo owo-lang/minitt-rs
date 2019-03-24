@@ -1,7 +1,7 @@
 use crate::ast::*;
 use crate::check::read_back::*;
 use core::fmt::Write;
-use std::fmt::{Display, Error as FmtError, Formatter};
+use std::fmt::{Display, Error as FmtError, Error, Formatter};
 
 impl Display for Value {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
@@ -49,6 +49,7 @@ impl Display for Value {
             // Don't print the context
             Value::Sum(constructors, level) => {
                 f.write_str("Sum")?;
+                level.fmt(f)?;
                 f.write_str(" {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
@@ -106,7 +107,7 @@ impl Display for Expression {
             Expression::One => f.write_str("1"),
             Expression::Pi(input, output, level) => {
                 f.write_str("\u{03A0}")?;
-                level.unwrap_or(0).fmt(f)?;
+                fmt_option_level(*level, f)?;
                 f.write_str(" ")?;
                 input.fmt(f)?;
                 f.write_str(". ")?;
@@ -118,7 +119,7 @@ impl Display for Expression {
             }
             Expression::Sigma(first, second, level) => {
                 f.write_str("\u{03A3}")?;
-                level.unwrap_or(0).fmt(f)?;
+                fmt_option_level(*level, f)?;
                 f.write_str(" ")?;
                 first.fmt(f)?;
                 f.write_str(". ")?;
@@ -154,6 +155,7 @@ impl Display for Expression {
             // Don't print the context
             Expression::Sum(constructors, level) => {
                 f.write_str("Sum")?;
+                fmt_option_level(*level, f)?;
                 f.write_str(" {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
@@ -370,6 +372,7 @@ impl Display for NormalExpression {
             // Don't print the context
             Expression::Sum(constructors, level) => {
                 f.write_str("Sum")?;
+                level.fmt(f)?;
                 f.write_str(" {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
@@ -447,5 +450,12 @@ mod tests {
             )),
         );
         println!("{}", expr);
+    }
+}
+
+pub fn fmt_option_level(level: Option<u32>, f: &mut Formatter) -> Result<(), Error> {
+    match level {
+        Some(l) => l.fmt(f),
+        _ => Ok(()),
     }
 }

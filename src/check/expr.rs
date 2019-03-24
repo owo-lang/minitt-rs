@@ -51,25 +51,27 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
                 e => Err(TCE::WantSigmaBut(e)),
             }
         }
-        Sum(branches, _) => {
-            let mut max = 0u32;
+        Sum(branches, expected_level) => {
+            let mut max_level = 0u32;
             for (_name, branch) in branches.into_iter() {
                 let (level, new) = check_type(index, tcs, *branch)?;
                 tcs = new;
-                if level > max {
-                    max = level;
+                if level > max_level {
+                    max_level = level;
                 }
             }
-            Ok(Value::Type(max))
+            let real_level = max(max_level, expected_level.unwrap_or(0));
+            result_with_expected_level(expected_level, real_level, Ok(Value::Type(real_level)))
         }
-        Pi(input, output, _level) | Sigma(input, output, _level) => {
+        Pi(input, output, decl_level) | Sigma(input, output, decl_level) => {
             let (level, tcs) = check_type(index, tcs, *input.expression.clone())?;
             let input_type = input.expression.eval(tcs.context());
             let generated = generate_value(index);
             let gamma = update_gamma(tcs.gamma, &input.pattern, input_type, generated)?;
-            check_type(index + 1, TCS::new(gamma, tcs.context), *output)?;
+            let (right_level, _) = check_type(index + 1, TCS::new(gamma, tcs.context), *output)?;
             // Does this need to depend on the level of the return type?
-            Ok(Value::Type(level))
+            let real_level = max(level, right_level);
+            result_with_expected_level(decl_level, real_level, Ok(Value::Type(real_level)))
         }
         Application(function, argument) => match *function {
             Lambda(pattern, Some(parameter_type), return_value) => {
@@ -131,7 +133,6 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
         }
         // There's nothing left to check.
         (E::Void, _) => Ok(tcs),
-        // todo: check level
         (E::Lambda(pattern, _, body), V::Pi(signature, closure, _level)) => {
             let TCS { gamma, context } = tcs_borrow!(tcs);
             let generated = generate_value(index);
@@ -144,7 +145,6 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
             )?;
             Ok(tcs)
         }
-        // todo: check level
         (E::Pair(first, second), V::Sigma(first_type, second_type, _level)) => {
             tcs = check(index, tcs, *first.clone(), *first_type)?;
             let context = tcs.context();
@@ -257,11 +257,7 @@ pub fn check_sum_type(
         tcs = new;
         max_level = max(max_level, level);
     }
-    match sum_level {
-        None => Ok((max_level, tcs)),
-        Some(specified_level) if specified_level >= max_level => Ok((specified_level, tcs)),
-        Some(expected_level) => Err(TCE::LevelMismatch(max_level, expected_level)),
-    }
+    result_with_expected_level(sum_level, max_level, Ok((max_level, tcs)))
 }
 
 /// To reuse code that checks if a sigma or a pi type is well-typed between `check_type` and `check`
@@ -273,7 +269,7 @@ pub fn check_telescoped(
     second: Expression,
     specified_level: Option<Level>,
 ) -> TCM<(Level, TCS)> {
-    let (_, new) = check_type(index, tcs, first.clone())?;
+    let (first_level, new) = check_type(index, tcs, first.clone())?;
     tcs = new;
     let TCS { gamma, context } = tcs_borrow!(tcs);
     let generated = generate_value(index);
@@ -283,15 +279,25 @@ pub fn check_telescoped(
         first.eval(context.clone()),
         generated.clone(),
     )?;
-    let (level, _) = check_type(
+    let (second_level, _) = check_type(
         index + 1,
         TCS::new(gamma, up_var_rc(context, pattern, generated)),
         second,
     )?;
-    match specified_level {
-        Some(expected_level) if expected_level < level => {
-            Err(TCE::LevelMismatch(level, expected_level))
+    let level = max(first_level, second_level);
+    result_with_expected_level(specified_level, level, Ok((level, tcs)))
+}
+
+#[inline]
+pub fn result_with_expected_level<T>(
+    expected_level: Option<u32>,
+    real_level: u32,
+    result: TCM<T>,
+) -> TCM<T> {
+    match expected_level {
+        Some(expected_level) if expected_level < real_level => {
+            Err(TCE::LevelMismatch(expected_level, real_level))
         }
-        _ => Ok((level, tcs)),
+        _ => result,
     }
 }

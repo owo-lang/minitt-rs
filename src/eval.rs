@@ -1,7 +1,6 @@
 use std::cmp::max;
 
 use crate::ast::*;
-use crate::check::read_back::generate_value;
 
 impl Pattern {
     /// `inPat` in Mini-TT.
