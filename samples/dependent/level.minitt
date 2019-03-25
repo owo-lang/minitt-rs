@@ -1,3 +1,4 @@
 let pair2: \Sigma a: Type1. Type1 = Type0, Type0;
 let pair1: \Sigma a: Type0. Type0 = 1, 1;
-let pair0: \Sigma a: 1. 1 = 0, 0;
+
+rec rec_sum: Type2 = Sum { Nil Type1 | Cons rec_sum };
