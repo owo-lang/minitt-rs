@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use crate::ast::{
-    up_dec_rc, up_var_rc, AnonymousValue, Declaration, Expression, Pattern, Typed, Value,
+    up_dec_rc, up_var_rc, AnonymousValue, Declaration, Expression, Level, Pattern, Typed, Value,
 };
 use crate::check::expr::{check, check_type};
 use crate::check::read_back::generate_value;
@@ -26,8 +26,8 @@ pub fn check_lift_parameters<'a>(
     index: u32,
     tcs: TCS<'a>,
     mut parameters: Vec<Typed>,
-    check_body: impl FnOnce(TCS<'a>) -> TCM<(LiftState<'a>, u32)>,
-) -> TCM<(LiftState<'a>, u32)> {
+    check_body: impl FnOnce(TCS<'a>) -> TCM<(LiftState<'a>, Level)>,
+) -> TCM<(LiftState<'a>, Level)> {
     if parameters.is_empty() {
         return check_body(tcs);
     }
@@ -197,7 +197,7 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
 }
 
 /// fill level of Sigma/Pi/Sum with given value
-pub fn value_with_level(value: Value, level: u32) -> Value {
+pub fn value_with_level(value: Value, level: Level) -> Value {
     use crate::ast::Value::*;
     match value {
         Sigma(first, second, _) => Sigma(first, second, level),

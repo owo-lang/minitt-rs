@@ -290,8 +290,8 @@ pub fn check_telescoped(
 
 #[inline]
 pub fn result_with_expected_level<T>(
-    expected_level: Option<u32>,
-    real_level: u32,
+    expected_level: Option<Level>,
+    real_level: Level,
     result: TCM<T>,
 ) -> TCM<T> {
     match expected_level {
