@@ -1,7 +1,7 @@
 use crate::ast::*;
 use crate::check::read_back::*;
 use core::fmt::Write;
-use std::fmt::{Display, Error as FmtError, Error, Formatter};
+use std::fmt::{Display, Error as FmtError, Formatter};
 
 impl Display for Value {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
