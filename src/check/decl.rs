@@ -37,7 +37,7 @@ pub fn check_lift_parameters<'a>(
     let (pattern, expression) = parameter.destruct();
     let (level, TCS { gamma, context }) = check_type(index, tcs, expression.clone())?;
     let generated = generate_value(index);
-    let type_val = value_with_level(expression.clone().eval(context.clone()), level);
+    let type_val = expression.clone().eval(context.clone()).with_level(level);
     let gamma = update_gamma_borrow(gamma, &pattern, type_val.clone(), &generated)?;
 
     let tcs = TCS {
@@ -59,12 +59,20 @@ pub fn check_lift_parameters<'a>(
 
 /// Extracted from `checkD` in Mini-TT.<br/>
 /// This part deals with recursive declarations, but without prefixed parameters.
-pub fn check_recursive_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<Gamma> {
+pub fn check_recursive_declaration(
+    index: u32,
+    tcs: TCS,
+    declaration: Declaration,
+) -> TCM<(Gamma, Level)> {
     let pattern = declaration.pattern.clone();
     let (level, _) = check_type(index, tcs_borrow!(tcs), declaration.signature.clone())
         .map_err(|err| try_locate!(err, pattern))?;
     let TCS { gamma, context } = tcs;
-    let signature = value_with_level(declaration.signature.clone().eval(context.clone()), level);
+    let signature = declaration
+        .signature
+        .clone()
+        .eval(context.clone())
+        .with_level(level);
     let generated = generate_value(index);
     let fake_gamma = update_gamma_borrow(
         Cow::Borrowed(&gamma),
@@ -87,6 +95,7 @@ pub fn check_recursive_declaration(index: u32, tcs: TCS, declaration: Declaratio
             .clone()
             .eval(up_dec_rc(context, declaration))
     })
+    .map(|gamma| (gamma, level))
     .map_err(|err| try_locate!(err, pattern))
 }
 
@@ -98,15 +107,16 @@ pub fn check_simple_declaration(
     pattern: Pattern,
     signature: Expression,
     body: Expression,
-) -> TCM<Gamma> {
+) -> TCM<(Gamma, Level)> {
     let (level, _) = check_type(index, tcs_borrow!(tcs), signature.clone())
         .map_err(|err| try_locate!(err, pattern))?;
     // workaround: fix error when calculate level here ↓
-    let signature = value_with_level(signature.eval(tcs.context()), level);
+    let signature = signature.eval(tcs.context()).with_level(level);
     check(index, tcs_borrow!(tcs), body.clone(), signature.clone())
         .map_err(|err| try_locate!(err, pattern))?;
     let TCS { gamma, context } = tcs;
     update_gamma_lazy(gamma, &pattern, signature, || body.eval(context))
+        .map(|gamma| (gamma, level))
         .map_err(|err| try_locate!(err, pattern))
 }
 
@@ -128,7 +138,18 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
         } else {
             check_recursive_declaration(index, tcs, declaration.clone())
         }
-        .map(|gamma| TCS::new(gamma, up_dec_rc(context, declaration)));
+        .map(|(gamma, level)| {
+            TCS::new(
+                gamma,
+                up_dec_rc(
+                    context,
+                    Declaration {
+                        signature: declaration.signature.with_level(Some(level)),
+                        ..declaration
+                    },
+                ),
+            )
+        });
     }
     let (pattern, signature, body, level) = match declaration {
         Declaration {
@@ -190,19 +211,17 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
 
     let TCS { gamma, context } = tcs;
     let body = body.eval(context.clone());
-    let signature = value_with_level(signature.eval(context.clone()), level);
-    update_gamma_borrow(gamma, &pattern, signature, &body)
-        .map(|gamma| TCS::new(gamma, up_var_rc(context, pattern.clone(), body)))
-        .map_err(|err| try_locate!(err, pattern))
-}
-
-/// fill level of Sigma/Pi/Sum with given value
-pub fn value_with_level(value: Value, level: Level) -> Value {
-    use crate::ast::Value::*;
-    match value {
-        Sigma(first, second, _) => Sigma(first, second, level),
-        Pi(first, second, _) => Pi(first, second, level),
-        Sum(tree, _) => Sum(tree, level),
-        v => v,
-    }
+    update_gamma_borrow(
+        gamma,
+        &pattern,
+        signature.eval(context.clone()).with_level(level),
+        &body,
+    )
+    .map(|gamma| {
+        TCS::new(
+            gamma,
+            up_var_rc(context, pattern.clone(), body.with_level(level)),
+        )
+    })
+    .map_err(|err| try_locate!(err, pattern))
 }

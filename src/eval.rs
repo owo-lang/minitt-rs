@@ -90,12 +90,11 @@ impl Closure {
 impl Value {
     /// Calculate the level of `self`, return `None` if it's not a type value.
     pub fn level_safe(&self) -> Option<Level> {
+        use crate::ast::Value::*;
         match self {
-            Value::One => Some(0),
-            Value::Type(level) => Some(1 + level),
-            Value::Pi(_, _, level) | Value::Sigma(_, _, level) | Value::Sum(_, level) => {
-                Some(*level)
-            }
+            One => Some(0),
+            Type(level) => Some(1 + level),
+            Pi(_, _, level) | Sigma(_, _, level) | Sum(_, level) => Some(*level),
             _ => None,
         }
     }
@@ -104,6 +103,16 @@ impl Value {
     pub fn level(&self) -> u32 {
         self.level_safe()
             .unwrap_or_else(|| panic!("Cannot calculate the level of: `{}`.", self))
+    }
+
+    pub fn with_level(self, level: Level) -> Self {
+        use crate::ast::Value::*;
+        match self {
+            Sigma(first, second, _) => Sigma(first, second, level),
+            Pi(first, second, _) => Pi(first, second, level),
+            Sum(tree, _) => Sum(tree, level),
+            v => v,
+        }
     }
 
     /// `vfst` in Mini-TT.<br/>
@@ -254,6 +263,16 @@ impl Expression {
                 expression.eval(context),
             )),
             e => panic!("Cannot eval: {}", e),
+        }
+    }
+
+    pub fn with_level(self, level: Option<Level>) -> Self {
+        use crate::ast::Expression::*;
+        match self {
+            Sigma(first, second, _) => Sigma(first, second, level),
+            Pi(first, second, _) => Pi(first, second, level),
+            Sum(tree, _) => Sum(tree, level),
+            v => v,
         }
     }
 }
