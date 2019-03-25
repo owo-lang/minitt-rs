@@ -107,9 +107,7 @@ impl Display for Expression {
             Expression::One => f.write_str("1"),
             Expression::Pi(input, output, level) => {
                 f.write_str("\u{03A0}")?;
-                if level.is_some() {
-                    level.unwrap().fmt(f)?;
-                }
+                level.map(|l| l.fmt(f)).transpose()?;
                 f.write_str(" ")?;
                 input.fmt(f)?;
                 f.write_str(". ")?;
@@ -121,9 +119,7 @@ impl Display for Expression {
             }
             Expression::Sigma(first, second, level) => {
                 f.write_str("\u{03A3}")?;
-                if level.is_some() {
-                    level.unwrap().fmt(f)?;
-                }
+                level.map(|l| l.fmt(f)).transpose()?;
                 f.write_str(" ")?;
                 first.fmt(f)?;
                 f.write_str(". ")?;
@@ -159,9 +155,7 @@ impl Display for Expression {
             // Don't print the context
             Expression::Sum(constructors, level) => {
                 f.write_str("Sum")?;
-                if level.is_some() {
-                    level.unwrap().fmt(f)?;
-                }
+                level.map(|l| l.fmt(f)).transpose()?;
                 f.write_str(" {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
