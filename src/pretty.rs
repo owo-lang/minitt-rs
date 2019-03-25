@@ -107,7 +107,9 @@ impl Display for Expression {
             Expression::One => f.write_str("1"),
             Expression::Pi(input, output, level) => {
                 f.write_str("\u{03A0}")?;
-                fmt_option_level(*level, f)?;
+                if level.is_some() {
+                    level.unwrap().fmt(f)?;
+                }
                 f.write_str(" ")?;
                 input.fmt(f)?;
                 f.write_str(". ")?;
@@ -119,7 +121,9 @@ impl Display for Expression {
             }
             Expression::Sigma(first, second, level) => {
                 f.write_str("\u{03A3}")?;
-                fmt_option_level(*level, f)?;
+                if level.is_some() {
+                    level.unwrap().fmt(f)?;
+                }
                 f.write_str(" ")?;
                 first.fmt(f)?;
                 f.write_str(". ")?;
@@ -155,7 +159,9 @@ impl Display for Expression {
             // Don't print the context
             Expression::Sum(constructors, level) => {
                 f.write_str("Sum")?;
-                fmt_option_level(*level, f)?;
+                if level.is_some() {
+                    level.unwrap().fmt(f)?;
+                }
                 f.write_str(" {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
@@ -450,12 +456,5 @@ mod tests {
             )),
         );
         println!("{}", expr);
-    }
-}
-
-pub fn fmt_option_level(level: Option<u32>, f: &mut Formatter) -> Result<(), Error> {
-    match level {
-        Some(l) => l.fmt(f),
-        _ => Ok(()),
     }
 }
