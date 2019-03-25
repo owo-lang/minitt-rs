@@ -319,11 +319,8 @@ pub fn choices_to_tree_map(the_rule: Tok) -> Branch {
 /// pi_type = { pi ~ level ~ typed_abstraction }
 /// ```
 pub fn pi_type_to_expression(the_rule: Tok) -> Expression {
-    let mut inner = the_rule.into_inner();
-    let level = type_level(&mut inner);
-    let (first_name, first_type, second) = typed_abstraction_to_tuple(&mut inner);
-    end_of_rule(&mut inner);
-    Expression::Pi(Typed::new(first_name, first_type), Box::new(second), level)
+    let (first_name, first_type, second) = typed_abstraction_to_tuple(the_rule);
+    Expression::Pi(Typed::new(first_name, first_type), Box::new(second), None)
 }
 
 /// ```ignore
@@ -331,33 +328,19 @@ pub fn pi_type_to_expression(the_rule: Tok) -> Expression {
 /// pi_type = { pi ~ typed_abstraction }
 /// ```
 pub fn sigma_type_to_expression(the_rule: Tok) -> Expression {
-    let mut inner = the_rule.into_inner();
-    let level = type_level(&mut inner);
-    let (input_name, input_type, output) = typed_abstraction_to_tuple(&mut inner);
-    end_of_rule(&mut inner);
-    Expression::Sigma(Typed::new(input_name, input_type), Box::new(output), level)
-}
-
-/// parse next token as level
-pub fn type_level(inner: &mut Tik) -> Option<Level> {
-    inner
-        .next()
-        .unwrap()
-        .into_inner()
-        .next()
-        .unwrap()
-        .as_str()
-        .parse()
-        .ok()
+    let (input_name, input_type, output) = typed_abstraction_to_tuple(the_rule);
+    Expression::Sigma(Typed::new(input_name, input_type), Box::new(output), None)
 }
 
 /// ```ignore
 /// typed_abstraction = _{ pattern ~ ":" ~ expression ~ "." ~ expression }
 /// ```
-pub fn typed_abstraction_to_tuple(mut inner: &mut Tik) -> (Pattern, Expression, Expression) {
+pub fn typed_abstraction_to_tuple(the_rule: Tok) -> (Pattern, Expression, Expression) {
+    let mut inner: Tik = the_rule.into_inner();
     let input_name = next_pattern(&mut inner);
     let input_type = next_expression(&mut inner);
     let output = next_expression(&mut inner);
+    end_of_rule(&mut inner);
     (input_name, input_type, output)
 }
 
