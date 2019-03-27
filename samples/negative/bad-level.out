@@ -1,0 +1,4 @@
+Parse successful.
+Expected a type expression at level `0`, instead got one at level: `1`.
+When checking the declaration of `badLevel`.
+Type-Check failed.

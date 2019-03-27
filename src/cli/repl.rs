@@ -248,7 +248,10 @@ fn normalize(ctx: Telescope, line: &str) {
 
 fn level(ctx: Telescope, line: &str) {
     eval_impl(ctx, line, |value: Value| {
-        println!("{:?}", value.level_safe())
+        match value.level_safe() {
+            Some(level) => println!("{}", level),
+            None => println!("The given expression is not a type expression."),
+        }
     });
 }
 
@@ -315,6 +318,7 @@ fn help(current_mode: &str) {
          {:<20} {}\n\
          {:<20} {}\n\
          {:<20} {}\n\
+         {:<20} {}\n\
          ",
         QUIT_CMD,
         "Quit the REPL.",
@@ -324,6 +328,8 @@ fn help(current_mode: &str) {
         "Show current value context.",
         DEBUG_CMD,
         "Show debug-printed value context.",
+        ":level <EXPR>",
+        "Show the level of the expression, if it's a type.",
         ":load <FILE>",
         "Load an external file.",
         ":infer <EXPR>",

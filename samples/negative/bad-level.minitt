@@ -1,0 +1,7 @@
+--
+-- Created by intellij-minitt on 2019-03-27
+-- bad-level
+-- Author: ice10
+--
+
+let badLevel: Type = \Pi x: Type1. x;
