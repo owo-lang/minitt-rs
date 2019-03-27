@@ -71,6 +71,7 @@ const INFER_CMD: &'static str = ":infer";
 const INFER_DBG_CMD: &'static str = ":infer-debug";
 const EVAL_CMD: &'static str = ":eval";
 const EVAL_DBG_CMD: &'static str = ":eval-debug";
+const LEVEL_CMD: &'static str = ":level";
 const NORMALIZE_CMD: &'static str = ":normalize";
 
 /// Used for REPL command
@@ -130,6 +131,10 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>
     } else if line.starts_with(EVAL_DBG_PFX) {
         let line = line.trim_start_matches(EVAL_DBG_CMD).trim_start();
         debug_eval(tcs.context(), line);
+        Some(tcs)
+    } else if line.starts_with(LEVEL_CMD) {
+        let line = line.trim_start_matches(LEVEL_CMD).trim_start();
+        level(tcs.context(), line);
         Some(tcs)
     } else if line.starts_with(':') {
         println!("Unrecognized command: {}", line);
@@ -239,6 +244,12 @@ fn eval(ctx: Telescope, line: &str) {
 
 fn normalize(ctx: Telescope, line: &str) {
     eval_impl(ctx, line, |value| println!("{}", value.read_back_please()));
+}
+
+fn level(ctx: Telescope, line: &str) {
+    eval_impl(ctx, line, |value: Value| {
+        println!("{:?}", value.level_safe())
+    });
 }
 
 fn eval_impl(ctx: Telescope, line: &str, map: impl FnOnce(Value) -> ()) {
