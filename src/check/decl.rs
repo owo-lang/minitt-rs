@@ -88,16 +88,17 @@ pub fn check_recursive_declaration(index: u32, tcs: TCS, declaration: Declaratio
 /// This part deals with non-recursive declarations, but without prefixed parameters.
 pub fn check_simple_declaration(
     index: u32,
-    tcs: TCS,
+    mut tcs: TCS,
     pattern: Pattern,
     signature: Expression,
     body: Expression,
 ) -> TCM<Gamma> {
-    check_type(index, tcs_borrow!(tcs), signature.clone())
-        .map_err(|err| try_locate!(err, pattern))?;
+    let (_, new_tcs) =
+        check_type(index, tcs, signature.clone()).map_err(|err| try_locate!(err, pattern))?;
+    tcs = new_tcs;
     // workaround: fix error when calculate level here ↓
     let signature = signature.eval(tcs.context());
-    check(index, tcs_borrow!(tcs), body.clone(), signature.clone())
+    tcs = check(index, tcs, body.clone(), signature.clone())
         .map_err(|err| try_locate!(err, pattern))?;
     let TCS { gamma, context } = tcs;
     update_gamma_lazy(gamma, &pattern, signature, || body.eval(context))
