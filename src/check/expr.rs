@@ -49,15 +49,15 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
             }
         }
         Sum(branches) => {
+            let mut max_level = 0;
             for (_, branch) in branches.into_iter() {
-                let (_, new) = check_type(index, tcs, *branch)?;
+                let (level, new) = check_type(index, tcs, *branch)?;
                 tcs = new;
+                if level > max_level {
+                    max_level = level;
+                }
             }
-            let TCS { gamma, context } = tcs;
-            match check_infer(index, TCS::new(gamma, context.clone()), expression.clone())? {
-                Value::Sum(tree) => Ok(Value::Type(Value::Sum(tree).level())),
-                _ => Err(TCE::CannotInfer(expression)),
-            }
+            Ok(Value::Type(max_level))
         }
         Pi(input, output) | Sigma(input, output) => {
             let (left_level, new) = check_type(index, tcs, *input.expression.clone())?;
@@ -234,7 +234,7 @@ pub fn check_fallback(index: u32, tcs: TCS, body: Expression, signature: Value) 
 
 /// To reuse code that checks if a sum type is well-typed between `check_type` and `check`
 pub fn check_sum_type(index: u32, mut tcs: TCS, constructors: Branch) -> TCM<(Level, TCS)> {
-    let mut max_level: Level = 0;
+    let mut max_level = 0;
     for constructor in constructors.values().cloned() {
         let (level, new) = check_type(index, tcs, *constructor)?;
         tcs = new;

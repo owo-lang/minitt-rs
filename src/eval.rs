@@ -1,4 +1,5 @@
 use crate::ast::*;
+use std::cmp::max;
 
 impl Pattern {
     /// `inPat` in Mini-TT.
@@ -88,9 +89,34 @@ impl Closure {
 impl Value {
     /// Calculate the level of `self`, return `None` if it's not a type value.
     pub fn level_safe(&self) -> Option<Level> {
+        use crate::ast::Value::*;
         match self {
-            // todo: calculate type here
-            _ => Some(0),
+            One => Some(0),
+            Type(level) => Some(1 + level),
+            Sum(branches) => Some(
+                branches
+                    .into_iter()
+                    .map(
+                        // todo: suppress an error here using `clone()`, actually don't know why
+                        |(_, case)| match case.clone().reduce_to_value().level_safe() {
+                            Some(l) => l,
+                            _ => 0,
+                        },
+                    )
+                    .max()
+                    .unwrap_or(0),
+            ),
+            Pi(first, second) | Value::Sigma(first, second) => Some(max(
+                first.level_safe().unwrap_or(0),
+                // todo: same problem as line 100, and
+                // will `.instantiate(Value::Unit)` work well when calculate level?
+                second
+                    .clone()
+                    .instantiate(Value::Unit)
+                    .level_safe()
+                    .unwrap_or(0),
+            )),
+            _ => None,
         }
     }
 
