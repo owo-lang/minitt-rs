@@ -13,20 +13,20 @@ pub enum Expression {
     /// `1`
     One,
     /// `Type`
-    Type(u32),
+    Type(Level),
     /// Empty file
     Void,
     /// `bla`
     Var(String),
     /// `Sum { Bla x }`
-    Sum(Branch, Option<Level>),
+    Sum(Branch),
     /// `split { Bla x => y }`
     Split(Branch),
     Merge(Box<Self>, Box<Self>),
     /// `\Pi a: b. c`
-    Pi(Typed, Box<Self>, Option<Level>),
+    Pi(Typed, Box<Self>),
     /// `\Sigma a: b. c`
-    Sigma(Typed, Box<Self>, Option<Level>),
+    Sigma(Typed, Box<Self>),
     /// `\lambda a. c`, the optional value is the type of the argument.<br/>
     /// This cannot be specified during parsing because it's used for generated intermediate values
     /// during type-checking.
@@ -124,11 +124,11 @@ pub enum Value {
     /// Canonical form: unit type.
     One,
     /// Canonical form: type universe.
-    Type(u32),
+    Type(Level),
     /// Canonical form: pi type (type for dependent functions).
-    Pi(Box<Self>, Closure, Level),
+    Pi(Box<Self>, Closure),
     /// Canonical form: sigma type (type for dependent pair).
-    Sigma(Box<Self>, Closure, Level),
+    Sigma(Box<Self>, Closure),
     /// Canonical form: Pair value (value for sigma).
     Pair(Box<Self>, Box<Self>),
     /// Canonical form: call to a constructor.
@@ -136,7 +136,7 @@ pub enum Value {
     /// Canonical form: case-split.
     Split(CaseTree),
     /// Canonical form: sum type.
-    Sum(CaseTree, Level),
+    Sum(CaseTree),
     /// Neutral form.
     Neutral(Neutral),
 }

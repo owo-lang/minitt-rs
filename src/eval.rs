@@ -1,5 +1,3 @@
-use std::cmp::max;
-
 use crate::ast::*;
 
 impl Pattern {
@@ -90,12 +88,9 @@ impl Closure {
 impl Value {
     /// Calculate the level of `self`, return `None` if it's not a type value.
     pub fn level_safe(&self) -> Option<Level> {
-        use crate::ast::Value::*;
         match self {
-            One => Some(0),
-            Type(level) => Some(1 + level),
-            Pi(_, _, level) | Sigma(_, _, level) | Sum(_, level) => Some(*level),
-            _ => None,
+            // todo: calculate type here
+            _ => Some(0),
         }
     }
 
@@ -103,16 +98,6 @@ impl Value {
     pub fn level(&self) -> u32 {
         self.level_safe()
             .unwrap_or_else(|| panic!("Cannot calculate the level of: `{}`.", self))
-    }
-
-    pub fn with_level(self, level: Level) -> Self {
-        use crate::ast::Value::*;
-        match self {
-            Sigma(first, second, _) => Sigma(first, second, level),
-            Pi(first, second, _) => Pi(first, second, level),
-            Sum(tree, _) => Sum(tree, level),
-            v => v,
-        }
     }
 
     /// `vfst` in Mini-TT.<br/>
@@ -192,53 +177,33 @@ impl Expression {
                 .map_err(|err| eprintln!("{}", err))
                 .unwrap(),
             // FIXME: this will cause infinite loop when type-checking recursive sum
-            E::Sum(constructors, level) => {
-                let level = level.unwrap_or_else(|| {
-                    let mut max_level: Level = 0;
-                    // for (_name, case) in constructors.iter() {
-                    //     let level = case.clone().eval(context.clone()).level();
-                    //     max_level = max(max_level, level);
-                    // }
-                    max_level
-                });
-                V::Sum(branch_to_righted(constructors, context), level)
-            }
+            E::Sum(constructors) => V::Sum(branch_to_righted(constructors, context)),
             E::Merge(left, right) => {
-                let (mut left, left_level) = match left.eval(context.clone()) {
-                    V::Sum(constructors, level) => (constructors, level),
+                let mut left = match left.eval(context.clone()) {
+                    V::Sum(constructors) => constructors,
                     otherwise => panic!("Not a Sum expression: `{}`.", otherwise),
                 };
-                let (mut right, right_level) = match right.eval(context) {
-                    V::Sum(constructors, level) => (constructors, level),
+                let mut right = match right.eval(context) {
+                    V::Sum(constructors) => constructors,
                     otherwise => panic!("Not a Sum expression: `{}`.", otherwise),
                 };
                 left.append(&mut right);
-                V::Sum(left, max(left_level, right_level))
+                V::Sum(left)
             }
             E::Split(case_tree) => V::Split(branch_to_righted(case_tree, context)),
-            E::Pi(input, output, level) => {
+            E::Pi(input, output) => {
                 let pattern = input.pattern;
                 let input = Box::new(input.expression.eval(context.clone()));
                 let extra_info = Some(input.clone());
                 let output = Closure::Abstraction(pattern, extra_info, *output, Box::new(context));
-                let level = level.unwrap_or_else(|| {
-                    // let output_level = output.clone().instantiate(generate_value(0)).level();
-                    // max(input.level(), output_level)
-                    0
-                });
-                V::Pi(input, output, level)
+                V::Pi(input, output)
             }
-            E::Sigma(first, second, level) => {
+            E::Sigma(first, second) => {
                 let pattern = first.pattern;
                 let first = Box::new(first.expression.eval(context.clone()));
                 let extra_info = Some(first.clone());
                 let second = Closure::Abstraction(pattern, extra_info, *second, Box::new(context));
-                let level = level.unwrap_or_else(|| {
-                    // let second_level = second.clone().instantiate(generate_value(0)).level();
-                    // max(first.level(), second_level)
-                    0
-                });
-                V::Sigma(first, second, level)
+                V::Sigma(first, second)
             }
             E::Lambda(pattern, parameter_type, body) => V::Lambda(Closure::Abstraction(
                 pattern,
@@ -263,16 +228,6 @@ impl Expression {
                 expression.eval(context),
             )),
             e => panic!("Cannot eval: {}", e),
-        }
-    }
-
-    pub fn with_level(self, level: Option<Level>) -> Self {
-        use crate::ast::Expression::*;
-        match self {
-            Sigma(first, second, _) => Sigma(first, second, level),
-            Pi(first, second, _) => Pi(first, second, level),
-            Sum(tree, _) => Sum(tree, level),
-            v => v,
         }
     }
 }

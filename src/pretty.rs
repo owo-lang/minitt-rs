@@ -19,9 +19,8 @@ impl Display for Value {
             }
             Value::Unit => f.write_str("0"),
             Value::One => f.write_str("1"),
-            Value::Pi(input, output, level) => {
+            Value::Pi(input, output) => {
                 f.write_str("\u{03A0}")?;
-                level.fmt(f)?;
                 f.write_str(" ")?;
                 output.fmt_with_type(f, Some(&**input))
             }
@@ -29,9 +28,8 @@ impl Display for Value {
                 f.write_str("Type")?;
                 level.fmt(f)
             }
-            Value::Sigma(first, second, level) => {
+            Value::Sigma(first, second) => {
                 f.write_str("\u{03A3}")?;
-                level.fmt(f)?;
                 f.write_str(" ")?;
                 second.fmt_with_type(f, Some(&**first))
             }
@@ -47,9 +45,8 @@ impl Display for Value {
                 f.write_char('}')
             }
             // Don't print the context
-            Value::Sum(constructors, level) => {
+            Value::Sum(constructors) => {
                 f.write_str("Sum")?;
-                level.fmt(f)?;
                 f.write_str(" {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
@@ -105,9 +102,8 @@ impl Display for Expression {
             }
             Expression::Unit => f.write_str("0"),
             Expression::One => f.write_str("1"),
-            Expression::Pi(input, output, level) => {
+            Expression::Pi(input, output) => {
                 f.write_str("\u{03A0}")?;
-                level.map(|l| l.fmt(f)).transpose()?;
                 f.write_str(" ")?;
                 input.fmt(f)?;
                 f.write_str(". ")?;
@@ -117,9 +113,8 @@ impl Display for Expression {
                 f.write_str("Type")?;
                 level.fmt(f)
             }
-            Expression::Sigma(first, second, level) => {
+            Expression::Sigma(first, second) => {
                 f.write_str("\u{03A3}")?;
-                level.map(|l| l.fmt(f)).transpose()?;
                 f.write_str(" ")?;
                 first.fmt(f)?;
                 f.write_str(". ")?;
@@ -153,9 +148,8 @@ impl Display for Expression {
                 f.write_char('}')
             }
             // Don't print the context
-            Expression::Sum(constructors, level) => {
+            Expression::Sum(constructors) => {
                 f.write_str("Sum")?;
-                level.map(|l| l.fmt(f)).transpose()?;
                 f.write_str(" {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
@@ -335,9 +329,8 @@ impl Display for NormalExpression {
             }
             Expression::Unit => f.write_str("0"),
             Expression::One => f.write_str("1"),
-            Expression::Pi(input, index, output, level) => {
+            Expression::Pi(input, index, output) => {
                 f.write_str("\u{03A0}")?;
-                level.fmt(f)?;
                 f.write_str(" <")?;
                 index.fmt(f)?;
                 f.write_str("> ")?;
@@ -349,9 +342,8 @@ impl Display for NormalExpression {
                 f.write_str("Type")?;
                 level.fmt(f)
             }
-            Expression::Sigma(first, index, second, level) => {
+            Expression::Sigma(first, index, second) => {
                 f.write_str("\u{03A3}")?;
-                level.fmt(f)?;
                 f.write_str(" <")?;
                 index.fmt(f)?;
                 f.write_str("> ")?;
@@ -370,9 +362,8 @@ impl Display for NormalExpression {
                 f.write_char('}')
             }
             // Don't print the context
-            Expression::Sum(constructors, level) => {
+            Expression::Sum(constructors) => {
                 f.write_str("Sum")?;
-                level.fmt(f)?;
                 f.write_str(" {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')

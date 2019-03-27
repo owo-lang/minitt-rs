@@ -177,7 +177,7 @@ macro_rules! update_gamma {
     ($gamma:expr, $pattern:expr, $type_val:expr, $clone:expr) => {
         match $pattern {
             Pattern::Pair(pattern_first, pattern_second) => match $type_val {
-                Value::Sigma(first, second, _) => update_gamma_by_pair(
+                Value::Sigma(first, second) => update_gamma_by_pair(
                     $gamma,
                     pattern_first,
                     pattern_second,

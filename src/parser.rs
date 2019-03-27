@@ -113,7 +113,7 @@ pub fn first_to_expression(the_rule: Tok) -> Expression {
 /// ```
 pub fn function_type_to_expression(the_rule: Tok) -> Expression {
     let (input, output) = atom_and_expression_to_tuple(the_rule);
-    Expression::Pi(Typed::new(Pattern::Unit, input), Box::new(output), None)
+    Expression::Pi(Typed::new(Pattern::Unit, input), Box::new(output))
 }
 
 /// ```ignore
@@ -122,7 +122,7 @@ pub fn function_type_to_expression(the_rule: Tok) -> Expression {
 /// ```
 pub fn pair_type_to_expression(the_rule: Tok) -> Expression {
     let (first, second) = atom_and_expression_to_tuple(the_rule);
-    Expression::Sigma(Typed::new(Pattern::Unit, first), Box::new(second), None)
+    Expression::Sigma(Typed::new(Pattern::Unit, first), Box::new(second))
 }
 
 /// Helper, extracted.
@@ -265,7 +265,7 @@ pub fn atom_to_expression(rules: Tok) -> Expression {
         Rule::constructor => constructor_to_expression(the_rule),
         Rule::variable => variable_to_expression(the_rule),
         Rule::split => Expression::Split(choices_to_tree_map(the_rule)),
-        Rule::sum => Expression::Sum(branches_to_tree_map(the_rule), None),
+        Rule::sum => Expression::Sum(branches_to_tree_map(the_rule)),
         Rule::one => Expression::One,
         Rule::unit => Expression::Unit,
         Rule::pi_type => pi_type_to_expression(the_rule),
@@ -320,7 +320,7 @@ pub fn choices_to_tree_map(the_rule: Tok) -> Branch {
 /// ```
 pub fn pi_type_to_expression(the_rule: Tok) -> Expression {
     let (first_name, first_type, second) = typed_abstraction_to_tuple(the_rule);
-    Expression::Pi(Typed::new(first_name, first_type), Box::new(second), None)
+    Expression::Pi(Typed::new(first_name, first_type), Box::new(second))
 }
 
 /// ```ignore
@@ -329,7 +329,7 @@ pub fn pi_type_to_expression(the_rule: Tok) -> Expression {
 /// ```
 pub fn sigma_type_to_expression(the_rule: Tok) -> Expression {
     let (input_name, input_type, output) = typed_abstraction_to_tuple(the_rule);
-    Expression::Sigma(Typed::new(input_name, input_type), Box::new(output), None)
+    Expression::Sigma(Typed::new(input_name, input_type), Box::new(output))
 }
 
 /// ```ignore

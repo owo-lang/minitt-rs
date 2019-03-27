@@ -23,12 +23,12 @@ pub enum NormalExpression {
     Pair(Box<Self>, Box<Self>),
     Unit,
     One,
-    Type(u32),
-    Pi(Box<Self>, u32, Box<Self>, Level),
-    Sigma(Box<Self>, u32, Box<Self>, Level),
+    Type(Level),
+    Pi(Box<Self>, u32, Box<Self>),
+    Sigma(Box<Self>, u32, Box<Self>),
     Constructor(String, Box<Self>),
     Split(NormalCaseTree),
-    Sum(NormalCaseTree, Level),
+    Sum(NormalCaseTree),
     Neutral(NormalNeutral),
 }
 
@@ -80,27 +80,17 @@ impl ReadBack for Value {
             Value::Unit => Unit,
             Value::One => One,
             Value::Type(level) => Type(level),
-            Value::Pi(input, output, level) => {
+            Value::Pi(input, output) => {
                 let output = output
                     .instantiate(generate_value(index))
                     .read_back(index + 1);
-                Pi(
-                    Box::new(input.read_back(index)),
-                    index,
-                    Box::new(output),
-                    level,
-                )
+                Pi(Box::new(input.read_back(index)), index, Box::new(output))
             }
-            Value::Sigma(first, second, level) => {
+            Value::Sigma(first, second) => {
                 let second = second
                     .instantiate(generate_value(index))
                     .read_back(index + 1);
-                Sigma(
-                    Box::new(first.read_back(index)),
-                    index,
-                    Box::new(second),
-                    level,
-                )
+                Sigma(Box::new(first.read_back(index)), index, Box::new(second))
             }
             Value::Pair(first, second) => Pair(
                 Box::new(first.read_back(index)),
@@ -108,7 +98,7 @@ impl ReadBack for Value {
             ),
             Value::Constructor(name, body) => Constructor(name, Box::new(body.read_back(index))),
             Value::Split(case_tree) => Split(read_back_branches(index, case_tree)),
-            Value::Sum(constructors, _) => Sum(read_back_branches(index, constructors), 0),
+            Value::Sum(constructors) => Sum(read_back_branches(index, constructors)),
             Value::Neutral(neutral) => Neutral(neutral.read_back(index)),
         }
     }
