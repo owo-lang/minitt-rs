@@ -1,5 +1,6 @@
-use crate::ast::*;
 use std::cmp::max;
+
+use crate::ast::*;
 
 impl Pattern {
     /// `inPat` in Mini-TT.

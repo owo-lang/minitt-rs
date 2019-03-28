@@ -1,6 +1,7 @@
-use either::Either;
 use std::collections::BTreeMap;
 use std::rc::Rc;
+
+use either::Either;
 
 pub type Level = u32;
 

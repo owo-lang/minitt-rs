@@ -5,7 +5,7 @@ use std::fmt::{Display, Error, Formatter};
 
 use either::{Either, Left, Right};
 
-use crate::ast::{nil_rc, up_var_rc, Closure, Expression, Level, Pattern, Telescope, Value};
+use crate::ast::{Closure, Expression, Level, nil_rc, Pattern, Telescope, up_var_rc, Value};
 use crate::check::read_back::NormalExpression;
 
 /// Type-Checking context. Name as key, type of the declaration as value.

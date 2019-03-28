@@ -1,7 +1,8 @@
-use crate::ast::*;
 use pest::iterators::{Pair, Pairs};
 use pest::Parser;
 use pest_derive::Parser;
+
+use crate::ast::*;
 
 #[derive(Parser)]
 #[grammar = "grammar.pest"]

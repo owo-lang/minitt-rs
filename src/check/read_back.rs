@@ -1,8 +1,10 @@
-use crate::ast::*;
-use either::Either;
 use std::collections::BTreeMap;
 use std::fmt::Display;
 use std::rc::Rc;
+
+use either::Either;
+
+use crate::ast::*;
 
 /// `NRho` in Mini-TT, normal form telescopes (contexts).
 pub type NormalTelescope = Rc<GenericTelescope<NormalExpression>>;

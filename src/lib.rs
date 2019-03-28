@@ -34,7 +34,7 @@ Mini-TT does not, but minitt does support:
 + Constant expressions with type signature completely inferred
 + Universe levels and its subtyping
   + Notice: `1` is of level 0, `Type0` is of level 1
-+ First-class sum types and its subtyping (work in progress)
++ First-class sum types, its merging operation and its subtyping (work in progress)
 
 [Version 0.1.8](https://docs.rs/crate/minitt/0.1.8) of minitt is basically a vanilla Mini-TT,
 several extensions are introduced in later versions.

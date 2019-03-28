@@ -7,3 +7,6 @@
 let bool: Type = Sum { True | False };
 let unit: Type = Sum { TT };
 let merged: Type = bool ++ unit;
+
+let plus_one: (x: Type): Type = x ++ unit;
+let bool_plus_one: Type = plus_one bool;

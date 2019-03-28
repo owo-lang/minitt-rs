@@ -9,6 +9,7 @@
 + Remove `src/main.rs`
 + Improve level support (#13, #19, #21)
 + Improve pretty printer for split (#16)
++ Support merging two sums (#15)
 
 # 0.2.5
 
