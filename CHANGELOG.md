@@ -1,5 +1,7 @@
 # Change Log
 
+# 0.2.7
+
 # 0.2.6
 
 + Remove `GenericCaseTree`, add `GenericCase` because now each case in the
