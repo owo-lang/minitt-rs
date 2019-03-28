@@ -96,15 +96,10 @@ impl Value {
             Type(level) => Some(1 + level),
             Sum(branches) => Some(
                 branches
-                    .into_iter()
-                    .map(
-                        // todo: suppress an error here using `clone()`, actually don't know why
-                        |(_, case)| match case.clone().reduce_to_value().level_safe() {
-                            Some(l) if l > 0 => l - 1,
-                            _ => 0,
-                        },
-                    )
+                    .iter()
+                    .map(|(_, case)| case.clone().reduce_to_value().level_safe().unwrap_or(0))
                     .max()
+                    .map(|l| if l > 0 { l - 1 } else { 0 })
                     .unwrap_or(0),
             ),
             Pi(first, second) | Value::Sigma(first, second) => Some(max(
@@ -214,7 +209,6 @@ impl Expression {
                 .resolve(&name)
                 .map_err(|err| eprintln!("{}", err))
                 .unwrap(),
-            // FIXME: this will cause infinite loop when type-checking recursive sum
             E::Sum(constructors) => V::Sum(branch_to_righted(constructors, context)),
             E::Merge(left, right) => {
                 let mut left = match left.eval(context.clone()) {

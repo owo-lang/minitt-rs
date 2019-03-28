@@ -233,8 +233,6 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
                         None => return Err(TCE::MissingCase(name)),
                     };
                     let branch_value = branch.reduce_to_value();
-                    // FIXME: if `branch_value` a generated value, how can you calculate its level?
-                    // debug_assert!(branch_value.level() <= level);
                     let signature = V::Pi(
                         Box::new(branch_value),
                         Closure::Choice(Box::new(closure.clone()), name.clone()),
