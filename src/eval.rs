@@ -100,7 +100,7 @@ impl Value {
                     .map(
                         // todo: suppress an error here using `clone()`, actually don't know why
                         |(_, case)| match case.clone().reduce_to_value().level_safe() {
-                            Some(l) => l,
+                            Some(l) if l > 0 => l - 1,
                             _ => 0,
                         },
                     )
@@ -108,14 +108,16 @@ impl Value {
                     .unwrap_or(0),
             ),
             Pi(first, second) | Value::Sigma(first, second) => Some(max(
-                first.level_safe().unwrap_or(0),
+                first
+                    .level_safe()
+                    .map_or(0, |level| if level > 1 { level - 1 } else { 0 }),
                 // todo: same problem as line 100, and
                 // will `.instantiate(Value::Unit)` work well when calculate level?
                 second
                     .clone()
                     .instantiate(Value::Unit)
                     .level_safe()
-                    .unwrap_or(0),
+                    .map_or(0, |level| if level > 1 { level - 1 } else { 0 }),
             )),
             _ => None,
         }
