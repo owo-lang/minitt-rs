@@ -189,11 +189,10 @@ impl Value {
 
 impl Expression {
     /// Return `true` if `self` is a `Sum` or `Merge`.
-    pub fn is_sum(&self) -> bool {
-        use crate::ast::Expression as E;
-        match self {
-            E::Merge(_, _) => true,
-            E::Sum(_) => true,
+    /// This is quite expensive! Can we optimize it a little bit?
+    pub fn eval_to_sum(self, context: Telescope) -> bool {
+        match self.eval(context) {
+            Value::Sum(_) => true,
             _ => false,
         }
     }

@@ -1,0 +1,8 @@
+--
+-- Created by intellij-minitt on 2019-03-27
+-- bad-merge
+-- Author: yqz5714
+--
+
+let bad_merge: Type = Type ++ Sum { H };
+

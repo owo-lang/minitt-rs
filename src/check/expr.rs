@@ -60,10 +60,10 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
             Ok(Value::Type(max_level))
         }
         Merge(left, right) => {
-            if !left.is_sum() {
+            if !left.clone().eval_to_sum(tcs.context()) {
                 return Err(TCE::WantSumBut(Either::Right(*left)));
             }
-            if !right.is_sum() {
+            if !right.clone().eval_to_sum(tcs.context()) {
                 return Err(TCE::WantSumBut(Either::Right(*right)));
             }
             let left_level = match check_infer(index, tcs_borrow!(tcs), *left)? {
@@ -136,16 +136,16 @@ pub fn check_merge_type(
     left: Expression,
     right: Expression,
 ) -> TCM<(Level, TCS)> {
-    if !left.is_sum() {
+    let (left_level, new_tcs) = check_type(index, tcs, left.clone())?;
+    tcs = new_tcs;
+    let (right_level, new_tcs) = check_type(index, tcs, right.clone())?;
+    tcs = new_tcs;
+    if !left.clone().eval_to_sum(tcs.context()) {
         return Err(TCE::WantSumBut(Either::Right(left)));
     }
-    if !right.is_sum() {
+    if !right.clone().eval_to_sum(tcs.context()) {
         return Err(TCE::WantSumBut(Either::Right(right)));
     }
-    let (left_level, new_tcs) = check_type(index, tcs, left)?;
-    tcs = new_tcs;
-    let (right_level, new_tcs) = check_type(index, tcs, right)?;
-    tcs = new_tcs;
     Ok((max(left_level, right_level), tcs))
 }
 

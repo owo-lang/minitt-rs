@@ -22,7 +22,7 @@ pub enum Expression {
     Sum(Branch),
     /// `split { Bla x => y }`
     Split(Branch),
-    Merge(Box<Expression>, Box<Expression>),
+    Merge(Box<Self>, Box<Self>),
     /// `\Pi a: b. c`
     Pi(Typed, Box<Self>),
     /// `\Sigma a: b. c`

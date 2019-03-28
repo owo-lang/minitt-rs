@@ -1,0 +1,9 @@
+--
+-- Created by intellij-minitt on 2019-03-27
+-- merge
+-- Author: yqz5714
+--
+
+let bool: Type = Sum { True | False };
+let unit: Type = Sum { TT };
+let merged: Type = bool ++ unit;

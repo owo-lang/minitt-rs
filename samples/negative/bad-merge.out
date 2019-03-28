@@ -1,0 +1,4 @@
+Parse successful.
+Expected Sum type, instead got: `Type0`.
+When checking the declaration of `bad_merge`.
+Type-Check failed.
