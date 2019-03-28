@@ -1,0 +1,4 @@
+Parse successful.
+Expected Sum type, instead got: `x`.
+When checking the declaration of `plus_one`.
+Type-Check failed.

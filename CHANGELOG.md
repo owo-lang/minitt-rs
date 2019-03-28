@@ -2,6 +2,8 @@
 
 # 0.2.7
 
++ Improve parser error handling
+
 # 0.2.6
 
 + Remove `GenericCaseTree`, add `GenericCase` because now each case in the

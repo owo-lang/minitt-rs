@@ -18,15 +18,21 @@ type Tik<'a> = Pairs<'a, Rule>;
 /// file = { WHITESPACE* ~ expression }
 /// ```
 pub fn parse_str(input: &str) -> Result<Expression, String> {
-    Ok(expression_to_expression(
-        MiniParser::parse(Rule::file, input)
-            .map_err(|err| format!("Parse failed at:{}", err))?
-            .next()
-            .unwrap()
-            .into_inner()
-            .next()
-            .unwrap(),
-    ))
+    let the_rule: Tok = MiniParser::parse(Rule::file, input)
+        .map_err(|err| format!("Parse failed at:{}", err))?
+        .next()
+        .unwrap()
+        .into_inner()
+        .next()
+        .unwrap();
+    let end_pos = the_rule.as_span().end_pos().pos();
+    let expression = expression_to_expression(the_rule);
+    if end_pos < input.len() {
+        let rest = &input[end_pos..];
+        Err(format!("Does not consume the following code:\n{}", rest))
+    } else {
+        Ok(expression)
+    }
 }
 
 /// Parse a string into an optional expression and print error to stderr.

@@ -1,0 +1,4 @@
+Does not consume the following code:
+let plus_one: (x: Type): Type = x ++ unit;
+let bool_plus_one: Type = plus_one bool;
+

@@ -1,0 +1,12 @@
+--
+-- Created by intellij-minitt on 2019-03-27
+-- var-merge
+-- Author: ice10
+--
+
+let unit: Type = Sum { TT };
+let plus_one (x: Type): Type = x ++ unit;
+
+-- Should this work?
+let bool_plus_one: Type = plus_one bool;
+
