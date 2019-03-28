@@ -193,10 +193,10 @@ impl Value {
 impl Expression {
     /// Return `true` if `self` is a `Sum` or `Merge`.
     /// This is quite expensive! Can we optimize it a little bit?
-    pub fn eval_to_sum(self, context: Telescope) -> bool {
+    pub fn eval_to_sum(self, context: Telescope) -> Option<Vec<String>> {
         match self.eval(context) {
-            Value::Sum(_) => true,
-            _ => false,
+            Value::Sum(constructors) => Some(constructors.keys().cloned().collect()),
+            _ => None,
         }
     }
 

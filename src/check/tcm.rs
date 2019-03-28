@@ -28,6 +28,7 @@ pub enum TCE {
     /// Reaching somewhere that is not expected to reach.
     Unreachable(&'static str, u32, u32),
     WantSumBut(Either<Value, Expression>),
+    DuplicateBranch(String),
     WantSigmaBut(Value),
     /// We can get the argument of application here, to better report error.
     WantPiBut(Value, Expression),
@@ -137,6 +138,11 @@ impl Display for TCE {
                     Left(value) => value.fmt(f)?,
                     Right(expression) => expression.fmt(f)?,
                 };
+                f.write_str("`.")
+            }
+            TCE::DuplicateBranch(branch) => {
+                f.write_str("Found duplicated branch: `")?;
+                f.write_str(branch)?;
                 f.write_str("`.")
             }
             TCE::Unreachable(file, line, column) => {

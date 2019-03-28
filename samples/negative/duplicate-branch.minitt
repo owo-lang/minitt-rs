@@ -1,0 +1,8 @@
+--
+-- Created by intellij-minitt on 2019-03-28
+-- duplicate-branch
+-- Author: yqz5714
+--
+
+let duplicate_branch: Type = Sum { TT } ++ Sum { TT };
+

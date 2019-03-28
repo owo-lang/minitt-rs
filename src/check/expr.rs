@@ -60,10 +60,10 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
             Ok(Value::Type(max_level))
         }
         Merge(left, right) => {
-            if !left.clone().eval_to_sum(tcs.context()) {
+            if left.clone().eval_to_sum(tcs.context()).is_none() {
                 return Err(TCE::WantSumBut(Either::Right(*left)));
             }
-            if !right.clone().eval_to_sum(tcs.context()) {
+            if right.clone().eval_to_sum(tcs.context()).is_none() {
                 return Err(TCE::WantSumBut(Either::Right(*right)));
             }
             let left_level = match check_infer(index, tcs_borrow!(tcs), *left)? {
@@ -140,11 +140,18 @@ pub fn check_merge_type(
     tcs = new_tcs;
     let (right_level, new_tcs) = check_type(index, tcs, right.clone())?;
     tcs = new_tcs;
-    if !left.clone().eval_to_sum(tcs.context()) {
-        return Err(TCE::WantSumBut(Either::Right(left)));
-    }
-    if !right.clone().eval_to_sum(tcs.context()) {
-        return Err(TCE::WantSumBut(Either::Right(right)));
+    let left_branches = match left.clone().eval_to_sum(tcs.context()) {
+        Some(branches) => branches,
+        None => return Err(TCE::WantSumBut(Either::Right(left))),
+    };
+    let right_branches = match right.clone().eval_to_sum(tcs.context()) {
+        Some(branches) => branches,
+        None => return Err(TCE::WantSumBut(Either::Right(right))),
+    };
+    for left_branch in left_branches.into_iter() {
+        if right_branches.contains(&left_branch) {
+            return Err(TCE::DuplicateBranch(left_branch));
+        }
     }
     Ok((max(left_level, right_level), tcs))
 }

@@ -1,0 +1,4 @@
+Parse successful.
+Found duplicated branch: `TT`.
+When checking the declaration of `duplicate_branch`.
+Type-Check failed.

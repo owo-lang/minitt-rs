@@ -3,6 +3,8 @@
 # 0.2.7
 
 + Improve parser error handling
++ Fix level for Sum/Pi/Sigma
++ Check branch duplication before merging
 
 # 0.2.6
 
