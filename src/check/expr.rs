@@ -1,13 +1,13 @@
+use std::cmp::max;
 use std::collections::BTreeMap;
 
 use either::Either;
 
-use crate::ast::{up_var_rc, Branch, Closure, Expression, GenericCase, Level, Pattern, Value};
+use crate::ast::{up_var_rc, Branch, Closure, Expression, GenericCase, Level, Typed, Value};
 use crate::check::decl::check_declaration;
 use crate::check::read_back::generate_value;
 use crate::check::subtype::check_subtype;
 use crate::check::tcm::{update_gamma, update_gamma_borrow, TCE, TCM, TCS};
-use std::cmp::max;
 
 /// `checkI` in Mini-TT.<br/>
 /// Type inference rule. More inferences are added here (maybe it's useful?).
@@ -59,6 +59,23 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
             }
             Ok(Value::Type(max_level))
         }
+        Merge(left, right) => {
+            if !left.is_sum() {
+                return Err(TCE::WantSumBut(Either::Right(*left)));
+            }
+            if !right.is_sum() {
+                return Err(TCE::WantSumBut(Either::Right(*right)));
+            }
+            let left_level = match check_infer(index, tcs_borrow!(tcs), *left)? {
+                Value::Type(left_level) => left_level,
+                e => return Err(TCE::WantSumBut(Either::Left(e))),
+            };
+            let right_level = match check_infer(index, tcs_borrow!(tcs), *right)? {
+                Value::Type(right_level) => right_level,
+                e => return Err(TCE::WantSumBut(Either::Left(e))),
+            };
+            Ok(Value::Type(max(left_level, right_level)))
+        }
         Pi(input, output) | Sigma(input, output) => {
             let (left_level, new) = check_type(index, tcs, *input.expression.clone())?;
             tcs = new;
@@ -98,9 +115,8 @@ pub fn check_type(index: u32, tcs: TCS, expression: Expression) -> TCM<(Level, T
     use crate::ast::Expression::*;
     match expression {
         Sum(constructors) => check_sum_type(index, tcs, constructors),
-        Pi(first, second) | Sigma(first, second) => {
-            check_telescoped(index, tcs, first.pattern, *first.expression, *second)
-        }
+        Pi(first, second) | Sigma(first, second) => check_telescoped(index, tcs, first, *second),
+        Merge(left, right) => check_merge_type(index, tcs, *left, *right),
         Type(level) => Ok((level + 1, tcs)),
         Void | One => Ok((0, tcs)),
         expression => {
@@ -111,6 +127,26 @@ pub fn check_type(index: u32, tcs: TCS, expression: Expression) -> TCM<(Level, T
             }
         }
     }
+}
+
+/// To reuse code that checks if a merge expression is well-typed between `check_type` and `check`
+pub fn check_merge_type(
+    index: u32,
+    mut tcs: TCS,
+    left: Expression,
+    right: Expression,
+) -> TCM<(Level, TCS)> {
+    if !left.is_sum() {
+        return Err(TCE::WantSumBut(Either::Right(left)));
+    }
+    if !right.is_sum() {
+        return Err(TCE::WantSumBut(Either::Right(right)));
+    }
+    let (left_level, new_tcs) = check_type(index, tcs, left)?;
+    tcs = new_tcs;
+    let (right_level, new_tcs) = check_type(index, tcs, right)?;
+    tcs = new_tcs;
+    Ok((max(left_level, right_level), tcs))
 }
 
 /// `check` in Mini-TT.<br/>
@@ -162,11 +198,11 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
         (E::Sum(constructors), V::Type(level)) => {
             check_level(level, check_sum_type(index, tcs, constructors)?)
         }
+        (E::Merge(left, right), V::Type(level)) => {
+            check_level(level, check_merge_type(index, tcs, *left, *right)?)
+        }
         (E::Sigma(first, second), V::Type(level)) | (E::Pi(first, second), V::Type(level)) => {
-            check_level(
-                level,
-                check_telescoped(index, tcs, first.pattern, *first.expression, *second)?,
-            )
+            check_level(level, check_telescoped(index, tcs, first, *second)?)
         }
         (E::Declaration(declaration, rest), rest_type) => {
             let tcs = check_declaration(index, tcs, *declaration)?;
@@ -249,24 +285,17 @@ pub fn check_sum_type(index: u32, mut tcs: TCS, constructors: Branch) -> TCM<(Le
 pub fn check_telescoped(
     index: u32,
     mut tcs: TCS,
-    pattern: Pattern,
-    first: Expression,
+    first: Typed,
     second: Expression,
 ) -> TCM<(Level, TCS)> {
-    let (_, new) = check_type(index, tcs, first.clone())?;
+    let (_, new) = check_type(index, tcs, *first.expression.clone())?;
     tcs = new;
-    let TCS { gamma, context } = tcs_borrow!(tcs);
     let generated = generate_value(index);
-    let gamma = update_gamma(
-        gamma,
-        &pattern,
-        first.eval(context.clone()),
-        generated.clone(),
+    let internal_tcs = tcs_borrow!(tcs).update(
+        first.pattern,
+        first.expression.eval(tcs.context()),
+        generated,
     )?;
-    let (level, _) = check_type(
-        index + 1,
-        TCS::new(gamma, up_var_rc(context, pattern, generated)),
-        second,
-    )?;
+    let (level, _) = check_type(index + 1, internal_tcs, second)?;
     Ok((level, tcs))
 }

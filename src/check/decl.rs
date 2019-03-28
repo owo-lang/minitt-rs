@@ -33,15 +33,10 @@ pub fn check_lift_parameters<'a>(
     // Forgive me, I failed find a better name.
     let clone = parameter.clone();
     let (pattern, expression) = parameter.destruct();
-    let (_, TCS { gamma, context }) = check_type(index, tcs, expression.clone())?;
+    let (_, tcs) = check_type(index, tcs, expression.clone())?;
     let generated = generate_value(index);
-    let type_val = expression.clone().eval(context.clone());
-    let gamma = update_gamma_borrow(gamma, &pattern, type_val.clone(), &generated)?;
-
-    let tcs = TCS {
-        gamma,
-        context: up_var_rc(context, pattern.clone(), generated),
-    };
+    let type_val = expression.clone().eval(tcs.context());
+    let tcs = tcs.update(pattern.clone(), type_val.clone(), generated)?;
     let (signature, body, tcs) = check_lift_parameters(index + 1, tcs, parameters, check_body)?;
 
     Ok((

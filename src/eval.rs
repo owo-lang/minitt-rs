@@ -188,6 +188,16 @@ impl Value {
 }
 
 impl Expression {
+    /// Return `true` if `self` is a `Sum` or `Merge`.
+    pub fn is_sum(&self) -> bool {
+        use crate::ast::Expression as E;
+        match self {
+            E::Merge(_, _) => true,
+            E::Sum(_) => true,
+            _ => false,
+        }
+    }
+
     /// `eval` in Mini-TT.<br/>
     /// Evaluate an [`Expression`] to a [`Value`] under a [`Telescope`],
     /// panic if not well-typed.

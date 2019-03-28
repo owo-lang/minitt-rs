@@ -1,9 +1,12 @@
-use crate::ast::{nil_rc, Closure, Expression, Level, Pattern, Telescope, Value};
-use crate::check::read_back::NormalExpression;
 use core::fmt::Write;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Error, Formatter};
+
+use either::{Either, Left, Right};
+
+use crate::ast::{nil_rc, up_var_rc, Closure, Expression, Level, Pattern, Telescope, Value};
+use crate::check::read_back::NormalExpression;
 
 /// Type-Checking context. Name as key, type of the declaration as value.
 pub type GammaRaw = BTreeMap<String, Value>;
@@ -24,6 +27,7 @@ pub enum TCE {
     UnexpectedCases(String),
     /// Reaching somewhere that is not expected to reach.
     Unreachable(&'static str, u32, u32),
+    WantSumBut(Either<Value, Expression>),
     WantSigmaBut(Value),
     /// We can get the argument of application here, to better report error.
     WantPiBut(Value, Expression),
@@ -58,6 +62,13 @@ impl<'a> TCS<'a> {
     /// Since `context` is ref-counted, it's gonna be cheap to clone.
     pub fn context(&self) -> Telescope {
         self.context.clone()
+    }
+
+    pub fn update(self, pattern: Pattern, type_val: Value, body: Value) -> TCM<TCS<'a>> {
+        Ok(TCS {
+            gamma: update_gamma_borrow(self.gamma, &pattern, type_val.clone(), &body)?,
+            context: up_var_rc(self.context, pattern.clone(), body),
+        })
     }
 }
 
@@ -118,6 +129,14 @@ impl Display for TCE {
             TCE::WantSigmaBut(expression) => {
                 f.write_str("Expected \u{03A3} type, instead got: `")?;
                 expression.fmt(f)?;
+                f.write_str("`.")
+            }
+            TCE::WantSumBut(either) => {
+                f.write_str("Expected Sum type, instead got: `")?;
+                match either {
+                    Left(value) => value.fmt(f)?,
+                    Right(expression) => expression.fmt(f)?,
+                };
                 f.write_str("`.")
             }
             TCE::Unreachable(file, line, column) => {
