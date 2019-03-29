@@ -1,7 +1,5 @@
 # Change Log
 
-# 0.2.9
-
 # 0.2.8
 
 + Fix the bug of `const` declaration not being added into the context
