@@ -1,5 +1,3 @@
-use std::borrow::Cow;
-
 use crate::ast::{up_dec_rc, up_var_rc, AnonymousValue, Declaration, Expression, Pattern, Typed};
 use crate::check::expr::{check, check_type};
 use crate::check::read_back::generate_value;
@@ -52,29 +50,18 @@ pub fn check_recursive_declaration(index: u32, tcs: TCS, declaration: Declaratio
     let pattern = declaration.pattern.clone();
     check_type(index, tcs_borrow!(tcs), declaration.signature.clone())
         .map_err(|err| try_locate!(err, pattern))?;
-    let TCS { gamma, context } = tcs;
-    let signature = declaration.signature.clone().eval(context.clone());
+    let signature = declaration.signature.clone().eval(tcs.context());
     let generated = generate_value(index);
-    let fake_gamma = update_gamma_borrow(
-        Cow::Borrowed(&gamma),
-        &pattern,
-        signature.clone(),
-        &generated,
-    )
-    .map_err(|err| try_locate!(err, pattern))?;
-    let fake_context = up_var_rc(context.clone(), pattern.clone(), generated);
-    check(
-        index + 1,
-        TCS::new(fake_gamma, fake_context),
-        declaration.body.clone(),
-        signature.clone(),
-    )
-    .map_err(|err| try_locate!(err, pattern))?;
-    update_gamma_lazy(gamma, &pattern, signature, || {
-        declaration
-            .body
-            .clone()
-            .eval(up_dec_rc(context, declaration))
+    let fake_tcs: TCS = tcs_borrow!(tcs);
+    let fake_tcs = fake_tcs
+        .update(pattern.clone(), signature.clone(), generated)
+        .map_err(|err| try_locate!(err, pattern))?;
+    let body = declaration.body.clone();
+    check(index + 1, fake_tcs, body.clone(), signature.clone())
+        .map_err(|err| try_locate!(err, pattern))?;
+    let context = tcs.context;
+    update_gamma_lazy(tcs.gamma, &pattern, signature, || {
+        body.eval(up_dec_rc(context, declaration))
     })
     .map_err(|err| try_locate!(err, pattern))
 }
@@ -142,31 +129,21 @@ pub fn check_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<
                 tcs_borrow!(tcs),
                 declaration.prefix_parameters.clone(),
                 |tcs| {
-                    let (_, TCS { gamma, context }) =
-                        check_type(index, tcs, declaration.signature.clone())
-                            .map_err(|err| try_locate!(err, pattern))?;
+                    let (_, tcs) = check_type(index, tcs, declaration.signature.clone())
+                        .map_err(|err| try_locate!(err, pattern))?;
                     let pattern = pattern.clone();
                     let generated = generate_value(index);
-                    let signature = declaration.signature.clone().eval(context.clone());
-                    let fake_gamma = update_gamma_borrow(
-                        Cow::Borrowed(&gamma),
-                        &pattern,
-                        signature.clone(),
-                        &generated,
-                    )
-                    .map_err(|err| try_locate!(err, pattern))?;
-                    let fake_context = up_var_rc(context.clone(), pattern.clone(), generated);
-                    check(
-                        index + 1,
-                        TCS::new(fake_gamma, fake_context),
-                        declaration.body.clone(),
-                        signature,
-                    )
-                    .map_err(|err| try_locate!(err, pattern))?;
+                    let signature = declaration.signature.clone().eval(tcs.context());
+                    let fake_tcs: TCS = tcs_borrow!(tcs);
+                    let fake_tcs = fake_tcs
+                        .update(pattern.clone(), signature.clone(), generated)
+                        .map_err(|err| try_locate!(err, pattern))?;
+                    check(index + 1, fake_tcs, declaration.body.clone(), signature)
+                        .map_err(|err| try_locate!(err, pattern))?;
                     Ok((
                         declaration.signature.clone(),
                         declaration.body.clone(),
-                        TCS::new(gamma, up_dec_rc(context, declaration)),
+                        TCS::new(tcs.gamma, up_dec_rc(tcs.context, declaration)),
                     ))
                 },
             )

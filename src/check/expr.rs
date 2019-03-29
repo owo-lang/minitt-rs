@@ -3,11 +3,11 @@ use std::collections::BTreeMap;
 
 use either::Either;
 
-use crate::ast::{up_var_rc, Branch, Closure, Expression, GenericCase, Level, Typed, Value};
+use crate::ast::{Branch, Closure, Expression, GenericCase, Level, Typed, Value};
 use crate::check::decl::check_declaration;
 use crate::check::read_back::generate_value;
 use crate::check::subtype::check_subtype;
-use crate::check::tcm::{update_gamma, update_gamma_borrow, TCE, TCM, TCS};
+use crate::check::tcm::{update_gamma, TCE, TCM, TCS};
 
 /// `checkI` in Mini-TT.<br/>
 /// Type inference rule. More inferences are added here (maybe it's useful?).
@@ -91,9 +91,8 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
                 let parameter_type = *parameter_type.internal;
                 tcs = check(index, tcs, *argument, parameter_type.clone())?;
                 let generated = generate_value(index + 1);
-                let gamma = update_gamma_borrow(tcs.gamma, &pattern, parameter_type, &generated)?;
-                let context = up_var_rc(tcs.context, pattern, generated);
-                check_infer(index + 1, TCS::new(gamma, context), *return_value)
+                let tcs = tcs.update(pattern, parameter_type, generated)?;
+                check_infer(index + 1, tcs, *return_value)
             }
             f => match check_infer(index, tcs_borrow!(tcs), f)? {
                 Value::Pi(input, output) => {
@@ -173,15 +172,10 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
         // There's nothing left to check.
         (E::Void, _) => Ok(tcs),
         (E::Lambda(pattern, _, body), V::Pi(signature, closure)) => {
-            let TCS { gamma, context } = tcs_borrow!(tcs);
+            let fake_tcs: TCS = tcs_borrow!(tcs);
             let generated = generate_value(index);
-            let gamma = update_gamma_borrow(gamma, &pattern, *signature, &generated)?;
-            check(
-                index + 1,
-                TCS::new(gamma, up_var_rc(context, pattern, generated.clone())),
-                *body,
-                closure.instantiate(generated),
-            )?;
+            let fake_tcs = fake_tcs.update(pattern, *signature, generated.clone())?;
+            check(index + 1, fake_tcs, *body, closure.instantiate(generated))?;
             Ok(tcs)
         }
         (E::Pair(first, second), V::Sigma(first_type, second_type)) => {
