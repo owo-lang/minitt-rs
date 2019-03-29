@@ -19,8 +19,8 @@
  [clap]: https://clap.rs/
  [pest]: https://pest.rs/
  [rustyline]: https://docs.rs/rustyline/
- [icon]: https://raw.githubusercontent.com/owo-lang/intellij-minitt/master/res/META-INF/pluginIcon.svg?sanitize=true
- [plugin]: https://github.com/owo-lang/intellij-minitt/
+ [icon]: https://raw.githubusercontent.com/owo-lang/minitt-rs/master/samples/icon.svg?sanitize=true
+ [plugin]: https://github.com/owo-lang/intellij-dtlc/
 
 Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
 This implementation includes a type-checker (extended the origin), an AST
@@ -30,7 +30,7 @@ Built with latest (when developing this) stable Rust, 2018 edition.
 It can be used as a core language for complicated dependently-typed programming
 languages, or used for testing the correctness of translation algorithms.
 
-I'm trying my best to use complete and meaningful namings.
+I'm trying my best to use complete and meaningful naming to avoid confusion.
 I'm also doing a general clean-up of the Haskell implementation and comment the
 functions with their counterparts' names in the Haskell implementation so people
 don't get confused when they read the paper while reading this implementation.
@@ -74,7 +74,8 @@ $ cargo install minitt --bin minittc --all-features --force
 + [Change Log](CHANGELOG.md)
 + [REPL Example](./samples/REPL.md)
 + Windows binary download by [AppVeyor][av-url]
-+ [IntelliJ Plugin][plugin]
++ [IntelliJ Plugin][plugin], as a part of project Dependently-Typed Lambda
+  Calculus
 
 ## Features
 
@@ -86,7 +87,7 @@ $ cargo install minitt --bin minittc --all-features --force
   + [ ] Use `Vec` for telescope/declaration instead of functional immutable list
 + New feature apart from trivial improvements
   + [X] Infer type of a pair
-  + [ ] Infer type of a constructor call
+  + [X] Infer type of a constructor call
   + [ ] Infer type of a case-split
   + [ ] Module system (or even a very simple one)
   + (Typed-)Holes?
