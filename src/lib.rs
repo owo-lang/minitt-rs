@@ -34,7 +34,8 @@ Mini-TT does not, but minitt does support:
 + Constant expressions with type signature completely inferred
 + Universe levels and its subtyping
   + Notice: `1` is of level 0, `Type0` is of level 1
-+ First-class sum types, its merging operation and its subtyping (work in progress)
++ First-class sum types, its merging operation (so you can merge two sums) and its subtyping
+  (like `Sum { A }` is a subtype of `Sum { A | B }`)
 
 [Version 0.1.8](https://docs.rs/crate/minitt/0.1.8) of minitt is basically a vanilla Mini-TT,
 several extensions are introduced in later versions.
@@ -113,8 +114,8 @@ normal form and do a syntactic comparison with the `read-back`ed expected type s
 
 Try to infer the type of a given expression.
 
-Cannot infer types of lambdas or other complicated expressions like nested function calls
-(this situation has been improved a lot if you're glad to use prefix parameters).
+Mini-TT cannot infer types of lambdas or other complicated expressions like nested function calls,
+but in minitt this situation has changed with the help of prefix parameters.
 
 ### `checkT`
 
@@ -142,6 +143,7 @@ I'm listing all the possible extension, disregarding how hard can the implementa
   + Affine Type System
 + First-class cases and sums
   + Record polymorphism
+  + Extensible sums
 + Cubical Type Theory
   + Already implemented in another Mini-TT dialect:
     [cubicaltt](https://github.com/mortberg/cubicaltt)
