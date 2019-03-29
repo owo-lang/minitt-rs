@@ -217,12 +217,9 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
         }
         (E::Constant(pattern, body, rest), rest_type) => {
             let signature = check_infer(index, tcs_borrow!(tcs), *body.clone())?;
-            let TCS { gamma, context } = tcs_borrow!(tcs);
-            let body_val = body.eval(context.clone());
-            let gamma = update_gamma_borrow(gamma, &pattern, signature, &body_val)?;
-            let context = up_var_rc(context, pattern, body_val);
-            check(index, TCS::new(gamma, context), *rest, rest_type)?;
-            Ok(tcs)
+            let body_val = body.eval(tcs.context());
+            let tcs = tcs.update(pattern, signature, body_val)?;
+            check(index, tcs, *rest, rest_type)
         }
         // I really wish to have box pattern here :(
         (E::Split(mut branches), V::Pi(sum, closure)) => match *sum {
