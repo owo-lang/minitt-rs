@@ -87,6 +87,8 @@ const NORMALIZE_PFX: &'static str = ":normalize ";
 fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>> {
     if line == QUIT_CMD {
         None
+    } else if line.is_empty() {
+        Some(tcs)
     } else if line == GAMMA_CMD {
         show_gamma(&tcs);
         Some(tcs)

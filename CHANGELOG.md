@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.3.2
+
++ Do nothing if getting empty input in REPL (#22)
+
 # 0.2.8
 
 + Fix the bug of `const` declaration not being added into the context
