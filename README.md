@@ -82,24 +82,24 @@ $ cargo install minitt --bin minittc --all-features --force
 + [X] Everything that the Haskell implementation has
 + [X] Parser as a cargo feature (using [pest][pest])
 + [X] AST pretty-printer as a cargo feature
-+ Improvements to the original implementation
++ [ ] Improvements to the original implementation
   + [X] Use `BTreeMap` for branch/case tree so we become flexible on case order
   + [ ] Use `Vec` for telescope/declaration instead of functional immutable list
-+ New feature apart from trivial improvements
++ [ ] New feature apart from trivial improvements
   + [X] Infer type of a pair
   + [X] Infer type of a constructor call
   + [ ] Infer type of a case-split
   + [ ] Module system (or even a very simple one)
-  + (Typed-)Holes?
+  + [ ] (Typed-)Holes?
     + [ ] For completion / context lookup
     + [ ] For type-directed development
   + [X] `const` declarations, where the type is inferred
   + [X] Prefixing declarations with parameters, like `let a (b: c): d = f b;`
-+ An executable for CLI usages (`minittc`) (using [clap][clap])
++ [ ] An executable for CLI usages (`minittc`) (using [clap][clap])
   + [X] File checker
   + [X] Completion script generation
     + Get the script: `minittc completion zsh/bash/powershell/fish/elvish`
-  + REPL (a fancy one based on [rustyline][rustyline] and a plain
+  + [X] REPL (a fancy one based on [rustyline][rustyline] and a plain
     one based on stdio)
     + [X] Load file
     + [X] Infer (and normalize) type
@@ -112,7 +112,8 @@ $ cargo install minitt --bin minittc --all-features --force
       + [X] Files
       + [ ] In-scope variables
   + [ ] Language server (?)
-  + Publish?
+    + We've got an [IntelliJ plugin][plugin]
+  + [X] Publish?
     + By `cargo install --path . --bin minittc --all-features`
     + By [AppVeyor][av-url]
       (Just find the configuration fits you best and get the artifact)
