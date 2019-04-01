@@ -1,0 +1,8 @@
+--
+-- Created by Dependently-Typed Lambda Calculus on 2019-04-01
+-- empty-eliminate
+-- Author: ice10
+--
+
+const empty = Sum {};
+let empty_eliminate (ret: Type): empty -> ret = split {};
