@@ -1,6 +1,9 @@
 #[macro_use]
 extern crate minitt;
 
+use minitt::parser::{expression_to_expression, parse_str};
+use std::str;
+
 /// CLI arguments. Based on structopt (clap)
 mod args;
 
@@ -18,13 +21,19 @@ pub fn main() {
     let checked = args
         .file
         .clone()
-        .and_then(|s| util::parse_file(s.as_str()))
-        .map(|ast| {
+        .and_then(|s| util::read_file(s.as_str()))
+        .and_then(|s| str::from_utf8(s.as_slice()).ok())
+        .and_then(|code| parse_str(code).map_err(|err| eprintln!("{}", err)).ok())
+        .map(|tok| {
             if !args.quiet {
                 println!("Parse successful.");
-                if args.generated {
-                    println!("{}", ast);
-                }
+            }
+            if args.lexical_json {
+                println!("{}", tok.to_json())
+            }
+            let ast = expression_to_expression(tok);
+            if args.generated {
+                println!("{}", ast);
             }
             if !args.parse_only {
                 // Type Check

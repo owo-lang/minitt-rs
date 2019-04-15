@@ -1,15 +1,18 @@
-use crate::util::parse_file;
+use crate::util::read_file;
 use minitt::ast::{Expression, GenericTelescope, Telescope, Value};
 use minitt::check::read_back::ReadBack;
 use minitt::check::tcm::{TCE, TCS};
 use minitt::check::{check_contextual, check_infer_contextual};
-use minitt::parser::{parse_str_err_printed, parse_str_to_json};
+use minitt::parser::{
+    expression_to_expression, parse_str, parse_str_err_printed, parse_str_to_json,
+};
 use rustyline::completion::{Completer, FilenameCompleter, Pair};
 use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
 use rustyline::hint::Hinter;
 use rustyline::{CompletionType, Config, Editor, Helper};
 use std::io::{stdin, stdout, Write};
+use std::str;
 
 struct MiniHelper {
     all_cmd: Vec<String>,
@@ -106,8 +109,11 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>
         Some(tcs)
     } else if line.starts_with(LOAD_PFX) {
         Some(
-            match parse_file(line.trim_start_matches(LOAD_CMD).trim_start()) {
-                Some(ast) => update_tcs(tcs, ast),
+            match read_file(line.trim_start_matches(LOAD_CMD).trim_start())
+                .and_then(|s| str::from_utf8(s.as_slice()).ok())
+                .and_then(|s| parse_str(s).map_err(|err| eprintln!("{}", err)).ok())
+            {
+                Some(ast) => update_tcs(tcs, expression_to_expression(ast)),
                 None => tcs,
             },
         )

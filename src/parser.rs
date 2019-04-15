@@ -10,14 +10,14 @@ use crate::ast::*;
 struct MiniParser;
 
 // Tik♂Tok on the clock but the party don't stop!
-type Tok<'a> = Pair<'a, Rule>;
-type Tik<'a> = Pairs<'a, Rule>;
+pub type Tok<'a> = Pair<'a, Rule>;
+pub type Tik<'a> = Pairs<'a, Rule>;
 
 /// Parse a string into an optional expression based on `file` rule:
 /// ```ignore
 /// file = { WHITESPACE* ~ expression }
 /// ```
-pub fn parse_str(input: &str) -> Result<Expression, String> {
+pub fn parse_str(input: &str) -> Result<Tok, String> {
     let the_rule: Tok = MiniParser::parse(Rule::file, input)
         .map_err(|err| format!("Parse failed at:{}", err))?
         .next()
@@ -26,37 +26,25 @@ pub fn parse_str(input: &str) -> Result<Expression, String> {
         .next()
         .unwrap();
     let end_pos = the_rule.as_span().end_pos().pos();
-    let expression = expression_to_expression(the_rule);
     if end_pos < input.len() {
         let rest = &input[end_pos..];
         Err(format!("Does not consume the following code:\n{}", rest))
     } else {
-        Ok(expression)
+        Ok(the_rule)
     }
 }
 
 /// Parse a string into the json-format lexical information.
 pub fn parse_str_to_json(input: &str) -> Result<String, String> {
-    let the_rule: Tok = MiniParser::parse(Rule::file, input)
-        .map_err(|err| format!("Parse failed at:{}", err))?
-        .next()
-        .unwrap()
-        .into_inner()
-        .next()
-        .unwrap();
-    let end_pos = the_rule.as_span().end_pos().pos();
-    if end_pos < input.len() {
-        let rest = &input[end_pos..];
-        Err(format!("Does not consume the following code:\n{}", rest))
-    } else {
-        Ok(the_rule.to_json())
-    }
+    parse_str(input).map(|tok| tok.to_json())
 }
 
 /// Parse a string into an optional expression and print error to stderr.
 #[inline]
 pub fn parse_str_err_printed(code: &str) -> Result<Expression, ()> {
-    parse_str(code).map_err(|err| eprintln!("{}", err))
+    parse_str(code)
+        .map(expression_to_expression)
+        .map_err(|err| eprintln!("{}", err))
 }
 
 macro_rules! next_rule {
