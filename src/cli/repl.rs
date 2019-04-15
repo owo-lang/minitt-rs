@@ -3,7 +3,7 @@ use minitt::ast::{Expression, GenericTelescope, Telescope, Value};
 use minitt::check::read_back::ReadBack;
 use minitt::check::tcm::{TCE, TCS};
 use minitt::check::{check_contextual, check_infer_contextual};
-use minitt::parser::parse_str_err_printed;
+use minitt::parser::{parse_str_err_printed, parse_str_to_json};
 use rustyline::completion::{Completer, FilenameCompleter, Pair};
 use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
@@ -72,6 +72,7 @@ const INFER_DBG_CMD: &'static str = ":infer-debug";
 const EVAL_CMD: &'static str = ":eval";
 const EVAL_DBG_CMD: &'static str = ":eval-debug";
 const LEVEL_CMD: &'static str = ":level";
+const LEXICAL_CMD: &'static str = ":lexical";
 const NORMALIZE_CMD: &'static str = ":normalize";
 
 /// Used for REPL command
@@ -83,6 +84,8 @@ const INFER_DBG_PFX: &'static str = ":infer-debug ";
 const EVAL_PFX: &'static str = ":eval ";
 const EVAL_DBG_PFX: &'static str = ":eval-debug ";
 const NORMALIZE_PFX: &'static str = ":normalize ";
+const LEVEL_PFX: &'static str = ":level ";
+const LEXICAL_PFX: &'static str = ":lexical ";
 
 fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>> {
     if line == QUIT_CMD {
@@ -134,9 +137,16 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>
         let line = line.trim_start_matches(EVAL_DBG_CMD).trim_start();
         debug_eval(tcs.context(), line);
         Some(tcs)
-    } else if line.starts_with(LEVEL_CMD) {
+    } else if line.starts_with(LEVEL_PFX) {
         let line = line.trim_start_matches(LEVEL_CMD).trim_start();
         level(tcs.context(), line);
+        Some(tcs)
+    } else if line.starts_with(LEXICAL_PFX) {
+        let line = line.trim_start_matches(LEXICAL_CMD).trim_start();
+        match parse_str_to_json(line) {
+            Err(err) => eprintln!("{}", err),
+            Ok(ok) => println!("{}", ok),
+        };
         Some(tcs)
     } else if line.starts_with(':') {
         println!("Unrecognized command: {}", line);
@@ -165,6 +175,8 @@ pub fn repl(mut tcs: TCS) {
         NORMALIZE_CMD,
         EVAL_CMD,
         EVAL_DBG_CMD,
+        LEVEL_CMD,
+        LEXICAL_CMD,
     ]
     .iter()
     .map(|s| s.to_string())
@@ -319,6 +331,7 @@ fn help(current_mode: &str) {
          {:<20} {}\n\
          {:<20} {}\n\
          {:<20} {}\n\
+         {:<20} {}\n\
          ",
         QUIT_CMD,
         "Quit the REPL.",
@@ -330,6 +343,8 @@ fn help(current_mode: &str) {
         "Show debug-printed value context.",
         ":level <EXPR>",
         "Show the level of the expression, if it's a type.",
+        ":lexical <EXPR>",
+        "Show the lexical information of the expression.",
         ":load <FILE>",
         "Load an external file.",
         ":infer <EXPR>",

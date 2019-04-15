@@ -35,6 +35,24 @@ pub fn parse_str(input: &str) -> Result<Expression, String> {
     }
 }
 
+/// Parse a string into the json-format lexical information.
+pub fn parse_str_to_json(input: &str) -> Result<String, String> {
+    let the_rule: Tok = MiniParser::parse(Rule::file, input)
+        .map_err(|err| format!("Parse failed at:{}", err))?
+        .next()
+        .unwrap()
+        .into_inner()
+        .next()
+        .unwrap();
+    let end_pos = the_rule.as_span().end_pos().pos();
+    if end_pos < input.len() {
+        let rest = &input[end_pos..];
+        Err(format!("Does not consume the following code:\n{}", rest))
+    } else {
+        Ok(the_rule.to_json())
+    }
+}
+
 /// Parse a string into an optional expression and print error to stderr.
 #[inline]
 pub fn parse_str_err_printed(code: &str) -> Result<Expression, ()> {

@@ -14,6 +14,9 @@ pub struct CliOptions {
     /// Prints code generated from parsed AST (in most cases it's accepted by the parser as well)
     #[structopt(short = "g", long)]
     pub generated: bool,
+    /// Prints lexical information of the parsed AST as json
+    #[structopt(short = "l", long)]
+    pub lexical_json: bool,
     /// Interactive mode, aka REPL
     #[structopt(alias = "repl", short = "i", long)]
     pub interactive: bool,
