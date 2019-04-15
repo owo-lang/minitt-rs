@@ -1,5 +1,4 @@
 use std::collections::BTreeMap;
-use std::fmt::Display;
 use std::rc::Rc;
 
 use either::Either;
@@ -47,7 +46,7 @@ pub fn generate_value(id: u32) -> Value {
 pub trait ReadBack: Sized {
     /// Corresponding normal form type for the read-backable structures.<br/>
     /// This is needed because Rust does not support Higher-Kinded Types :(
-    type NormalForm: Eq + Display;
+    type NormalForm: Eq;
 
     /// Interface for `rbV`, `rbN` and `rbRho` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm;
