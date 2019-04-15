@@ -3,6 +3,7 @@
 # 0.3.3
 
 + Support printing lexical information of AST (cli flag: `--lexical-json`)
++ Disable all default features
 
 # 0.3.2
 
