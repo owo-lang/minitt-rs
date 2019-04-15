@@ -467,13 +467,6 @@ pub fn identifier_to_name(rule: Tok) -> String {
 mod tests {
     use crate::parser::parse_str_err_printed;
 
-    #[cfg(not(feature = "pretty"))]
-    fn successful_test_case(code: &str) {
-        let expr = parse_str_err_printed(code).unwrap();
-        println!("{:?}", expr);
-    }
-
-    #[cfg(feature = "pretty")]
     fn successful_test_case(code: &str) {
         println!("========= source ===========");
         println!("{}", code);

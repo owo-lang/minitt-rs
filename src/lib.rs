@@ -185,10 +185,9 @@ pub mod eval;
 /// Depends on module `syntax`.
 pub mod check;
 
-/// Pretty print utilities
-#[cfg(feature = "pretty")]
+/// Pretty print utilities.
 pub mod pretty;
 
-/// Parser, from text to AST and a bunch of utilities
+/// Parser, from text to AST and a bunch of related tools.
 #[cfg(feature = "parser")]
 pub mod parser;

@@ -1,7 +1,7 @@
 use core::fmt::Write;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
-use std::fmt::{Error, Formatter};
+use std::fmt::{Display, Error, Formatter};
 
 use either::{Either, Left, Right};
 
@@ -103,12 +103,8 @@ impl TCE {
     }
 }
 
-impl TCE {
-    pub fn format_me(&self, f: &mut Formatter) -> Result<(), Error> {
-        #[cfg(not(feature = "pretty"))]
-        use std::fmt::Debug;
-        #[cfg(feature = "pretty")]
-        use std::fmt::Display;
+impl Display for TCE {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
         match self {
             TCE::Textual(s) => f.write_str(s.as_str()),
             TCE::UpdateGammaFailed(pattern) => {
@@ -202,12 +198,6 @@ impl TCE {
     }
 }
 
-impl std::fmt::Display for TCE {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), Error> {
-        self.format_me(f)
-    }
-}
-
 macro_rules! update_gamma {
     ($gamma:expr, $pattern:expr, $type_val:expr, $clone:expr) => {
         match $pattern {
@@ -281,26 +271,7 @@ fn update_gamma_by_var<'a>(gamma: Gamma<'a>, type_val: Value, name: &String) -> 
 }
 
 #[inline]
-#[cfg(feature = "pretty")]
-fn mismatch<E: std::fmt::Display>(
-    f: &mut Formatter,
-    inferred: &E,
-    expected: &E,
-) -> Result<(), Error> {
-    f.write_str("Type mismatch: expected `")?;
-    expected.fmt(f)?;
-    f.write_str("`, got (inferred): `")?;
-    inferred.fmt(f)?;
-    f.write_str("`.")
-}
-
-#[inline]
-#[cfg(not(feature = "pretty"))]
-fn mismatch<E: std::fmt::Debug>(
-    f: &mut Formatter,
-    inferred: &E,
-    expected: &E,
-) -> Result<(), Error> {
+fn mismatch<E: Display>(f: &mut Formatter, inferred: &E, expected: &E) -> Result<(), Error> {
     f.write_str("Type mismatch: expected `")?;
     expected.fmt(f)?;
     f.write_str("`, got (inferred): `")?;
