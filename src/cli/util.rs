@@ -1,5 +1,5 @@
 use minitt::ast::Expression;
-use minitt::parser::parse_str_err_printed;
+use minitt::parser::{expression_to_expression, parse_str, Tok};
 use std::io::Read;
 use std::{fs, io, str};
 
@@ -11,7 +11,7 @@ fn read_file(file_arg: &str) -> io::Result<Vec<u8>> {
     Ok(file_content)
 }
 
-pub fn parse_file(file_arg: &str) -> Option<Expression> {
+pub fn parse_file(file_arg: &str, print_lexical_json: bool) -> Option<Expression> {
     // If cannot read input, return.
     let file_content = match read_file(file_arg) {
         Ok(c) => c,
@@ -23,5 +23,11 @@ pub fn parse_file(file_arg: &str) -> Option<Expression> {
     // Read file
     let file_content_utf8 = str::from_utf8(file_content.as_slice()).unwrap();
     // Parse
-    parse_str_err_printed(file_content_utf8).ok()
+    let tok: Tok = parse_str(file_content_utf8)
+        .map_err(|err| eprintln!("{}", err))
+        .ok()?;
+    if print_lexical_json {
+        println!("{}", tok.to_json());
+    }
+    Some(expression_to_expression(tok))
 }

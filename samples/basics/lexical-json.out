@@ -1,0 +1,191 @@
+{
+  "pos": [
+    104,
+    132
+  ],
+  "rule": "expression",
+  "inner": {
+    "pos": [
+      104,
+      132
+    ],
+    "pairs": [
+      {
+        "pos": [
+          104,
+          132
+        ],
+        "rule": "declaration",
+        "inner": {
+          "pos": [
+            104,
+            130
+          ],
+          "pairs": [
+            {
+              "pos": [
+                104,
+                107
+              ],
+              "rule": "let_or_rec",
+              "inner": "let"
+            },
+            {
+              "pos": [
+                108,
+                120
+              ],
+              "rule": "pattern",
+              "inner": {
+                "pos": [
+                  108,
+                  120
+                ],
+                "pairs": [
+                  {
+                    "pos": [
+                      108,
+                      120
+                    ],
+                    "rule": "atom_pattern",
+                    "inner": {
+                      "pos": [
+                        108,
+                        120
+                      ],
+                      "pairs": [
+                        {
+                          "pos": [
+                            108,
+                            120
+                          ],
+                          "rule": "identifier",
+                          "inner": {
+                            "pos": [
+                              108,
+                              120
+                            ],
+                            "pairs": [
+                              {
+                                "pos": [
+                                  108,
+                                  120
+                                ],
+                                "rule": "identifier_simple",
+                                "inner": "lexical_json"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "pos": [
+                120,
+                120
+              ],
+              "rule": "prefix_parameters",
+              "inner": ""
+            },
+            {
+              "pos": [
+                122,
+                126
+              ],
+              "rule": "expression",
+              "inner": {
+                "pos": [
+                  122,
+                  126
+                ],
+                "pairs": [
+                  {
+                    "pos": [
+                      122,
+                      126
+                    ],
+                    "rule": "atom",
+                    "inner": {
+                      "pos": [
+                        122,
+                        126
+                      ],
+                      "pairs": [
+                        {
+                          "pos": [
+                            122,
+                            126
+                          ],
+                          "rule": "universe",
+                          "inner": {
+                            "pos": [
+                              126,
+                              126
+                            ],
+                            "pairs": [
+                              {
+                                "pos": [
+                                  126,
+                                  126
+                                ],
+                                "rule": "level",
+                                "inner": ""
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "pos": [
+                129,
+                130
+              ],
+              "rule": "expression",
+              "inner": {
+                "pos": [
+                  129,
+                  130
+                ],
+                "pairs": [
+                  {
+                    "pos": [
+                      129,
+                      130
+                    ],
+                    "rule": "atom",
+                    "inner": {
+                      "pos": [
+                        129,
+                        130
+                      ],
+                      "pairs": [
+                        {
+                          "pos": [
+                            129,
+                            130
+                          ],
+                          "rule": "one",
+                          "inner": "1"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
+Parse successful.

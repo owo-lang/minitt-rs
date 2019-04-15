@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.3.3
+
++ Support printing lexical information of AST (cli flag: `--lexical-json`)
+
 # 0.3.2
 
 + Do nothing if getting empty input in REPL (#22)

@@ -106,7 +106,7 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>
         Some(tcs)
     } else if line.starts_with(LOAD_PFX) {
         Some(
-            match parse_file(line.trim_start_matches(LOAD_CMD).trim_start()) {
+            match parse_file(line.trim_start_matches(LOAD_CMD).trim_start(), false) {
                 Some(ast) => update_tcs(tcs, ast),
                 None => tcs,
             },

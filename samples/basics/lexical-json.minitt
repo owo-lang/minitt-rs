@@ -1,0 +1,7 @@
+--
+-- Created by Dependently-Typed Lambda Calculus on 2019-04-15
+-- lexical-json
+-- Author: yqz5714
+--
+
+let lexical_json: Type = 1;
