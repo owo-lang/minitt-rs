@@ -7,45 +7,60 @@ pub type Level = u32;
 
 /// `Exp` in Mini-TT.
 /// Expression language for Mini-TT.
+///
+/// $M,\ N,\ A,\ B ::=$
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Expression {
     /// $0$
     Unit,
     /// $\textbf{1}$
     One,
-    /// $\texttt{U}$, `Type`
+    /// $\texttt{U}$,
+    /// `Type`. Extended with levels.
     Type(Level),
     /// Empty file
     Void,
-    /// $x$, `bla`
+    /// $x$,
+    /// `bla`
     Var(String),
-    /// $\texttt{Sum} S$, `Sum { Bla x }`
+    /// $\texttt{Sum} \ S$,
+    /// `Sum { Bla x }`
     Sum(Branch),
-    /// $\texttt{split} S$, `split { Bla x => y }`
+    /// $\texttt{fun} \ S$,
+    /// `split { Bla x => y }`
     Split(Branch),
+    /// This is an extension to Mini-TT, `A ++ B`.
     Merge(Box<Self>, Box<Self>),
-    /// $\Pi \_: A. B$, `\Pi a: b. c`
+    /// $\Pi p : A. B$ or $A \rightarrow B$,
+    /// `\Pi a: b. c` or `A -> B`
     Pi(Typed, Box<Self>),
-    /// `\Sigma a: b. c`
+    /// $\Sigma p : A. B$ or $A \times B$,
+    /// `\Sigma a: b. c` or `A * B`
     Sigma(Typed, Box<Self>),
+    /// $\lambda p. M$,
     /// `\lambda a. c`, the optional value is the type of the argument.<br/>
     /// This cannot be specified during parsing because it's used for generated intermediate values
     /// during type-checking.
     Lambda(Pattern, Option<AnonymousValue>, Box<Self>),
+    /// $M.1$,
     /// `bla.1`
     First(Box<Self>),
+    /// $M.2$,
     /// `bla.2`
     Second(Box<Self>),
+    /// $M \ N$,
     /// `f a`
     Application(Box<Self>, Box<Self>),
+    /// $M, N$,
     /// `a, b`
     Pair(Box<Self>, Box<Self>),
-    /// `Cons a`
+    /// $\texttt{c}\ M$, `Cons a`
     Constructor(String, Box<Self>),
-    /// `const bla`, this is an extension: a declaration whose type-signature is inferred.
+    /// `const a = b`, this is an extension: a declaration whose type-signature is inferred.
     /// This is very similar to a `Declaration`.
     Constant(Pattern, Box<Self>, Box<Self>),
-    /// $$, `let bla` or `rec bla`
+    /// $D; M$,
+    /// `let bla` or `rec bla`
     Declaration(Box<Declaration>, Box<Self>),
 }
 
@@ -76,9 +91,10 @@ impl PartialEq<AnonymousValue> for AnonymousValue {
     }
 }
 
+/// $S(M) ::= ()\ |\ (\texttt{c}\ M, S)$
 pub type GenericBranch<T> = BTreeMap<String, Box<T>>;
 
-/// Pattern matching branch.
+/// $S ::= ()\ |\ (\texttt{c}\ M, S)$, Pattern matching branch.
 pub type Branch = GenericBranch<Expression>;
 
 /// This function name is mysterious, but I failed to find a better name. It's for converting a
@@ -92,7 +108,8 @@ pub fn branch_to_righted(branch: Branch, context: Telescope) -> CaseTree {
     case_tree
 }
 
-/// Pattern with type explicitly specified
+/// $p:A$, Pattern with type explicitly specified.
+/// This is just a helper struct.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Typed {
     pub pattern: Pattern,
@@ -116,35 +133,50 @@ impl Typed {
 
 /// `Val` in Mini-TT, value term.<br/>
 /// Terms are either of canonical form or neutral form.
+///
+/// $u,v,t ::=$
 #[derive(Debug, Clone)]
 pub enum Value {
+    /// $\lambda\ f$.
     /// Canonical form: lambda abstraction.
     Lambda(Closure),
+    /// $0$.
     /// Canonical form: unit instance.
     Unit,
+    /// $1$.
     /// Canonical form: unit type.
     One,
+    /// $\texttt{U}$.
     /// Canonical form: type universe.
     Type(Level),
+    /// $\Pi \ t\ g$.
     /// Canonical form: pi type (type for dependent functions).
     Pi(Box<Self>, Closure),
+    /// $\Sigma \ t\ g$.
     /// Canonical form: sigma type (type for dependent pair).
     Sigma(Box<Self>, Closure),
+    /// $u,v$.
     /// Canonical form: Pair value (value for sigma).
     Pair(Box<Self>, Box<Self>),
+    /// $c t$.
     /// Canonical form: call to a constructor.
     Constructor(String, Box<Self>),
+    /// $\texttt{fun}\ s$.
     /// Canonical form: case-split.
     Split(CaseTree),
+    /// $\texttt{Sum}\ s$.
     /// Canonical form: sum type.
     Sum(CaseTree),
+    /// $[k]$.
     /// Neutral form.
     Neutral(Neutral),
 }
 
 /// Generic definition for two kinds of neutral terms.
 ///
-/// Implementing `Eq` because of `NormalExpression`
+/// Implementing `Eq` because of `NormalExpression`.
+///
+/// $k ::=$
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum GenericNeutral<Value: Clone> {
     /// Neutral form: stuck on a free variable.
@@ -166,24 +198,39 @@ pub enum GenericNeutral<Value: Clone> {
 pub type Neutral = GenericNeutral<Value>;
 
 /// `Patt` in Mini-TT.
+///
+/// $p ::=$
 #[derive(Debug, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Pattern {
+    /// $p,p$,
     /// Pair pattern. This sounds like trivial and useless, but we can achieve mutual recursion by
     /// using this pattern.
     Pair(Box<Self>, Box<Self>),
+    /// $_$,
     /// Unit pattern, used for introducing anonymous definitions.
     Unit,
+    /// $x$,
     /// Variable name pattern, the most typical pattern.
     Var(String),
 }
 
 /// `Decl` in Mini-TT.
+/// $D ::= p:A=M\ |\ \texttt{rec}\ p:A=M$
+///
+/// It's supposed to be an `enum` because it can be rec or non-rec, but for
+/// coding convenience I've made it a struct with a `bool` member
+/// (`is_recursive`) to indicate whether it's recursive.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Declaration {
+    /// $p$ in syntax.
     pub pattern: Pattern,
+    /// This is an extension -- declarations can be prefixed with some parameters.
     pub prefix_parameters: Vec<Typed>,
+    /// $A$ in syntax.
     pub signature: Expression,
+    /// $M$ in syntax.
     pub body: Expression,
+    /// Whether the $\texttt{rec}$ is present.
     pub is_recursive: bool,
 }
 
