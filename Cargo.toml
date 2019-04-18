@@ -12,6 +12,7 @@ repository = "https://github.com/owo-lang/minitt-rs"
 
 [package.metadata.docs.rs]
 features = ["parser"]
+rustdoc-args = ["--html-in-header", "rustdoc/katex-header.html", "--document-private-items"]
 
 [badges]
 appveyor = { repository = "owo-lang/minitt-rs", service = "github" }

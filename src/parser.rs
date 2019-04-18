@@ -114,7 +114,7 @@ pub fn expression_to_expression(rules: Tok) -> Expression {
 /// ```ignore
 /// first = { atom ~ ".1" }
 /// ```
-pub fn first_to_expression(the_rule: Tok) -> Expression {
+fn first_to_expression(the_rule: Tok) -> Expression {
     let mut inner: Tik = the_rule.into_inner();
     let pair = next_atom(&mut inner);
     end_of_rule(&mut inner);
@@ -124,7 +124,7 @@ pub fn first_to_expression(the_rule: Tok) -> Expression {
 /// ```ignore
 /// function_type = { atom ~ "->" ~ expression }
 /// ```
-pub fn function_type_to_expression(the_rule: Tok) -> Expression {
+fn function_type_to_expression(the_rule: Tok) -> Expression {
     let (input, output) = atom_and_expression_to_tuple(the_rule);
     Expression::Pi(Typed::new(Pattern::Unit, input), Box::new(output))
 }
@@ -133,13 +133,13 @@ pub fn function_type_to_expression(the_rule: Tok) -> Expression {
 /// multiplication = _{ "*" | "\\times" | "×" }
 /// pair_type = { atom ~ multiplication ~ expression }
 /// ```
-pub fn pair_type_to_expression(the_rule: Tok) -> Expression {
+fn pair_type_to_expression(the_rule: Tok) -> Expression {
     let (first, second) = atom_and_expression_to_tuple(the_rule);
     Expression::Sigma(Typed::new(Pattern::Unit, first), Box::new(second))
 }
 
 /// Helper, extracted.
-pub fn atom_and_expression_to_tuple(the_rule: Tok) -> (Expression, Expression) {
+fn atom_and_expression_to_tuple(the_rule: Tok) -> (Expression, Expression) {
     let mut inner: Tik = the_rule.into_inner();
     let input = next_atom(&mut inner);
     let output = next_expression(&mut inner);
@@ -150,7 +150,7 @@ pub fn atom_and_expression_to_tuple(the_rule: Tok) -> (Expression, Expression) {
 /// ```ignore
 /// second = { atom ~ ".2" }
 /// ```
-pub fn second_to_expression(the_rule: Tok) -> Expression {
+fn second_to_expression(the_rule: Tok) -> Expression {
     let mut inner: Tik = the_rule.into_inner();
     let pair = next_atom(&mut inner);
     end_of_rule(&mut inner);
@@ -160,7 +160,7 @@ pub fn second_to_expression(the_rule: Tok) -> Expression {
 /// ```ignore
 /// pair = { atom ~ "," ~ expression }
 /// ```
-pub fn pair_to_expression(the_rule: Tok) -> Expression {
+fn pair_to_expression(the_rule: Tok) -> Expression {
     let mut inner: Tik = the_rule.into_inner();
     let first = next_atom(&mut inner);
     let second = next_expression(&mut inner);
@@ -171,7 +171,7 @@ pub fn pair_to_expression(the_rule: Tok) -> Expression {
 /// ```ignore
 /// application = { atom ~ expression }
 /// ```
-pub fn application_to_expression(the_rule: Tok) -> Expression {
+fn application_to_expression(the_rule: Tok) -> Expression {
     let mut inner: Tik = the_rule.into_inner();
     let function = next_atom(&mut inner);
     let argument = next_expression(&mut inner);
@@ -183,7 +183,7 @@ pub fn application_to_expression(the_rule: Tok) -> Expression {
 /// prefix_parameter = { "(" ~ typed_pattern ~ ")" }
 /// prefix_parameters = { prefix_parameter* }
 /// ```
-pub fn prefix_parameters_to_vec(the_rule: Tok) -> Vec<Typed> {
+fn prefix_parameters_to_vec(the_rule: Tok) -> Vec<Typed> {
     let mut map: Vec<Typed> = Default::default();
     for prefix_parameter in the_rule.into_inner() {
         let mut inner: Tik = prefix_parameter.into_inner();
@@ -204,7 +204,7 @@ pub fn prefix_parameters_to_vec(the_rule: Tok) -> Vec<Typed> {
 ///  ~ ";" ~ expression?
 ///  }
 /// ```
-pub fn declaration_to_expression(the_rule: Tok) -> Expression {
+fn declaration_to_expression(the_rule: Tok) -> Expression {
     let mut inner: Tik = the_rule.into_inner();
     let let_or_rec_rule = inner.next().unwrap();
     let rec = match let_or_rec_rule.as_str() {
@@ -233,7 +233,7 @@ pub fn declaration_to_expression(the_rule: Tok) -> Expression {
 ///  ~ ";" ~ expression?
 ///  }
 /// ```
-pub fn const_declaration_to_expression(the_rule: Tok) -> Expression {
+fn const_declaration_to_expression(the_rule: Tok) -> Expression {
     let mut inner: Tik = the_rule.into_inner();
     let name = next_pattern(&mut inner);
     let body = next_expression(&mut inner);
@@ -248,7 +248,7 @@ pub fn const_declaration_to_expression(the_rule: Tok) -> Expression {
 /// ```ignore
 /// merge_sum = { atom ~ "++" ~ expression }
 /// ```
-pub fn merge_sum_to_expression(the_rule: Tok) -> Expression {
+fn merge_sum_to_expression(the_rule: Tok) -> Expression {
     let mut inner: Tik = the_rule.into_inner();
     let lhs = next_atom(&mut inner);
     let rhs = next_expression(&mut inner);
@@ -271,7 +271,7 @@ pub fn merge_sum_to_expression(the_rule: Tok) -> Expression {
 ///   | "(" ~ expression ~ ")"
 ///   }
 /// ```
-pub fn atom_to_expression(rules: Tok) -> Expression {
+fn atom_to_expression(rules: Tok) -> Expression {
     let the_rule: Tok = rules.into_inner().next().unwrap();
     match the_rule.as_rule() {
         Rule::universe => universe_to_expression(the_rule),
@@ -293,7 +293,7 @@ pub fn atom_to_expression(rules: Tok) -> Expression {
 /// branches = _{ "{" ~ (constructor ~ ("|" ~ constructor)*)? ~ "}" }
 /// constructor = { constructor_name ~ expression }
 /// ```
-pub fn branches_to_tree_map(the_rule: Tok) -> Branch {
+fn branches_to_tree_map(the_rule: Tok) -> Branch {
     let mut map: Branch = Default::default();
     for constructor in the_rule.into_inner() {
         let mut inner: Tik = constructor.into_inner();
@@ -312,7 +312,7 @@ pub fn branches_to_tree_map(the_rule: Tok) -> Branch {
 /// choices = _{ "{" ~ (pattern_match ~ ("|" ~ pattern_match)*)? ~ "}" }
 /// pattern_match = { constructor_name ~ maybe_pattern ~ "=>" ~ expression }
 /// ```
-pub fn choices_to_tree_map(the_rule: Tok) -> Branch {
+fn choices_to_tree_map(the_rule: Tok) -> Branch {
     let mut map: Branch = Default::default();
     for pattern_match in the_rule.into_inner() {
         let mut inner: Tik = pattern_match.into_inner();
@@ -331,7 +331,7 @@ pub fn choices_to_tree_map(the_rule: Tok) -> Branch {
 /// pi = ${ ("\\Pi" | "\u{03A0}") ~ level }
 /// pi_type = { pi ~ level ~ typed_abstraction }
 /// ```
-pub fn pi_type_to_expression(the_rule: Tok) -> Expression {
+fn pi_type_to_expression(the_rule: Tok) -> Expression {
     let (first_name, first_type, second) = typed_abstraction_to_tuple(the_rule);
     Expression::Pi(Typed::new(first_name, first_type), Box::new(second))
 }
@@ -340,7 +340,7 @@ pub fn pi_type_to_expression(the_rule: Tok) -> Expression {
 /// sigma = ${ ("\\Sigma" | "\u{03A3}") ~ level }
 /// pi_type = { pi ~ typed_abstraction }
 /// ```
-pub fn sigma_type_to_expression(the_rule: Tok) -> Expression {
+fn sigma_type_to_expression(the_rule: Tok) -> Expression {
     let (input_name, input_type, output) = typed_abstraction_to_tuple(the_rule);
     Expression::Sigma(Typed::new(input_name, input_type), Box::new(output))
 }
@@ -348,7 +348,7 @@ pub fn sigma_type_to_expression(the_rule: Tok) -> Expression {
 /// ```ignore
 /// typed_abstraction = _{ pattern ~ ":" ~ expression ~ "." ~ expression }
 /// ```
-pub fn typed_abstraction_to_tuple(the_rule: Tok) -> (Pattern, Expression, Expression) {
+fn typed_abstraction_to_tuple(the_rule: Tok) -> (Pattern, Expression, Expression) {
     let mut inner: Tik = the_rule.into_inner();
     let input_name = next_pattern(&mut inner);
     let input_type = next_expression(&mut inner);
@@ -361,7 +361,7 @@ pub fn typed_abstraction_to_tuple(the_rule: Tok) -> (Pattern, Expression, Expres
 /// atom_pattern = { identifier | meta_var | "(" ~ pattern ~ ")" }
 /// pattern = { pair_pattern | atom_pattern }
 /// ```
-pub fn atom_pattern_to_pattern(the_rule: Tok) -> Pattern {
+fn atom_pattern_to_pattern(the_rule: Tok) -> Pattern {
     let rule: Tok = the_rule.into_inner().next().unwrap();
     match rule.as_rule() {
         Rule::identifier => Pattern::Var(identifier_to_name(rule)),
@@ -375,7 +375,7 @@ pub fn atom_pattern_to_pattern(the_rule: Tok) -> Pattern {
 /// pair_pattern = { atom_pattern ~ "," ~ pattern }
 /// pattern = { pair_pattern | atom_pattern }
 /// ```
-pub fn pattern_to_pattern(the_rule: Tok) -> Pattern {
+fn pattern_to_pattern(the_rule: Tok) -> Pattern {
     let rule: Tok = the_rule.into_inner().next().unwrap();
     match rule.as_rule() {
         Rule::pair_pattern => {
@@ -394,7 +394,7 @@ pub fn pattern_to_pattern(the_rule: Tok) -> Pattern {
 /// lambda = _{ lambda unicode | "\\lambda" }
 /// lambda_expression = { lambda ~ pattern ~ "." ~ expression }
 /// ```
-pub fn lambda_expression_to_expression(the_rule: Tok) -> Expression {
+fn lambda_expression_to_expression(the_rule: Tok) -> Expression {
     let mut inner: Tik = the_rule.into_inner();
     let parameter = next_pattern(&mut inner);
     let body = next_expression(&mut inner);
@@ -403,7 +403,7 @@ pub fn lambda_expression_to_expression(the_rule: Tok) -> Expression {
 }
 
 /// Constructor as an expression
-pub fn constructor_to_expression(the_rule: Tok) -> Expression {
+fn constructor_to_expression(the_rule: Tok) -> Expression {
     let (constructor, argument) = constructor_to_tuple(the_rule);
     Expression::Constructor(constructor, Box::new(argument))
 }
@@ -412,7 +412,7 @@ pub fn constructor_to_expression(the_rule: Tok) -> Expression {
 /// level = { ASCII_DIGIT* }
 /// universe = @{ "Type" ~ level }
 /// ```
-pub fn universe_to_expression(the_rule: Tok) -> Expression {
+fn universe_to_expression(the_rule: Tok) -> Expression {
     let mut inner: Tik = the_rule.into_inner();
     let level = inner.next().unwrap().as_str();
     Expression::Type(level.parse().unwrap_or(0))
@@ -422,7 +422,7 @@ pub fn universe_to_expression(the_rule: Tok) -> Expression {
 /// constructor_name = @{ ASCII_ALPHA_UPPER ~ identifier? }
 /// constructor = { constructor_name ~ expression }
 /// ```
-pub fn constructor_to_tuple(the_rule: Tok) -> (String, Expression) {
+fn constructor_to_tuple(the_rule: Tok) -> (String, Expression) {
     let mut inner: Tik = the_rule.into_inner();
     let constructor = next_constructor_name(&mut inner);
     let argument = inner
@@ -436,7 +436,7 @@ pub fn constructor_to_tuple(the_rule: Tok) -> (String, Expression) {
 /// ```ignore
 /// maybe_pattern = { pattern? }
 /// ```
-pub fn maybe_pattern_to_pattern(the_rule: Tok) -> Pattern {
+fn maybe_pattern_to_pattern(the_rule: Tok) -> Pattern {
     let mut inner: Tik = the_rule.into_inner();
     let pattern = inner
         .next()
@@ -449,7 +449,7 @@ pub fn maybe_pattern_to_pattern(the_rule: Tok) -> Pattern {
 /// ```ignore
 /// variable = { identifier }
 /// ```
-pub fn variable_to_expression(the_rule: Tok) -> Expression {
+fn variable_to_expression(the_rule: Tok) -> Expression {
     let mut inner: Tik = the_rule.into_inner();
     let name = next_rule!(inner, identifier, identifier_to_name);
     end_of_rule(&mut inner);
@@ -459,7 +459,7 @@ pub fn variable_to_expression(the_rule: Tok) -> Expression {
 /// ```ignore
 /// identifier = @{ !"let" ~ !"rec" ~ !"0" ~ !"1" ~ character+ }
 /// ```
-pub fn identifier_to_name(rule: Tok) -> String {
+fn identifier_to_name(rule: Tok) -> String {
     rule.as_span().as_str().to_string()
 }
 

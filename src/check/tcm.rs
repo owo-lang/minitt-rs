@@ -11,7 +11,7 @@ use crate::check::read_back::NormalExpression;
 /// Type-Checking context. Name as key, type of the declaration as value.
 pub type GammaRaw = BTreeMap<String, Value>;
 
-/// `Gamma` in Mini-TT.<br/>
+/// `Gamma` in Mini-TT, denoted as $\Gamma$.<br/>
 /// By aliasing `BTreeMap` to `Gamma`, we get `lookupG` in Mini-TT for free.
 pub type Gamma<'a> = Cow<'a, GammaRaw>;
 
@@ -32,11 +32,11 @@ pub enum TCE {
     WantSigmaBut(Value),
     /// We can get the argument of application here, to better report error.
     WantPiBut(Value, Expression),
-    /// Actually first value, expected second value
+    /// Actually first value, expected second value.
     TypeMismatch(Value, Value),
-    /// Want a type's type, but unfortunately it's not
+    /// Want a type's type, but unfortunately it's not.
     NotTypeType(Value),
-    /// Actually first level, expected second level
+    /// Actually first level, expected second level.
     LevelMismatch(Level, Level),
     /// First argument is inferred value, second is expected.
     ReadBackTypeMismatch(NormalExpression, NormalExpression),
@@ -219,7 +219,9 @@ macro_rules! update_gamma {
 }
 
 /// Move version of `upG` in Mini-TT.<br/>
-/// `Gamma |- p : t = u => Gamma’`<br/><br/>
+/// $$
+/// \Gamma \vdash p : t = u \Rightarrow \Gamma\'
+/// $$
 /// `Cow` is used to simulate immutability.
 pub fn update_gamma<'a>(
     gamma: Gamma<'a>,

@@ -1,5 +1,5 @@
 #![doc(
-    html_logo_url = "https://raw.githubusercontent.com/owo-lang/minitt-rs/master/samples/icon.svg?sanitize=true"
+    html_logo_url = "https://raw.githubusercontent.com/owo-lang/minitt-rs/master/rustdoc/icon.svg?sanitize=true"
 )]
 /*!
 Reading the [README](https://github.com/owo-lang/minitt-rs/blob/master/README.md) is recommended

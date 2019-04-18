@@ -9,22 +9,22 @@ pub type Level = u32;
 /// Expression language for Mini-TT.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Expression {
-    /// `0`
+    /// $0$
     Unit,
-    /// `1`
+    /// $\textbf{1}$
     One,
-    /// `Type`
+    /// $\texttt{U}$, `Type`
     Type(Level),
     /// Empty file
     Void,
-    /// `bla`
+    /// $x$, `bla`
     Var(String),
-    /// `Sum { Bla x }`
+    /// $\texttt{Sum} S$, `Sum { Bla x }`
     Sum(Branch),
-    /// `split { Bla x => y }`
+    /// $\texttt{split} S$, `split { Bla x => y }`
     Split(Branch),
     Merge(Box<Self>, Box<Self>),
-    /// `\Pi a: b. c`
+    /// $\Pi \_: A. B$, `\Pi a: b. c`
     Pi(Typed, Box<Self>),
     /// `\Sigma a: b. c`
     Sigma(Typed, Box<Self>),
@@ -45,7 +45,7 @@ pub enum Expression {
     /// `const bla`, this is an extension: a declaration whose type-signature is inferred.
     /// This is very similar to a `Declaration`.
     Constant(Pattern, Box<Self>, Box<Self>),
-    /// `let bla` or `rec bla`
+    /// $$, `let bla` or `rec bla`
     Declaration(Box<Declaration>, Box<Self>),
 }
 
