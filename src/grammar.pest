@@ -41,9 +41,13 @@ multiplication = _{ "*" | "\\times" | "\xd7" | "\u{2716}" }
 for_all = _{ "\\forall" | "\u{2200}" }
 double_arrow = _{ "=>" | "\u{21d2}" }
 single_arrow = _{ "->" | "\u{2192}" }
+///#E0957B
 let_or_rec = { "let" | "rec" }
+///#E0957B
 one = { "1" }
+///#E0957B
 unit = { "0" }
+///Cyan
 universe = ${ "Type" ~ level }
 void = { EOI }
 meta_var = { "_" }
@@ -55,6 +59,7 @@ prefix_parameters = { prefix_parameter* }
 // Patterns
 atom_pattern = { identifier | meta_var | "(" ~ pattern ~ ")" }
 pair_pattern = { atom_pattern ~ "," ~ pattern }
+///Orange
 pattern = { pair_pattern | atom_pattern }
 maybe_pattern = { pattern? }
 
