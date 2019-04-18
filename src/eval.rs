@@ -39,7 +39,20 @@ impl Pattern {
     }
 }
 
-impl TelescopeRaw {
+impl GenericTelescope<Value> {
+    /// $$
+    /// \textnormal{If} \ x \ \textnormal{is\ in}\ p, \\\\
+    /// \begin{alignedat}{2}
+    ///   & (\rho, p=v)(x) &&= \texttt{proj}^p_x(v) \\\\
+    ///   & (\rho, p:A=M)(x) &&= \texttt{proj}^p_x(⟦ M ⟧ \rho) \\\\
+    ///   & (\rho, \texttt{rec} p:A=M)(x) &&= \texttt{proj}^p_x(⟦ M ⟧ (\rho, \texttt{rec}\ p:A=M))
+    /// \end{alignedat} \\\\
+    /// \textnormal{If} \ x \ \textnormal{is\ not\ in}\ p, \\\\
+    /// \begin{alignedat}{2}
+    ///   & (\rho, p=v)(x) &&= \rho(x) \\\\
+    ///   & (\rho, D)(x) &&= \rho(x) \\\\
+    /// \end{alignedat}
+    /// $$
     /// `getRho` in Mini-TT.
     pub fn resolve(&self, name: &str) -> Result<Value, String> {
         use crate::ast::GenericTelescope::*;
@@ -72,6 +85,12 @@ impl TelescopeRaw {
 }
 
 impl Closure {
+    /// $$
+    /// \begin{alignedat}{2}
+    ///   & \texttt{inst} \lang \lambda p.M, \rho \rang v &&= ⟦ M ⟧ (\rho,p=v) \\\\
+    ///   & \texttt{inst} (f \circ c) v &&= \texttt{inst} \ f (c \ v)
+    /// \end{alignedat}
+    /// $$
     /// `*` in Mini-TT.<br/>
     /// Instantiate a closure with `val`.
     pub fn instantiate(self, value: Value) -> Value {
@@ -88,6 +107,7 @@ impl Closure {
 }
 
 impl Value {
+    /// This is not present in Mini-TT.<br/>
     /// Calculate the level of `self`, return `None` if it's not a type value.
     pub fn level_safe(&self) -> Option<Level> {
         use crate::ast::Value::*;
@@ -118,12 +138,19 @@ impl Value {
         }
     }
 
+    /// This is not present in Mini-TT.<br/>
     /// This is called `levelView` in Agda.
     pub fn level(&self) -> u32 {
         self.level_safe()
             .unwrap_or_else(|| panic!("Cannot calculate the level of: `{}`.", self))
     }
 
+    /// $$
+    /// \begin{alignedat}{2}
+    ///   & (u,v).1 &&= u \\\\
+    ///   & [k].1 &&= [k.1] \\\\
+    /// \end{alignedat}
+    /// $$
     /// `vfst` in Mini-TT.<br/>
     /// Run `.1` on a Pair.
     pub fn first(self) -> Self {
@@ -135,6 +162,12 @@ impl Value {
         }
     }
 
+    /// $$
+    /// \begin{alignedat}{2}
+    ///   & (u,v).2 &&= v \\\\
+    ///   & [k].2 &&= [k.2] \\\\
+    /// \end{alignedat}
+    /// $$
     /// `vsnd` in Mini-TT.<br/>
     /// Run `.2` on a Pair.
     pub fn second(self) -> Self {
@@ -160,6 +193,17 @@ impl Value {
         }
     }
 
+    /// $$
+    /// \begin{alignedat}{2}
+    ///  & \texttt{app} (\lambda \ f) v &&= \texttt{inst} \ f \ v \\\\
+    ///  & \texttt{app} (\texttt{fun}\lang S,\rho \rang (c_i \ v) &&=
+    ///       \texttt{app}(⟦ M\_i ⟧ \rho)v \\\\
+    ///  &    && \ \ \ \ \ \ \textnormal{where}
+    ///       \ S=(c_1 \rightarrow M_1 | ... | c_n \rightarrow M_n) \\\\
+    ///  & \texttt{app} (\texttt{fun} \ s) [k] &&= [s \ k] \\\\
+    ///  & \texttt{app} [k] \ v &&= [k \ v]
+    /// \end{alignedat}
+    /// $$
     /// `app` in Mini-TT.
     pub fn apply(self, argument: Self) -> Self {
         use crate::ast::GenericNeutral as Neutral;
@@ -186,6 +230,7 @@ impl Value {
 }
 
 impl Expression {
+    /// This is not present in Mini-TT.<br/>
     /// Return `true` if `self` is a `Sum` or `Merge`.
     /// This is quite expensive! Can we optimize it a little bit?
     pub fn eval_to_sum(self, context: Telescope) -> Option<Vec<String>> {
@@ -195,6 +240,27 @@ impl Expression {
         }
     }
 
+    /// $$
+    /// \begin{alignedat}{2}
+    ///   & ⟦ \lambda p.M ⟧ \rho &&= \lang \lambda p.M,\rho \rang \\\\
+    ///   & ⟦ x ⟧ \rho &&= \rho(x) \\\\
+    ///   & ⟦ M \ N ⟧ \rho &&= \texttt{app} (⟦ M ⟧ \rho, ⟦ N ⟧ \rho) \\\\
+    ///   & ⟦ \Pi \ p:A.B ⟧ \rho &&= \Pi (⟦ A ⟧ \rho) \lang \lambda p.B,\rho \rang \\\\
+    ///   & ⟦ \texttt{U} ⟧ \rho &&= \texttt{U} \\\\
+    ///   & ⟦ D; M ⟧ \rho &&= ⟦ M ⟧ (\rho(x); D) \\\\
+    ///  & && \\\\
+    ///   & ⟦ M,N ⟧ \rho &&= (⟦ M ⟧ \rho, ⟦ N ⟧ \rho) \\\\
+    ///   & ⟦ 0 ⟧ \rho &&= 0 \\\\
+    ///   & ⟦ M.1 ⟧ \rho &&= (⟦ M\rho ⟧).1 \\\\
+    ///   & ⟦ M.2 ⟧ \rho &&= (⟦ M\rho ⟧).2 \\\\
+    ///   & ⟦ \Sigma \ p:A.B ⟧ \rho &&= \Sigma (⟦ A ⟧ \rho) \lang \lambda p.B,\rho \rang \\\\
+    ///   & ⟦ \textbf{1} ⟧ \rho &&= \textbf{1} \\\\
+    ///  & && \\\\
+    ///   & ⟦ c \ M ⟧ \rho &&= c(⟦ M ⟧ \rho) \\\\
+    ///   & ⟦ \texttt{fun} \ S ⟧ \rho &&= \texttt{fun} \lang S,\rho \rang \\\\
+    ///   & ⟦ \texttt{Sum} \ S ⟧ \rho &&= \texttt{Sum} \lang S,\rho \rang
+    /// \end{alignedat}
+    /// $$
     /// `eval` in Mini-TT.<br/>
     /// Evaluate an [`Expression`] to a [`Value`] under a [`Telescope`],
     /// panic if not well-typed.

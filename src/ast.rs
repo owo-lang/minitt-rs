@@ -143,7 +143,7 @@ pub enum Value {
     /// $0$.
     /// Canonical form: unit instance.
     Unit,
-    /// $1$.
+    /// $textbf{1}$.
     /// Canonical form: unit type.
     One,
     /// $\texttt{U}$.
@@ -176,17 +176,22 @@ pub enum Value {
 ///
 /// Implementing `Eq` because of `NormalExpression`.
 ///
-/// $k ::=$
+/// $k(v) ::=$
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum GenericNeutral<Value: Clone> {
+    /// $\texttt{x}_n$.
     /// Neutral form: stuck on a free variable.
     Generated(u32),
+    /// $k\ v$.
     /// Neutral form: stuck on applying on a free variable.
     Application(Box<Self>, Box<Value>),
+    /// $k.1$.
     /// Neutral form: stuck on trying to find the first element of a free variable.
     First(Box<Self>),
+    /// $k.2$.
     /// Neutral form: stuck on trying to find the second element of a free variable.
     Second(Box<Self>),
+    /// $s\ k$.
     /// Neutral form: stuck on trying to case-split a free variable.
     Split(
         GenericBranch<GenericCase<Either<Value, Expression>, Value>>,
@@ -194,6 +199,7 @@ pub enum GenericNeutral<Value: Clone> {
     ),
 }
 
+/// $k ::= k(v)$.
 /// `Neut` in Mini-TT, neutral value.
 pub type Neutral = GenericNeutral<Value>;
 
@@ -206,7 +212,7 @@ pub enum Pattern {
     /// Pair pattern. This sounds like trivial and useless, but we can achieve mutual recursion by
     /// using this pattern.
     Pair(Box<Self>, Box<Self>),
-    /// $_$,
+    /// \_,
     /// Unit pattern, used for introducing anonymous definitions.
     Unit,
     /// $x$,
@@ -280,8 +286,10 @@ impl Declaration {
 // TODO: replace with Vec<enum {Dec, Var}> maybe?
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum GenericTelescope<Value: Clone> {
-    /// Empty telescope
+    /// $()$,
+    /// Empty telescope.
     Nil,
+    /// $\rho, p=D$,
     /// In Mini-TT, checked declarations are put here. However, it's not possible to store a
     /// recursive declaration as an `Expression` (which is a member of `Declaration`) here.
     ///
@@ -297,15 +305,16 @@ pub enum GenericTelescope<Value: Clone> {
     /// -- Unresolved reference
     /// ```
     UpDec(Rc<Self>, Declaration),
+    /// $\rho, p=v$,
     /// Usually a local variable, introduced in your telescope
     UpVar(Rc<Self>, Pattern, Value),
 }
 
-pub type TelescopeRaw = GenericTelescope<Value>;
 pub type TelescopeRc<Value> = Rc<GenericTelescope<Value>>;
 
+/// $\rho ::= \rho(v)$
 /// `Rho` in Mini-TT, dependent context.
-pub type Telescope = Rc<TelescopeRaw>;
+pub type Telescope = Rc<GenericTelescope<Value>>;
 
 /// Just for simplifying constructing an `Rc`.
 pub fn up_var_rc<Value: Clone>(
@@ -330,16 +339,20 @@ pub fn nil_rc<Value: Clone>() -> TelescopeRc<Value> {
 }
 
 /// `Clos` in Mini-TT.
+///
+/// $f,g ::=$
 #[derive(Debug, Clone)]
 pub enum Closure {
+    /// $\lang \lambda p.M,\rho \rang$,
     /// `cl` in Mini-TT.<br/>
     /// Closure that does a pattern matching.
     ///
     /// Members: pattern, parameter type (optional), body expression and the captured scope.
     Abstraction(Pattern, Option<Box<Value>>, Expression, Box<Telescope>),
-    /// This is not present in Mini-TT.<br/>
+    /// This is not present in Mini-TT, thus an extension.<br/>
     /// Sometimes the closure is already an evaluated value.
     Value(Box<Value>),
+    /// $f \circ c$
     /// `clCmp` in Mini-TT.<br/>
     /// Closure that was inside of a case-split.
     ///
@@ -371,6 +384,7 @@ impl<Expression, Value: Clone> GenericCase<Expression, Value> {
 /// One single case in case trees.
 pub type Case = GenericCase<Either<Value, Expression>, Value>;
 
+/// $\lang S,\rho \rang$,
 /// `SClos` in Mini-TT.<br/>
 /// Case tree.
 pub type CaseTree = GenericBranch<Case>;

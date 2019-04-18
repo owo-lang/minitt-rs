@@ -125,7 +125,7 @@ impl ReadBack for Case {
     }
 }
 
-impl ReadBack for &TelescopeRaw {
+impl ReadBack for &GenericTelescope<Value> {
     type NormalForm = NormalTelescope;
 
     /// `rbRho` in Mini-TT.
