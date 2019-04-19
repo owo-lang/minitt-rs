@@ -8,6 +8,13 @@ use either::{Either, Left, Right};
 use crate::ast::{nil_rc, up_var_rc, Closure, Expression, Level, Pattern, Telescope, Value};
 use crate::check::read_back::NormalExpression;
 
+/// Since we have no place to document `lookupG` I'll put it here:
+/// $$
+/// \frac{}{(\Gamma, a:t)(x)\rightarrow t}
+/// \quad
+/// \frac{\Gamma(x) \rightarrow t}
+/// {(\Gamma, y:t')(x)\rightarrow t} y \neq x
+/// $$
 /// Type-Checking context. Name as key, type of the declaration as value.
 pub type GammaRaw = BTreeMap<String, Value>;
 
@@ -221,7 +228,14 @@ macro_rules! update_gamma {
 
 /// Move version of `upG` in Mini-TT.<br/>
 /// $$
-/// \Gamma \vdash p : t = u \Rightarrow \Gamma\'
+/// \frac{}{\Gamma \vdash x:t=v\Rightarrow \Gamma,x:t}
+/// \quad
+/// \frac{}{\Gamma \vdash \_:t=v\Rightarrow \Gamma}
+/// \newline
+/// \newline
+/// \frac{\Gamma \vdash p_1:t_1=v.1 \Rightarrow \Gamma_1
+///   \quad \Gamma \vdash p_2:\textsf{inst}\ g(v.1)=v.2 \Rightarrow \Gamma_2}
+///  {\Gamma \vdash (p_1,p_2):\Sigma\ t_1\ g=v\Rightarrow \Gamma_2}
 /// $$
 /// `Cow` is used to simulate immutability.
 pub fn update_gamma<'a>(
@@ -253,6 +267,7 @@ pub fn update_gamma_lazy<'a>(
     update_gamma!(gamma, pattern, type_val, body())
 }
 
+/// Some minor helper specialized from other functions.
 fn update_gamma_by_pair<'a>(
     gamma: Gamma<'a>,
     pattern_first: &Box<Pattern>,
@@ -267,6 +282,7 @@ fn update_gamma_by_pair<'a>(
     update_gamma(gamma, pattern_second, second, val_second)
 }
 
+/// Some minor helper specialized from other functions.
 fn update_gamma_by_var<'a>(gamma: Gamma<'a>, type_val: Value, name: &String) -> TCM<Gamma<'a>> {
     let mut gamma = gamma.into_owned();
     gamma.insert(name.clone(), type_val);

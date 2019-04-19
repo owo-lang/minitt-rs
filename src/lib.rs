@@ -77,6 +77,10 @@ But not the case for even a bit more complicated structures, like lambdas.
 
 ### `checkD`
 
+$$
+\textnormal{checkD}\quad \rho,\Gamma\vdash_l D\Rightarrow \Gamma'
+$$
+
 Each program is a sequence of definitions, each definition comes with a type signature and a body
 expression. We check the definitions one by one, after checking each definition we add it to the
 context and check the rest. For recursive definitions, we generate a neutral value before actually
@@ -92,6 +96,10 @@ complicated implementation.
 + [Prefix parameters checking](check/decl/fn.check_lift_parameters.html)
 
 ### `check`
+
+$$
+\textnormal{check}\quad \rho,\Gamma\vdash_l M\Leftarrow t
+$$
 
 This is the so-called `instance of` check, the function name in Mini-TT paper is `check`.
 
@@ -112,12 +120,20 @@ normal form and do a syntactic comparison with the `read-back`ed expected type s
 
 ### `checkI`
 
+$$
+\textnormal{checkI}\quad \rho,\Gamma\vdash_l M\Rightarrow t
+$$
+
 Try to infer the type of a given expression.
 
 Mini-TT cannot infer types of lambdas or other complicated expressions like nested function calls,
 but in minitt this situation has changed with the help of prefix parameters.
 
 ### `checkT`
+
+$$
+\textnormal{checkT}\quad \rho,\Gamma\vdash_l A
+$$
 
 Check if an expression is a type expression, returns the type's level because only `Value` have the
 method [`level()`](ast/enum.Value.html#method.level) (while returning the level is the only way for
