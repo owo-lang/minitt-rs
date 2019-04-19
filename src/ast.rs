@@ -15,7 +15,7 @@ pub enum Expression {
     Unit,
     /// $\textbf{1}$
     One,
-    /// $\texttt{U}$,
+    /// $\textsf{U}$,
     /// `Type`. Extended with levels.
     Type(Level),
     /// Empty file
@@ -23,10 +23,10 @@ pub enum Expression {
     /// $x$,
     /// `bla`
     Var(String),
-    /// $\texttt{Sum} \ S$,
+    /// $\textsf{Sum} \ S$,
     /// `Sum { Bla x }`
     Sum(Branch),
-    /// $\texttt{fun} \ S$,
+    /// $\textsf{fun} \ S$,
     /// `split { Bla x => y }`
     Split(Branch),
     /// This is an extension to Mini-TT, `A ++ B`.
@@ -54,7 +54,7 @@ pub enum Expression {
     /// $M, N$,
     /// `a, b`
     Pair(Box<Self>, Box<Self>),
-    /// $\texttt{c}\ M$, `Cons a`
+    /// $\textsf{c}\ M$, `Cons a`
     Constructor(String, Box<Self>),
     /// `const a = b`, this is an extension: a declaration whose type-signature is inferred.
     /// This is very similar to a `Declaration`.
@@ -91,10 +91,10 @@ impl PartialEq<AnonymousValue> for AnonymousValue {
     }
 }
 
-/// $S(M) ::= ()\ |\ (\texttt{c}\ M, S)$
+/// $S(M) ::= ()\ |\ (\textsf{c}\ M, S)$
 pub type GenericBranch<T> = BTreeMap<String, Box<T>>;
 
-/// $S ::= ()\ |\ (\texttt{c}\ M, S)$, Pattern matching branch.
+/// $S ::= ()\ |\ (\textsf{c}\ M, S)$, Pattern matching branch.
 pub type Branch = GenericBranch<Expression>;
 
 /// This function name is mysterious, but I failed to find a better name. It's for converting a
@@ -146,7 +146,7 @@ pub enum Value {
     /// $textbf{1}$.
     /// Canonical form: unit type.
     One,
-    /// $\texttt{U}$.
+    /// $\textsf{U}$.
     /// Canonical form: type universe.
     Type(Level),
     /// $\Pi \ t\ g$.
@@ -161,10 +161,10 @@ pub enum Value {
     /// $c t$.
     /// Canonical form: call to a constructor.
     Constructor(String, Box<Self>),
-    /// $\texttt{fun}\ s$.
+    /// $\textsf{fun}\ s$.
     /// Canonical form: case-split.
     Split(CaseTree),
-    /// $\texttt{Sum}\ s$.
+    /// $\textsf{Sum}\ s$.
     /// Canonical form: sum type.
     Sum(CaseTree),
     /// $[k]$.
@@ -179,7 +179,7 @@ pub enum Value {
 /// $k(v) ::=$
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum GenericNeutral<Value: Clone> {
-    /// $\texttt{x}_n$.
+    /// $\textsf{x}_n$.
     /// Neutral form: stuck on a free variable.
     Generated(u32),
     /// $k\ v$.
@@ -221,7 +221,7 @@ pub enum Pattern {
 }
 
 /// `Decl` in Mini-TT.
-/// $D ::= p:A=M\ |\ \texttt{rec}\ p:A=M$
+/// $D ::= p:A=M\ |\ \textsf{rec}\ p:A=M$
 ///
 /// It's supposed to be an `enum` because it can be rec or non-rec, but for
 /// coding convenience I've made it a struct with a `bool` member
@@ -236,7 +236,7 @@ pub struct Declaration {
     pub signature: Expression,
     /// $M$ in syntax.
     pub body: Expression,
-    /// Whether the $\texttt{rec}$ is present.
+    /// Whether the $\textsf{rec}$ is present.
     pub is_recursive: bool,
 }
 
@@ -317,6 +317,7 @@ pub type TelescopeRc<Value> = Rc<GenericTelescope<Value>>;
 pub type Telescope = Rc<GenericTelescope<Value>>;
 
 /// Just for simplifying constructing an `Rc`.
+/// $\rho, p=v$
 pub fn up_var_rc<Value: Clone>(
     me: TelescopeRc<Value>,
     pattern: Pattern,
@@ -326,6 +327,7 @@ pub fn up_var_rc<Value: Clone>(
 }
 
 /// Just for simplifying constructing an `Rc`.
+/// $\rho, p=D$
 pub fn up_dec_rc<Value: Clone>(
     me: TelescopeRc<Value>,
     declaration: Declaration,
@@ -334,6 +336,7 @@ pub fn up_dec_rc<Value: Clone>(
 }
 
 /// Because we can't `impl` a `Default` for `Rc`.
+/// $()$
 pub fn nil_rc<Value: Clone>() -> TelescopeRc<Value> {
     Rc::new(GenericTelescope::Nil)
 }

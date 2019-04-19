@@ -12,6 +12,15 @@ impl Pattern {
         }
     }
 
+    /// $$
+    /// \begin{alignedat}{2}
+    ///  & \textsf{proj}^x_x(v) &&= v \\\\
+    ///  & \textsf{proj}^{(p_1,p_2)}_x (v) &&= \textsf{proj}^{p_1}_x (v.1)
+    ///   \ \textnormal{if}\ x\ \textnormal{is\ in}\ p_1, \\\\
+    ///  & \textsf{proj}^{(p_1,p_2)}_x (v) &&= \textsf{proj}^{p_2}_x (v.2)
+    ///   \ \textnormal{if}\ x\ \textnormal{is\ in}\ p_2
+    /// \end{alignedat}
+    /// $$
     /// `patProj` in Mini-TT.
     pub fn project(&self, name: &str, val: Value) -> Result<Value, String> {
         match self {
@@ -43,9 +52,10 @@ impl GenericTelescope<Value> {
     /// $$
     /// \textnormal{If} \ x \ \textnormal{is\ in}\ p, \\\\
     /// \begin{alignedat}{2}
-    ///   & (\rho, p=v)(x) &&= \texttt{proj}^p_x(v) \\\\
-    ///   & (\rho, p:A=M)(x) &&= \texttt{proj}^p_x(⟦ M ⟧ \rho) \\\\
-    ///   & (\rho, \texttt{rec} p:A=M)(x) &&= \texttt{proj}^p_x(⟦ M ⟧ (\rho, \texttt{rec}\ p:A=M))
+    ///   & (\rho, p=v)(x) &&= \textsf{proj}^p_x(v) \\\\
+    ///   & (\rho, p:A=M)(x) &&= \textsf{proj}^p_x(⟦ M ⟧ \rho) \\\\
+    ///   & (\rho, \textsf{rec}\ p:A=M)(x) &&=
+    ///     \textsf{proj}^p_x(⟦ M ⟧ (\rho, \textsf{rec}\ p:A=M))
     /// \end{alignedat} \\\\
     /// \textnormal{If} \ x \ \textnormal{is\ not\ in}\ p, \\\\
     /// \begin{alignedat}{2}
@@ -87,8 +97,8 @@ impl GenericTelescope<Value> {
 impl Closure {
     /// $$
     /// \begin{alignedat}{2}
-    ///   & \texttt{inst} \lang \lambda p.M, \rho \rang v &&= ⟦ M ⟧ (\rho,p=v) \\\\
-    ///   & \texttt{inst} (f \circ c) v &&= \texttt{inst} \ f (c \ v)
+    ///   & \textsf{inst} \lang \lambda p.M, \rho \rang v &&= ⟦ M ⟧ (\rho,p=v) \\\\
+    ///   & \textsf{inst} (f \circ c) v &&= \textsf{inst} \ f (c \ v)
     /// \end{alignedat}
     /// $$
     /// `*` in Mini-TT.<br/>
@@ -195,13 +205,13 @@ impl Value {
 
     /// $$
     /// \begin{alignedat}{2}
-    ///  & \texttt{app} (\lambda \ f) v &&= \texttt{inst} \ f \ v \\\\
-    ///  & \texttt{app} (\texttt{fun}\lang S,\rho \rang (c_i \ v) &&=
-    ///       \texttt{app}(⟦ M\_i ⟧ \rho)v \\\\
+    ///  & \textsf{app} (\lambda \ f) v &&= \textsf{inst} \ f \ v \\\\
+    ///  & \textsf{app} (\textsf{fun}\lang S,\rho \rang (c_i \ v) &&=
+    ///       \textsf{app}(⟦ M\_i ⟧ \rho)v \\\\
     ///  &    && \ \ \ \ \ \ \textnormal{where}
     ///       \ S=(c_1 \rightarrow M_1 | ... | c_n \rightarrow M_n) \\\\
-    ///  & \texttt{app} (\texttt{fun} \ s) [k] &&= [s \ k] \\\\
-    ///  & \texttt{app} [k] \ v &&= [k \ v]
+    ///  & \textsf{app} (\textsf{fun} \ s) [k] &&= [s \ k] \\\\
+    ///  & \textsf{app} [k] \ v &&= [k \ v]
     /// \end{alignedat}
     /// $$
     /// `app` in Mini-TT.
@@ -244,9 +254,9 @@ impl Expression {
     /// \begin{alignedat}{2}
     ///   & ⟦ \lambda p.M ⟧ \rho &&= \lang \lambda p.M,\rho \rang \\\\
     ///   & ⟦ x ⟧ \rho &&= \rho(x) \\\\
-    ///   & ⟦ M \ N ⟧ \rho &&= \texttt{app} (⟦ M ⟧ \rho, ⟦ N ⟧ \rho) \\\\
+    ///   & ⟦ M \ N ⟧ \rho &&= \textsf{app} (⟦ M ⟧ \rho, ⟦ N ⟧ \rho) \\\\
     ///   & ⟦ \Pi \ p:A.B ⟧ \rho &&= \Pi (⟦ A ⟧ \rho) \lang \lambda p.B,\rho \rang \\\\
-    ///   & ⟦ \texttt{U} ⟧ \rho &&= \texttt{U} \\\\
+    ///   & ⟦ \textsf{U} ⟧ \rho &&= \textsf{U} \\\\
     ///   & ⟦ D; M ⟧ \rho &&= ⟦ M ⟧ (\rho(x); D) \\\\
     ///  & && \\\\
     ///   & ⟦ M,N ⟧ \rho &&= (⟦ M ⟧ \rho, ⟦ N ⟧ \rho) \\\\
@@ -257,12 +267,12 @@ impl Expression {
     ///   & ⟦ \textbf{1} ⟧ \rho &&= \textbf{1} \\\\
     ///  & && \\\\
     ///   & ⟦ c \ M ⟧ \rho &&= c(⟦ M ⟧ \rho) \\\\
-    ///   & ⟦ \texttt{fun} \ S ⟧ \rho &&= \texttt{fun} \lang S,\rho \rang \\\\
-    ///   & ⟦ \texttt{Sum} \ S ⟧ \rho &&= \texttt{Sum} \lang S,\rho \rang
+    ///   & ⟦ \textsf{fun} \ S ⟧ \rho &&= \textsf{fun} \lang S,\rho \rang \\\\
+    ///   & ⟦ \textsf{Sum} \ S ⟧ \rho &&= \textsf{Sum} \lang S,\rho \rang
     /// \end{alignedat}
     /// $$
     /// `eval` in Mini-TT.<br/>
-    /// Evaluate an [`Expression`] to a [`Value`] under a [`Telescope`],
+    /// Evaluate an `Expression` to a `Value` under a `Telescope`,
     /// panic if not well-typed.
     pub fn eval(self, context: Telescope) -> Value {
         use crate::ast::Expression as E;

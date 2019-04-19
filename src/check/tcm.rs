@@ -11,7 +11,8 @@ use crate::check::read_back::NormalExpression;
 /// Type-Checking context. Name as key, type of the declaration as value.
 pub type GammaRaw = BTreeMap<String, Value>;
 
-/// `Gamma` in Mini-TT, denoted as $\Gamma$.<br/>
+/// $\Gamma ::= () \ | \ \Gamma, x : t$,
+/// `Gamma` in Mini-TT.<br/>
 /// By aliasing `BTreeMap` to `Gamma`, we get `lookupG` in Mini-TT for free.
 pub type Gamma<'a> = Cow<'a, GammaRaw>;
 
