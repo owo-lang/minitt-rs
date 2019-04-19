@@ -143,7 +143,7 @@ pub enum Value {
     /// $0$.
     /// Canonical form: unit instance.
     Unit,
-    /// $textbf{1}$.
+    /// $\textbf{1}$.
     /// Canonical form: unit type.
     One,
     /// $\textsf{U}$.
@@ -158,7 +158,7 @@ pub enum Value {
     /// $u,v$.
     /// Canonical form: Pair value (value for sigma).
     Pair(Box<Self>, Box<Self>),
-    /// $c t$.
+    /// $c \ t$.
     /// Canonical form: call to a constructor.
     Constructor(String, Box<Self>),
     /// $\textsf{fun}\ s$.

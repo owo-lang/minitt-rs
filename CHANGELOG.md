@@ -2,6 +2,8 @@
 
 # 0.3.5
 
++ Fix some problematic LaTeX comments
+
 # 0.3.4
 
 + Add KaTeX support in rustdoc
