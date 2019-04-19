@@ -1,5 +1,14 @@
 # Change Log
 
+# 0.3.4
+
++ Add KaTeX support in rustdoc
++ Documented these modules with their inference rules:
+  + `check/tcm.rs`
+  + `ast.rs`
+  + `eval.rs`
++ Move icon location
+
 # 0.3.3
 
 + Support printing lexical information of AST (cli flag: `--lexical-json`)
