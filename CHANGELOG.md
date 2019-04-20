@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.3.6
+
++ Fix a display problem on docs.rs
+
 # 0.3.5
 
 + Fix some problematic LaTeX comments

@@ -28,10 +28,6 @@ Mini-TT does not support (while you may expect it to support):
 
 Mini-TT does not, but minitt does support:
 
-<!---
-+ Functions returning functions (curried functions) (cubicaltt supports this too) with the
-  help of an [additional member of lambda expressions](ast/struct.AnonymousValue.html)
---->
 + Infer types of expressions that appears deeply inside an expression
 + Constant expressions with type signature completely inferred
 + Universe levels and its subtyping
