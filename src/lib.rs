@@ -28,8 +28,10 @@ Mini-TT does not support (while you may expect it to support):
 
 Mini-TT does not, but minitt does support:
 
+<!---
 + Functions returning functions (curried functions) (cubicaltt supports this too) with the
   help of an [additional member of lambda expressions](ast/struct.AnonymousValue.html)
+--->
 + Infer types of expressions that appears deeply inside an expression
 + Constant expressions with type signature completely inferred
 + Universe levels and its subtyping
@@ -39,6 +41,12 @@ Mini-TT does not, but minitt does support:
 
 [Version 0.1.8](https://docs.rs/crate/minitt/0.1.8) of minitt is basically a vanilla Mini-TT,
 several extensions are introduced in later versions.
+
+For those who want to have a try on minitt:
+Please do notice that function application in minitt is right-associative, which is very-very
+(very-very-very-very) anti-intuitive. This is because the parser is implemented primarily for
+debugging the type-checker, it's not for general-purpose programming.
+If you want to write some real code, I recommend [Voile](https://github.com/owo-lang/voile-rs).
 
 ## Syntax Trees
 

@@ -58,9 +58,9 @@ pub fn check_lift_parameters<'a>(
 
 /// $$
 /// \frac{\rho,\Gamma\vdash\_l A
-///       \quad \Gamma\vdash p:t=[\textsf{x}]\_l\Rightarrow \Gamma\_1
-///       \quad (\rho,p=[\textsf{x}]\_l),\Gamma\vdash\_{l+1} M\Leftarrow t
-///       \Gamma\vdash p:t=v\Rightarrow \Gamma\_2}
+///       \quad \Gamma\vdash p:t=[\textsf{x}\_l]\Rightarrow \Gamma\_1
+///       \quad (\rho,p=[\textsf{x}\_l]),\Gamma\vdash\_{l+1} M\Leftarrow t
+///       \quad \Gamma\vdash p:t=v\Rightarrow \Gamma\_2}
 ///      {\rho,\Gamma\vdash\_l \textsf{rec}\ p:A=M\Rightarrow \Gamma\_2}
 /// $$
 /// $$

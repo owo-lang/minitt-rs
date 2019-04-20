@@ -3,11 +3,11 @@ use std::collections::BTreeMap;
 
 use either::Either;
 
+use super::decl::check_declaration;
+use super::read_back::generate_value;
+use super::subtype::check_subtype;
+use super::tcm::{update_gamma, TCE, TCM, TCS};
 use crate::ast::{Branch, Closure, Expression, GenericCase, Level, Typed, Value};
-use crate::check::decl::check_declaration;
-use crate::check::read_back::generate_value;
-use crate::check::subtype::check_subtype;
-use crate::check::tcm::{update_gamma, TCE, TCM, TCS};
 
 /// `checkI` in Mini-TT.<br/>
 /// Type inference rule. More inferences are added here (maybe it's useful?).

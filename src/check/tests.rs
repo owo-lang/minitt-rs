@@ -1,5 +1,5 @@
+use super::{check_declaration_main, check_main};
 use crate::ast::{Declaration, Expression, Pattern};
-use crate::check::{check_declaration_main, check_main};
 
 #[test]
 fn simple_check() {

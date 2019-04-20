@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
+use super::read_back::{generate_value, ReadBack};
+use super::tcm::{TCE, TCM, TCS};
 use crate::ast::{Case, Value};
-use crate::check::read_back::{generate_value, ReadBack};
-use crate::check::tcm::{TCE, TCM, TCS};
 
 /// Check if `subtype` is the subtype of `supertype`.
 pub fn check_subtype(

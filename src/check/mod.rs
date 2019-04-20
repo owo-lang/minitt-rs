@@ -39,10 +39,10 @@ pub mod expr;
 /// $$
 pub mod decl;
 
+use self::decl::check_declaration;
+use self::expr::{check, check_infer};
+use self::tcm::{TCM, TCS};
 use crate::ast::{Declaration, Expression, Value};
-use crate::check::decl::check_declaration;
-use crate::check::expr::{check, check_infer};
-use crate::check::tcm::{TCM, TCS};
 
 /// `checkMain` in Mini-TT.
 pub fn check_main<'a>(expression: Expression) -> TCM<TCS<'a>> {

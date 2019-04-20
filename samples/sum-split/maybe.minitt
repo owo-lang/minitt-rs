@@ -7,19 +7,13 @@ let unwrap_type (t : Type): (maybe t) -> Type = split
   | Nothing => 1
   };
 
--- let unwrap_bad: \Pi t: Type. \Pi mt: maybe t. (unwrap_type t) mt = \lambda t.
---   the (\Pi mt: maybe t. (unwrap_type t) mt) split
---     { Just a => a
---     | Nothing => 0
---     };
+let unwrap_bad: \Pi t: Type. \Pi mt: maybe t. (unwrap_type t) mt = \lambda t.
+  (the (\Pi mt: maybe t. ((unwrap_type t) mt))) split
+    { Just a => a
+    | Nothing => 0
+    };
 
--- The above definition won't work, because Mini-TT model is so stupid:
--- when it type-checks a declaration, it checks several hard-coded patterns of
--- well-typed expressions. When non of the rules matches, it tries to infer the
--- expression's type and compare with the signature.
-
--- And, as you can imagine, it cannot infer `split`'s type signature obviously.
--- Look at this cubicaltt-like replacement:
+-- A cubicaltt-like replacement:
 
 let unwrap (t : Type): \Pi mt: maybe t. (unwrap_type t) mt = split
   -- I'm so sorry for the dumb parser, function application is accidentally

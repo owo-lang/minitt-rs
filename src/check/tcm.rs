@@ -5,8 +5,8 @@ use std::fmt::{Display, Error, Formatter};
 
 use either::{Either, Left, Right};
 
+use super::read_back::NormalExpression;
 use crate::ast::{nil_rc, up_var_rc, Closure, Expression, Level, Pattern, Telescope, Value};
-use crate::check::read_back::NormalExpression;
 
 /// Since we have no place to document `lookupG` I'll put it here:
 /// $$
