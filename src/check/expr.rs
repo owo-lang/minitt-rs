@@ -108,6 +108,26 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
     }
 }
 
+/// $$
+/// \frac{}{\rho,\Gamma\vdash_l \textsf{U}}
+/// $$
+/// $$
+/// \frac{\rho,\Gamma\vdash_l A
+///       \quad \Gamma\vdash p:⟦A⟧\rho=[\textsf{x}\_l]\Rightarrow\Gamma_1
+///       \quad (\rho,p=[\textsf{x}\_l]), \Gamma\_1\vdash\_{l+1}B}
+///      {\rho,\Gamma\vdash_l \Pi\ p:A.B}
+/// $$
+/// $$
+/// \frac{\rho,\Gamma\vdash_l A
+///       \quad \Gamma\vdash p:⟦A⟧\rho=[\textsf{x}\_l]\Rightarrow\Gamma_1
+///       \quad (\rho,p=[\textsf{x}\_l]), \Gamma\_1\vdash\_{l+1}B}
+///      {\rho,\Gamma\vdash_l \Sigma\ p:A.B}
+/// $$
+/// $$
+/// \frac{\rho,\Gamma\vdash_l A\Leftarrow\textsf{U}}
+///      {\rho,\Gamma\vdash_l A}
+/// \textnormal{(if other rules are not applicable)}
+/// $$
 /// `checkT` in Mini-TT.<br/>
 /// Check if an expression is a well-typed type expression.
 pub fn check_type(index: u32, tcs: TCS, expression: Expression) -> TCM<(Level, TCS)> {

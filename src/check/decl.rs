@@ -12,6 +12,7 @@ macro_rules! try_locate {
     };
 }
 
+/// Internal state when lifting prefix-parameters.
 pub type LiftState<'a> = (Expression, Expression, TCS<'a>);
 
 /// $$
