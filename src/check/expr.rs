@@ -9,6 +9,26 @@ use super::subtype::check_subtype;
 use super::tcm::{update_gamma, TCE, TCM, TCS};
 use crate::ast::{Branch, Closure, Expression, GenericCase, Level, Typed, Value};
 
+/// $$
+/// \frac{\Gamma(x)\rightarrow t}
+///      {\rho,\Gamma\vdash\_l x\Rightarrow t}
+/// \quad
+/// \frac{\rho,\Gamma\vdash\_l M \Rightarrow \Pi\ t\ g
+///       \quad \rho,\Gamma\vdash\_l N\Leftarrow t}
+///      {\rho,\Gamma\vdash\_l M\ N \Rightarrow \textsf{inst}\ g(⟦N⟧\rho)}
+/// $$
+/// $$
+/// \frac{}{\rho,\Gamma\vdash\_l 0 \Rightarrow \textbf{1}}
+/// \quad
+/// \frac{}{\rho,\Gamma\vdash\_l \textbf{1} \Rightarrow \textsf{U}}
+/// $$
+/// $$
+/// \frac{\rho,\Gamma\vdash\_l M\Rightarrow \Sigma\ t\ g}
+///      {\rho,\Gamma\vdash\_l M.1\Rightarrow t}
+/// \quad
+/// \frac{\rho,\Gamma\vdash\_l M\Rightarrow \Sigma\ t\ g}
+///      {\rho,\Gamma\vdash\_l M.2 \Rightarrow \textsf{inst}\ g((⟦M⟧\rho).1)}
+/// $$
 /// `checkI` in Mini-TT.<br/>
 /// Type inference rule. More inferences are added here (maybe it's useful?).
 pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Value> {
@@ -175,6 +195,31 @@ pub fn check_merge_type(
     Ok((max(left_level, right_level), tcs))
 }
 
+/// $$
+/// \frac{\rho,\Gamma\vdash\_l M\Leftarrow ⟦A\_i⟧v}
+///      {\rho,\Gamma\vdash\_l c\_i \ M \Leftarrow \textsf{Sum}
+///       \lang c\_1\ A\_1 | \dots | c\_n\ A\_n,v \rang}
+/// $$
+/// $$
+/// \frac{}{\rho,\Gamma\vdash\_l 0 \Leftarrow \textbf{1}}
+/// \quad
+/// \frac{}{\rho,\Gamma\vdash\_l \textbf{1} \Leftarrow \textsf{U}}
+/// $$
+/// $$
+/// \frac{\rho,\Gamma\vdash_l M\_1\Leftarrow \Pi(⟦A\_1⟧v)(g \circ c\_1)
+///       \dots
+///       \rho,\Gamma\vdash_l M\_n\Leftarrow \Pi(⟦A\_n⟧v)(g \circ c\_n)}
+///      {\rho,\Gamma\vdash\_l \textsf{fun}(c\_1\rightarrow M\_1 | \dots | c\_n \rightarrow M\_n)
+///       \Leftarrow \Pi(\textsf{Sum}\lang c\_1:A\_1 | \dots | c\_n:A\_n,v \rang)g}
+/// $$
+/// $$
+/// \frac{\rho,\Gamma\vdash\_l D\Rightarrow \Gamma\_1
+///       \quad (\rho,\Gamma),\Gamma\_1\vdash\_l M\Leftarrow t}
+///      {\rho,\Gamma\vdash\_l D; M\Leftarrow t}
+/// $$
+/// $$
+/// \dots (\textnormal{There are too many, please checkout the original paper for more})
+/// $$
 /// `check` in Mini-TT.<br/>
 /// However, telescope and gamma are preserved for REPL use.
 pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> TCM<TCS> {
@@ -268,6 +313,9 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
     }
 }
 
+/// $$
+/// \frac{i < j}{\Gamma\vdash \textsf{U}\_i <: \textsf{U}\_j}
+/// $$
 /// Level comparison
 pub fn check_level(level: u32, (actual_level, tcs): (u32, TCS)) -> TCM<TCS> {
     if actual_level <= level {
@@ -277,6 +325,11 @@ pub fn check_level(level: u32, (actual_level, tcs): (u32, TCS)) -> TCM<TCS> {
     }
 }
 
+/// $$
+/// \frac{\rho,\Gamma\vdash\_l M \Rightarrow t'
+///       \quad \textsf{R}\_l t = \textsf{R}\_l t'}
+///      {\rho,\Gamma\vdash\_l M\Leftarrow t}
+/// $$
 /// Fallback rule of instance check.<br/>
 /// First infer the expression type, then do subtyping comparison.
 pub fn check_fallback(index: u32, tcs: TCS, body: Expression, signature: Value) -> TCM<TCS> {
@@ -284,6 +337,13 @@ pub fn check_fallback(index: u32, tcs: TCS, body: Expression, signature: Value) 
     check_subtype(index, tcs, inferred, signature, true)
 }
 
+/// $$
+/// \frac{\rho,\Gamma\vdash\_l A\_1\Leftarrow \textsf{U}
+///       \dots
+///       \rho,\Gamma\vdash\_l A\_n\Leftarrow \textsf{U}}
+///      {\rho,\Gamma\vdash\_l
+///       \textsf{Sum}(c\_1\ A\_1|\dots|c\_n\ A\_n)\Leftarrow \textsf{U}}
+/// $$
 /// To reuse code that checks if a sum type is well-typed between `check_type` and `check`
 pub fn check_sum_type(index: u32, mut tcs: TCS, constructors: Branch) -> TCM<(Level, TCS)> {
     let mut max_level = 0;
@@ -297,6 +357,12 @@ pub fn check_sum_type(index: u32, mut tcs: TCS, constructors: Branch) -> TCM<(Le
     Ok((max_level, tcs))
 }
 
+/// $$
+/// \frac{\rho,\Gamma\vdash_l A
+///       \quad \Gamma\vdash p:⟦A⟧\rho=[\textsf{x}\_l]\Rightarrow\Gamma_1
+///       \quad (\rho,p=[\textsf{x}\_l]), \Gamma\_1\vdash\_{l+1}B}
+///      {\rho,\Gamma\vdash\_l (\Pi /\Sigma) \ p:A.B}
+/// $$
 /// To reuse code that checks if a sigma or a pi type is well-typed between `check_type` and `check`
 pub fn check_telescoped(
     index: u32,
