@@ -3,6 +3,8 @@
 # 0.3.5
 
 + Fix some problematic LaTeX comments
++ Documented all the other modules with their inference rules
+  and evaluation rules (if any)
 
 # 0.3.4
 

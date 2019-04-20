@@ -316,7 +316,7 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
 /// $$
 /// \frac{i < j}{\Gamma\vdash \textsf{U}\_i <: \textsf{U}\_j}
 /// $$
-/// Level comparison
+/// Level comparison.
 pub fn check_level(level: u32, (actual_level, tcs): (u32, TCS)) -> TCM<TCS> {
     if actual_level <= level {
         Ok(tcs)
@@ -327,7 +327,7 @@ pub fn check_level(level: u32, (actual_level, tcs): (u32, TCS)) -> TCM<TCS> {
 
 /// $$
 /// \frac{\rho,\Gamma\vdash\_l M \Rightarrow t'
-///       \quad \textsf{R}\_l t = \textsf{R}\_l t'}
+///       \quad \textsf{R}\_l\ t = \textsf{R}\_l\ t'}
 ///      {\rho,\Gamma\vdash\_l M\Leftarrow t}
 /// $$
 /// Fallback rule of instance check.<br/>
