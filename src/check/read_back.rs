@@ -19,18 +19,31 @@ pub type NormalNeutral = GenericNeutral<NormalExpression>;
 
 /// `NExp` in Mini-TT, normal form expressions.<br/>
 /// Deriving `Eq` so we can do comparison.
+///
+/// $E ::=$
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum NormalExpression {
+    /// $\lambda \textsf{x}_i\  .\ E$
     Lambda(u32, Box<Self>),
+    /// $E_1, E_2$
     Pair(Box<Self>, Box<Self>),
+    /// $0$
     Unit,
+    /// $\textbf{1}$
     One,
+    /// $\textsf{U}$
     Type(Level),
+    /// $\Pi \textsf{x}_i:E_1.E_2$
     Pi(Box<Self>, u32, Box<Self>),
+    /// $\Sigma \textsf{x}_i:E_1.E_2$
     Sigma(Box<Self>, u32, Box<Self>),
+    /// $c\ E$
     Constructor(String, Box<Self>),
+    /// $\textsf{fun}\lang S,\alpha \rang$
     Split(NormalCaseTree),
+    /// $\textsf{Sum}\lang S,\alpha \rang$
     Sum(NormalCaseTree),
+    /// $[K]$
     Neutral(NormalNeutral),
 }
 
@@ -49,6 +62,37 @@ pub trait ReadBack: Sized {
     /// This is needed because Rust does not support Higher-Kinded Types :(
     type NormalForm: Eq + Display;
 
+    /// $$
+    /// \begin{alignedat}{2}
+    ///   & \textsf{R}_i (\lambda \ f) &&= \lambda \ \textsf{x}_i
+    ///      \ . \ \textsf{R}\_{i+1} (\textsf{inst}\ f [ \textsf{x}\_i ]) \\\\
+    ///   & \textsf{R}_i (u,v) &&= (\textsf{R}_i u,\textsf{R}_i v) \\\\
+    ///   & \textsf{R}_i 0 &&= 0 \\\\
+    ///   & \textsf{R}_i (c\ v) &&= c \ (\textsf{R}_i v) \\\\
+    ///   & \textsf{R}_i (\textsf{fun}\lang S,\rho\rang) &&= \textsf{fun}\lang S,
+    ///      \textsf{R}_i \rho\rang \\\\
+    ///   & \textsf{R}_i (\textsf{Sum}\lang S,\rho\rang) &&= \textsf{Sum}\lang S,
+    ///      \textsf{R}_i \rho\rang \\\\
+    ///   & \textsf{R}_i \textsf{U} &&= \textsf{U} \\\\
+    ///   & \textsf{R}_i \textbf{1} &&= \textbf{1} \\\\
+    ///   & \textsf{R}_i (\Pi\ t\ g) &&= \Pi \textsf{x}_i : \textsf{R}\_i \ t
+    ///      \ . \ \textsf{R}\_{i+1} (\textsf{inst}\ g [ \textsf{x}\_i ]) \\\\
+    ///   & \textsf{R}_i (\Sigma\ t\ g) &&= \Sigma \textsf{x}_i : \textsf{R}\_i \ t
+    ///      \ . \ \textsf{R}\_{i+1} (\textsf{inst}\ g [ \textsf{x}\_i ]) \\\\
+    ///   & \textsf{R}_i [k] &&= [\textsf{R}\_i\ k] \\\\
+    ///   & && \\\\
+    ///   & \textsf{R}_i \textsf{x}\_j &&= \textsf{x}\_j \\\\
+    ///   & \textsf{R}_i (k\ v) &&= (\textsf{R}_i\ k) (\textsf{R}_i\ v) \\\\
+    ///   & \textsf{R}_i (k.1) &&= (\textsf{R}_i\ k) .1 \\\\
+    ///   & \textsf{R}_i (k.2) &&= (\textsf{R}_i\ k) .2 \\\\
+    ///   & \textsf{R}_i (\lang S,\rho \rang\ k) &&=
+    ///      \lang S,\textsf{R}\_i \rho \rang (\textsf{R}_i\ k) \\\\
+    ///   & && \\\\
+    ///   & \textsf{R}_i (\rho,p=v) &&= \textsf{R}_i\ \rho,p=\textsf{R}\_i\ v \\\\
+    ///   & \textsf{R}_i (\rho,D) &&= \textsf{R}_i\ \rho,D \\\\
+    ///   & \textsf{R}_i () &&= ()
+    /// \end{alignedat}
+    /// $$
     /// Interface for `rbV`, `rbN` and `rbRho` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm;
 
@@ -69,6 +113,26 @@ pub trait ReadBack: Sized {
 impl ReadBack for Value {
     type NormalForm = NormalExpression;
 
+    /// $$
+    /// \begin{alignedat}{2}
+    ///   & \textsf{R}_i (\lambda \ f) &&= \lambda \ \textsf{x}_i
+    ///      \ . \ \textsf{R}\_{i+1} (\textsf{inst}\ f [ \textsf{x}\_i ]) \\\\
+    ///   & \textsf{R}_i (u,v) &&= (\textsf{R}_i u,\textsf{R}_i v) \\\\
+    ///   & \textsf{R}_i 0 &&= 0 \\\\
+    ///   & \textsf{R}_i (c\ v) &&= c \ (\textsf{R}_i v) \\\\
+    ///   & \textsf{R}_i (\textsf{fun}\lang S,\rho\rang) &&= \textsf{fun}\lang S,
+    ///      \textsf{R}_i \rho\rang \\\\
+    ///   & \textsf{R}_i (\textsf{Sum}\lang S,\rho\rang) &&= \textsf{Sum}\lang S,
+    ///      \textsf{R}_i \rho\rang \\\\
+    ///   & \textsf{R}_i \textsf{U} &&= \textsf{U} \\\\
+    ///   & \textsf{R}_i \textbf{1} &&= \textbf{1} \\\\
+    ///   & \textsf{R}_i (\Pi\ t\ g) &&= \Pi \textsf{x}_i : \textsf{R}\_i \ t
+    ///      \ . \ \textsf{R}\_{i+1} (\textsf{inst}\ g [ \textsf{x}\_i ]) \\\\
+    ///   & \textsf{R}_i (\Sigma\ t\ g) &&= \Sigma \textsf{x}_i : \textsf{R}\_i \ t
+    ///      \ . \ \textsf{R}\_{i+1} (\textsf{inst}\ g [ \textsf{x}\_i ]) \\\\
+    ///   & \textsf{R}_i [k] &&= [\textsf{R}\_i\ k]
+    /// \end{alignedat}
+    /// $$
     /// `rbV` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm {
         use crate::check::read_back::NormalExpression::*;
@@ -128,6 +192,13 @@ impl ReadBack for Case {
 impl ReadBack for &GenericTelescope<Value> {
     type NormalForm = NormalTelescope;
 
+    /// $$
+    /// \begin{alignedat}{2}
+    ///   & \textsf{R}_i (\rho,p=v) &&= \textsf{R}_i\ \rho,p=\textsf{R}\_i\ v \\\\
+    ///   & \textsf{R}_i (\rho,D) &&= \textsf{R}_i\ \rho,D \\\\
+    ///   & \textsf{R}_i () &&= ()
+    /// \end{alignedat}
+    /// $$
     /// `rbRho` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm {
         use crate::ast::GenericTelescope::*;
@@ -148,6 +219,16 @@ impl ReadBack for &GenericTelescope<Value> {
 impl ReadBack for Neutral {
     type NormalForm = NormalNeutral;
 
+    /// $$
+    /// \begin{alignedat}{2}
+    ///   & \textsf{R}_i \textsf{x}\_j &&= \textsf{x}\_j \\\\
+    ///   & \textsf{R}_i (k\ v) &&= (\textsf{R}_i\ k) (\textsf{R}_i\ v) \\\\
+    ///   & \textsf{R}_i (k.1) &&= (\textsf{R}_i\ k) .1 \\\\
+    ///   & \textsf{R}_i (k.2) &&= (\textsf{R}_i\ k) .2 \\\\
+    ///   & \textsf{R}_i (\lang S,\rho \rang\ k) &&=
+    ///     \lang S,\textsf{R}\_i \rho \rang (\textsf{R}_i\ k)
+    /// \end{alignedat}
+    /// $$
     /// `rbN` in Mini-TT.
     fn read_back(self, index: u32) -> Self::NormalForm {
         use crate::ast::GenericNeutral::*;
