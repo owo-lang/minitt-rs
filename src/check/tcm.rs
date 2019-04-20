@@ -231,8 +231,8 @@ macro_rules! update_gamma {
 /// \frac{}{\Gamma \vdash x:t=v\Rightarrow \Gamma,x:t}
 /// \quad
 /// \frac{}{\Gamma \vdash \_:t=v\Rightarrow \Gamma}
-/// \newline
-/// \newline
+/// $$
+/// $$
 /// \frac{\Gamma \vdash p_1:t_1=v.1 \Rightarrow \Gamma_1
 ///   \quad \Gamma \vdash p_2:\textsf{inst}\ g(v.1)=v.2 \Rightarrow \Gamma_2}
 ///  {\Gamma \vdash (p_1,p_2):\Sigma\ t_1\ g=v\Rightarrow \Gamma_2}

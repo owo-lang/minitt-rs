@@ -14,6 +14,17 @@ macro_rules! try_locate {
 
 pub type LiftState<'a> = (Expression, Expression, TCS<'a>);
 
+/// $$
+/// \frac{\rho \ \texttt{empty} \quad T:\textsf{U} \quad a:T}
+///      {\textnormal{checkLiftD}(a,T,\rho)}
+/// $$
+/// $$
+/// \frac{\rho\equiv[(v,T)::\rho'] \quad T:\textsf{U}
+///       \quad v:T\vdash R:\textsf{U}
+///       \quad \Gamma,v:T\vdash\textnormal{checkLiftD}(a,R,\rho')}
+///      {\Gamma\vdash\textnormal{checkLiftD}(\lambda v.a,\Pi (v:T).R,\rho)}
+/// $$
+/// This is an extension, it's not present in Mini-TT.<br/>
 /// Lift all these `parameters` into the context.<br/>
 /// Returning `TCS` to reuse the variable.
 ///
@@ -44,6 +55,16 @@ pub fn check_lift_parameters<'a>(
     ))
 }
 
+/// $$
+/// \frac{\rho,\Gamma\vdash\_l A
+///       \quad \Gamma\vdash p:t=[\textsf{x}]\_l\Rightarrow \Gamma\_1
+///       \quad (\rho,p=[\textsf{x}]\_l),\Gamma\vdash\_{l+1} M\Leftarrow t
+///       \Gamma\vdash p:t=v\Rightarrow \Gamma\_2}
+///      {\rho,\Gamma\vdash\_l \textsf{rec}\ p:A=M\Rightarrow \Gamma\_2}
+/// $$
+/// $$
+/// \dbinom{t=⟦A⟧\rho,}{v=⟦M⟧(\rho,\textsf{rec}\ p:A=M)}
+/// $$
 /// Extracted from `checkD` in Mini-TT.<br/>
 /// This part deals with recursive declarations, but without prefixed parameters.
 pub fn check_recursive_declaration(index: u32, tcs: TCS, declaration: Declaration) -> TCM<Gamma> {
@@ -66,6 +87,15 @@ pub fn check_recursive_declaration(index: u32, tcs: TCS, declaration: Declaratio
     .map_err(|err| try_locate!(err, pattern))
 }
 
+/// $$
+/// \frac{\rho,\Gamma\vdash_l A
+///       \quad \rho,\Gamma\vdash_l M\Leftarrow t
+///       \quad \Gamma\vdash p:t=⟦M⟧\rho\Rightarrow \Gamma_1}
+///      {\rho,\Gamma\vdash_l p:A=M\Rightarrow \Gamma_1}
+/// $$
+/// $$
+/// (t=⟦M⟧\rho)
+/// $$
 /// Extracted from `checkD` in Mini-TT.<br/>
 /// This part deals with non-recursive declarations, but without prefixed parameters.
 pub fn check_simple_declaration(

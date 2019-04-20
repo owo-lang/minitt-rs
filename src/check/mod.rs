@@ -34,6 +34,9 @@ pub mod expr;
 /// Declaration checker: for prefix parameters, simple declarations and recursive declarations.
 ///
 /// Depends on modules `syntax`, `expr` and `tcm`.
+/// $$
+/// \textnormal{checkD}\quad \rho,\Gamma\vdash_l D\Rightarrow \Gamma'
+/// $$
 pub mod decl;
 
 use crate::ast::{Declaration, Expression, Value};
