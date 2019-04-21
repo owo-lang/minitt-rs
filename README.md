@@ -19,7 +19,7 @@
  [clap]: https://clap.rs/
  [pest]: https://pest.rs/
  [rustyline]: https://docs.rs/rustyline/
- [icon]: https://raw.githubusercontent.com/owo-lang/minitt-rs/master/samples/icon.svg?sanitize=true
+ [icon]: https://raw.githubusercontent.com/owo-lang/minitt-rs/master/rustdoc/icon.svg?sanitize=true
  [plugin]: https://github.com/owo-lang/intellij-dtlc/
 
 Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
