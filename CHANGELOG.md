@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.3.7
+
++ Fix a typo on docs.rs
+
 # 0.3.6
 
 + Fix a display problem on docs.rs

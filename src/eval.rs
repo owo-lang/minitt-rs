@@ -206,7 +206,7 @@ impl Value {
     /// $$
     /// \begin{alignedat}{2}
     ///  & \textsf{app} (\lambda \ f) v &&= \textsf{inst} \ f \ v \\\\
-    ///  & \textsf{app} (\textsf{fun}\lang S,\rho \rang (c_i \ v) &&=
+    ///  & \textsf{app} (\textsf{fun}\lang S,\rho \rang (c_i \ v)) &&=
     ///       \textsf{app}(⟦ M\_i ⟧ \rho)v \\\\
     ///  &    && \ \ \ \ \ \ \textnormal{where}
     ///       \ S=(c_1 \rightarrow M_1 | ... | c_n \rightarrow M_n) \\\\
