@@ -1,25 +1,25 @@
 {
   "pos": [
     104,
-    132
+    185
   ],
   "rule": "expression",
   "inner": {
     "pos": [
       104,
-      132
+      185
     ],
     "pairs": [
       {
         "pos": [
           104,
-          132
+          185
         ],
         "rule": "declaration",
         "inner": {
           "pos": [
             104,
-            130
+            185
           ],
           "pairs": [
             {
@@ -175,6 +175,308 @@
                           ],
                           "rule": "one",
                           "inner": "1"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "pos": [
+                133,
+                185
+              ],
+              "rule": "expression",
+              "inner": {
+                "pos": [
+                  133,
+                  185
+                ],
+                "pairs": [
+                  {
+                    "pos": [
+                      133,
+                      185
+                    ],
+                    "rule": "const_declaration",
+                    "inner": {
+                      "pos": [
+                        139,
+                        185
+                      ],
+                      "pairs": [
+                        {
+                          "pos": [
+                            139,
+                            146
+                          ],
+                          "rule": "pattern",
+                          "inner": {
+                            "pos": [
+                              139,
+                              146
+                            ],
+                            "pairs": [
+                              {
+                                "pos": [
+                                  139,
+                                  146
+                                ],
+                                "rule": "atom_pattern",
+                                "inner": {
+                                  "pos": [
+                                    139,
+                                    146
+                                  ],
+                                  "pairs": [
+                                    {
+                                      "pos": [
+                                        139,
+                                        146
+                                      ],
+                                      "rule": "identifier",
+                                      "inner": {
+                                        "pos": [
+                                          139,
+                                          146
+                                        ],
+                                        "pairs": [
+                                          {
+                                            "pos": [
+                                              139,
+                                              146
+                                            ],
+                                            "rule": "identifier_simple",
+                                            "inner": "pattern"
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "pos": [
+                            149,
+                            161
+                          ],
+                          "rule": "expression",
+                          "inner": {
+                            "pos": [
+                              149,
+                              161
+                            ],
+                            "pairs": [
+                              {
+                                "pos": [
+                                  149,
+                                  161
+                                ],
+                                "rule": "atom",
+                                "inner": {
+                                  "pos": [
+                                    149,
+                                    161
+                                  ],
+                                  "pairs": [
+                                    {
+                                      "pos": [
+                                        149,
+                                        161
+                                      ],
+                                      "rule": "variable",
+                                      "inner": {
+                                        "pos": [
+                                          149,
+                                          161
+                                        ],
+                                        "pairs": [
+                                          {
+                                            "pos": [
+                                              149,
+                                              161
+                                            ],
+                                            "rule": "identifier",
+                                            "inner": {
+                                              "pos": [
+                                                149,
+                                                161
+                                              ],
+                                              "pairs": [
+                                                {
+                                                  "pos": [
+                                                    149,
+                                                    161
+                                                  ],
+                                                  "rule": "identifier_simple",
+                                                  "inner": "lexical_json"
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "pos": [
+                            164,
+                            185
+                          ],
+                          "rule": "expression",
+                          "inner": {
+                            "pos": [
+                              164,
+                              185
+                            ],
+                            "pairs": [
+                              {
+                                "pos": [
+                                  164,
+                                  185
+                                ],
+                                "rule": "const_declaration",
+                                "inner": {
+                                  "pos": [
+                                    170,
+                                    183
+                                  ],
+                                  "pairs": [
+                                    {
+                                      "pos": [
+                                        170,
+                                        173
+                                      ],
+                                      "rule": "pattern",
+                                      "inner": {
+                                        "pos": [
+                                          170,
+                                          173
+                                        ],
+                                        "pairs": [
+                                          {
+                                            "pos": [
+                                              170,
+                                              173
+                                            ],
+                                            "rule": "atom_pattern",
+                                            "inner": {
+                                              "pos": [
+                                                170,
+                                                173
+                                              ],
+                                              "pairs": [
+                                                {
+                                                  "pos": [
+                                                    170,
+                                                    173
+                                                  ],
+                                                  "rule": "identifier",
+                                                  "inner": {
+                                                    "pos": [
+                                                      170,
+                                                      173
+                                                    ],
+                                                    "pairs": [
+                                                      {
+                                                        "pos": [
+                                                          170,
+                                                          173
+                                                        ],
+                                                        "rule": "identifier_simple",
+                                                        "inner": "bla"
+                                                      }
+                                                    ]
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    {
+                                      "pos": [
+                                        176,
+                                        183
+                                      ],
+                                      "rule": "expression",
+                                      "inner": {
+                                        "pos": [
+                                          176,
+                                          183
+                                        ],
+                                        "pairs": [
+                                          {
+                                            "pos": [
+                                              176,
+                                              183
+                                            ],
+                                            "rule": "atom",
+                                            "inner": {
+                                              "pos": [
+                                                176,
+                                                183
+                                              ],
+                                              "pairs": [
+                                                {
+                                                  "pos": [
+                                                    176,
+                                                    183
+                                                  ],
+                                                  "rule": "variable",
+                                                  "inner": {
+                                                    "pos": [
+                                                      176,
+                                                      183
+                                                    ],
+                                                    "pairs": [
+                                                      {
+                                                        "pos": [
+                                                          176,
+                                                          183
+                                                        ],
+                                                        "rule": "identifier",
+                                                        "inner": {
+                                                          "pos": [
+                                                            176,
+                                                            183
+                                                          ],
+                                                          "pairs": [
+                                                            {
+                                                              "pos": [
+                                                                176,
+                                                                183
+                                                              ],
+                                                              "rule": "identifier_simple",
+                                                              "inner": "pattern"
+                                                            }
+                                                          ]
+                                                        }
+                                                      }
+                                                    ]
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
                         }
                       ]
                     }
