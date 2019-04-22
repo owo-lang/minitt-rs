@@ -5,3 +5,7 @@
 --
 
 let lexical_json: Type = 1;
+
+const pattern = lexical_json;
+
+const bla = pattern;
