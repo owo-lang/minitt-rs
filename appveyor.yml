@@ -1,3 +1,9 @@
+skip_branch_with_pr: true
+
+branches:
+  only:
+    - master
+
 # Template: https://github.com/starkat99/appveyor-rust
 
 os: Visual Studio 2017
