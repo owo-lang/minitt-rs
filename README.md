@@ -1,7 +1,7 @@
 # minitt-rs
 
 [![Crates.io](https://img.shields.io/crates/d/minitt.svg)][crates]
-[![Crates.io](https://img.shields.io/crates/v/minitt.svg)][crates]
+[![Crates.io](https://img.shields.io/crates/v/minitt.svg)][lib-rs]
 [![Crates.io](https://img.shields.io/crates/l/minitt.svg)][crates]
 [![docs.rs](https://docs.rs/minitt/badge.svg)][doc-rs]
 [![Build status][av-svg]][av-url]
@@ -9,6 +9,7 @@
 [![dependency status][dep-svg]][dep-rs]
 
  [crates]: https://crates.io/crates/minitt/
+ [lib-rs]: https://lib.rs/minitt/
  [av-svg]: https://ci.appveyor.com/api/projects/status/0pnq07tqo5skyjeo/branch/master?svg=true
  [av-url]: https://ci.appveyor.com/project/ice1000/minitt-rs/branch/master
  [cc-svg]: https://circleci.com/gh/owo-lang/minitt-rs/tree/master.svg?style=svg
@@ -27,7 +28,7 @@ Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
 This implementation includes a type-checker (extended the origin), an AST
 pretty-printer and a command line tool which can be used as a file checker and
 an interactive REPL with completion and type inference.
-Built with latest (when developing this) stable Rust, 2018 edition.
+Built with stable Rust (version 1.34.0), 2018 edition.
 It can be used as a core language for complicated dependently-typed programming
 languages, or used for testing the correctness of translation algorithms.
 
@@ -37,7 +38,9 @@ functions with their counterparts' names in the Haskell implementation so people
 don't get confused when they read the paper while reading this implementation.
 
 *Notice: the development of this POC language has been moved to another
-redesigned programming language, [voile][voile].*
+redesigned programming language, [Voile][voile]. We have a new type theory,
+better surface syntax, better error messages, richer type-checker. Everything
+is (or will become) better in Voile.*
 
 A dependently-typed program in [samples](./samples/dependent/function.minitt):
 
@@ -72,7 +75,7 @@ Want to use minitt as a library? Add this to your `Cargo.toml`
 (if you don't even need a parser, you can remove the features completely):
 
 ```toml
-minitt = { version = "0.3.6", features = ["parser"] }
+minitt = { version = "0.3.8", features = ["parser"] }
 ```
 
 ## Resources
