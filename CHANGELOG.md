@@ -2,6 +2,10 @@
 
 # 0.3.8
 
++ Bump dependencies
++ Add more inference rules in check/expr.rs
++ Notify people that this library is superseded by Voile
+
 # 0.3.7
 
 + Fix a typo on docs.rs
