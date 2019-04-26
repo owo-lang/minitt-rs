@@ -218,6 +218,12 @@ pub fn check_merge_type(
 ///      {\rho,\Gamma\vdash\_l D; M\Leftarrow t}
 /// $$
 /// $$
+/// \frac{\rho,\Gamma\vdash\_l M\Rightarrow t\'
+///       \quad \textsf{R}\_l\ t =\textsf{R}\_l\ t'}
+///      {\rho,\Gamma\vdash\_l M\Leftarrow t}
+/// (\textnormal{If other rules are not applicable})
+/// $$
+/// $$
 /// \dots (\textnormal{There are too many, please checkout the original paper for more})
 /// $$
 /// `check` in Mini-TT.<br/>

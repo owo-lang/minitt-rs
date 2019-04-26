@@ -21,6 +21,7 @@
  [rustyline]: https://docs.rs/rustyline/
  [icon]: https://raw.githubusercontent.com/owo-lang/minitt-rs/master/rustdoc/icon.svg?sanitize=true
  [plugin]: https://github.com/owo-lang/intellij-dtlc/
+ [voile]: https://github.com/owo-lang/voile-rs
 
 Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
 This implementation includes a type-checker (extended the origin), an AST
@@ -34,6 +35,9 @@ I'm trying my best to use complete and meaningful naming to avoid confusion.
 I'm also doing a general clean-up of the Haskell implementation and comment the
 functions with their counterparts' names in the Haskell implementation so people
 don't get confused when they read the paper while reading this implementation.
+
+*Notice: the development of this POC language has been moved to another
+redesigned programming language, [voile][voile].*
 
 A dependently-typed program in [samples](./samples/dependent/function.minitt):
 
