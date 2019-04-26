@@ -8,7 +8,7 @@ use rustyline::completion::{Completer, FilenameCompleter, Pair};
 use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
 use rustyline::hint::Hinter;
-use rustyline::{CompletionType, Config, Editor, Helper};
+use rustyline::{CompletionType, Config, Context, Editor, Helper};
 use std::io::{stdin, stdout, Write};
 
 struct MiniHelper {
@@ -23,9 +23,10 @@ impl Completer for MiniHelper {
         &self,
         line: &str,
         pos: usize,
+        ctx: &Context<'_>,
     ) -> Result<(usize, Vec<Self::Candidate>), ReadlineError> {
         if line.starts_with(LOAD_PFX) {
-            return self.file_completer.complete(line, pos);
+            return self.file_completer.complete(line, pos, ctx);
         }
         Ok((
             0,
@@ -42,7 +43,7 @@ impl Completer for MiniHelper {
 }
 
 impl Hinter for MiniHelper {
-    fn hint(&self, line: &str, pos: usize) -> Option<String> {
+    fn hint(&self, line: &str, pos: usize, _ctx: &Context<'_>) -> Option<String> {
         if line.len() < 2 {
             return None;
         }

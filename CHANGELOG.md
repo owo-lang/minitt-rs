@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.3.9
+
++ Fix `minittc` compilation error (very sorry!)
+
 # 0.3.8
 
 + Bump dependencies
