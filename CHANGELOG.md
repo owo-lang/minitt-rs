@@ -1,5 +1,10 @@
 # Change Log
 
+# unreleased
+
++ Remove winapi 0.2.8 dependency caused by `wrap_help`
+  feature of `clap`
+
 # 0.3.9
 
 + Fix `minittc` compilation error (very sorry!)
