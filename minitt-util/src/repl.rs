@@ -1,8 +1,11 @@
+use std::fmt::{Display, Error, Formatter};
+use std::io::{stdin, stdout, Write};
+
 use rustyline::completion::{Completer, FilenameCompleter, Pair};
 use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
 use rustyline::hint::Hinter;
-use rustyline::{Context, Helper};
+use rustyline::{Context, Editor, Helper};
 
 pub struct MiniHelper {
     pub all_cmd: Vec<String>,
@@ -36,7 +39,7 @@ impl Completer for MiniHelper {
 }
 
 impl Hinter for MiniHelper {
-    fn hint(&self, line: &str, pos: usize, _ctx: &Context<'_>) -> Option<String> {
+    fn hint(&self, line: &str, pos: usize, _: &Context<'_>) -> Option<String> {
         if line.len() < 2 {
             return None;
         }
@@ -52,3 +55,72 @@ impl Hinter for MiniHelper {
 impl Highlighter for MiniHelper {}
 
 impl Helper for MiniHelper {}
+
+#[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
+pub enum ReplEnvType {
+    Plain,
+    Rich,
+}
+
+impl Display for ReplEnvType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {
+        match self {
+            ReplEnvType::Plain => f.write_str("PLAIN"),
+            ReplEnvType::Rich => f.write_str("RICH"),
+        }
+    }
+}
+
+pub fn repl_plain<TCS>(
+    mut tcs: TCS,
+    prompt: &str,
+    repl_welcome_message: impl FnOnce(ReplEnvType) -> (),
+    repl_work: impl Fn(TCS, ReplEnvType, &str) -> Option<TCS>,
+) {
+    repl_welcome_message(ReplEnvType::Plain);
+    let stdin = stdin();
+    loop {
+        print!("{}", prompt);
+        stdout().flush().expect("Cannot flush stdout!");
+        let mut line = String::new();
+        stdin.read_line(&mut line).expect("Cannot flush stdout!");
+        if let Some(ok) = repl_work(tcs, ReplEnvType::Plain, line.trim()) {
+            tcs = ok;
+        } else {
+            break;
+        };
+    }
+}
+
+pub fn repl_rich<TCS>(
+    mut tcs: TCS,
+    prompt: &str,
+    r: &mut Editor<MiniHelper>,
+    repl_work: impl Fn(TCS, ReplEnvType, &str) -> Option<TCS>,
+) {
+    loop {
+        match r.readline(prompt) {
+            Ok(line) => {
+                let line = line.trim();
+                r.add_history_entry(line);
+                if let Some(ok) = repl_work(tcs, ReplEnvType::Rich, line) {
+                    tcs = ok;
+                } else {
+                    break;
+                };
+            }
+            Err(ReadlineError::Interrupted) => {
+                println!("Interrupted by Ctrl-c.");
+                break;
+            }
+            Err(ReadlineError::Eof) => {
+                println!("Interrupted by Ctrl-d");
+                break;
+            }
+            Err(err) => {
+                println!("Error: {:?}", err);
+                break;
+            }
+        };
+    }
+}

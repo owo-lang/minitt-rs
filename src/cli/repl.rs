@@ -1,5 +1,3 @@
-use std::io::{stdin, stdout, Write};
-
 use rustyline::completion::FilenameCompleter;
 use rustyline::error::ReadlineError;
 use rustyline::{CompletionType, Config, Editor};
@@ -9,7 +7,7 @@ use minitt::check::read_back::ReadBack;
 use minitt::check::tcm::{TCE, TCS};
 use minitt::check::{check_contextual, check_infer_contextual};
 use minitt::parser::{parse_str_err_printed, parse_str_to_json};
-use minitt_util::repl::MiniHelper;
+use minitt_util::repl::{MiniHelper, ReplEnvType};
 
 use crate::util::parse_file;
 
@@ -41,7 +39,7 @@ const NORMALIZE_PFX: &'static str = ":normalize ";
 const LEVEL_PFX: &'static str = ":level ";
 const LEXICAL_PFX: &'static str = ":lexical ";
 
-fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>> {
+fn repl_work<'a>(tcs: TCS<'a>, current_mode: ReplEnvType, line: &str) -> Option<TCS<'a>> {
     if line == QUIT_CMD {
         None
     } else if line.is_empty() {
@@ -114,8 +112,8 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: &str, line: &str) -> Option<TCS<'a>
     }
 }
 
-pub fn repl(mut tcs: TCS) {
-    repl_welcome_message("RICH");
+pub fn repl(tcs: TCS) {
+    repl_welcome_message(ReplEnvType::Rich);
     let all_cmd: Vec<_> = vec![
         QUIT_CMD,
         GAMMA_CMD,
@@ -146,48 +144,12 @@ pub fn repl(mut tcs: TCS) {
         file_completer: FilenameCompleter::new(),
     }));
     // Load history?
-    loop {
-        match r.readline(PROMPT) {
-            Ok(line) => {
-                let line = line.trim();
-                r.add_history_entry(line);
-                if let Some(ok) = repl_work(tcs, "RICH", line) {
-                    tcs = ok;
-                } else {
-                    break;
-                };
-            }
-            Err(ReadlineError::Interrupted) => {
-                println!("Interrupted by Ctrl-c.");
-                break;
-            }
-            Err(ReadlineError::Eof) => {
-                println!("Interrupted by Ctrl-d");
-                break;
-            }
-            Err(err) => {
-                println!("Error: {:?}", err);
-                break;
-            }
-        };
-    }
+    minitt_util::repl::repl_rich(tcs, PROMPT, &mut r, repl_work);
     // Write history?
 }
 
-pub fn repl_plain(mut tcs: TCS) {
-    repl_welcome_message("PLAIN");
-    let stdin = stdin();
-    loop {
-        print!("{}", PROMPT);
-        stdout().flush().expect("Cannot flush stdout!");
-        let mut line = String::new();
-        stdin.read_line(&mut line).expect("Cannot flush stdout!");
-        if let Some(ok) = repl_work(tcs, "PLAIN", line.trim()) {
-            tcs = ok;
-        } else {
-            break;
-        };
-    }
+pub fn repl_plain(tcs: TCS) {
+    minitt_util::repl::repl_plain(tcs, PROMPT, repl_welcome_message, repl_work);
 }
 
 fn infer_normalize(tcs: TCS, line: &str) {
@@ -251,7 +213,7 @@ fn debug_infer(tcs: TCS, line: &str) {
     infer_impl(tcs, line, |value| println!("{:?}", value));
 }
 
-fn repl_welcome_message(current_mode: &str) {
+fn repl_welcome_message(current_mode: ReplEnvType) {
     println!(
         "Interactive minittc {}\n\
          Source code: https://github.com/owo-lang/minitt-rs\n\
@@ -268,7 +230,7 @@ fn repl_welcome_message(current_mode: &str) {
     );
 }
 
-fn help(current_mode: &str) {
+fn help(current_mode: ReplEnvType) {
     repl_welcome_message(current_mode);
     println!(
         "\
