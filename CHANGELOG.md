@@ -2,7 +2,7 @@
 
 # 0.3.11
 
-+ Create `minitt-util` for cli-relevant helpers
++ Create `minitt-util` for cli-relevant helpers (#24)
 
 # 0.3.10
 
