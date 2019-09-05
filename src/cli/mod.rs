@@ -1,6 +1,8 @@
 #[macro_use]
 extern crate minitt;
 
+use minitt_util::repl::ReplEnvType;
+
 /// CLI arguments. Based on structopt (clap)
 mod args;
 
@@ -45,9 +47,14 @@ pub fn main() {
         .unwrap_or_else(|| Default::default());
 
     // REPL
-    if args.interactive_plain {
-        repl::repl_plain(checked)
-    } else if args.interactive {
-        repl::repl(checked)
-    }
+    repl::repl(
+        checked,
+        if args.interactive_plain {
+            Some(ReplEnvType::Plain)
+        } else if args.interactive {
+            Some(ReplEnvType::Rich)
+        } else {
+            None
+        },
+    );
 }

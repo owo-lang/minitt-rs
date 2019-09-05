@@ -74,17 +74,17 @@ impl Display for ReplEnvType {
 pub fn repl_plain<TCS>(
     mut tcs: TCS,
     prompt: &str,
-    repl_welcome_message: impl FnOnce(ReplEnvType) -> (),
-    repl_work: impl Fn(TCS, ReplEnvType, &str) -> Option<TCS>,
+    welcome_message: impl FnOnce(ReplEnvType) -> (),
+    work: impl Fn(TCS, ReplEnvType, &str) -> Option<TCS>,
 ) {
-    repl_welcome_message(ReplEnvType::Plain);
+    welcome_message(ReplEnvType::Plain);
     let stdin = stdin();
     loop {
         print!("{}", prompt);
         stdout().flush().expect("Cannot flush stdout!");
         let mut line = String::new();
         stdin.read_line(&mut line).expect("Cannot flush stdout!");
-        if let Some(ok) = repl_work(tcs, ReplEnvType::Plain, line.trim()) {
+        if let Some(ok) = work(tcs, ReplEnvType::Plain, line.trim()) {
             tcs = ok;
         } else {
             break;
@@ -96,17 +96,18 @@ pub fn repl_rich<TCS>(
     mut tcs: TCS,
     prompt: &str,
     create_editor: impl FnOnce() -> Editor<MiniHelper>,
-    repl_welcome_message: impl FnOnce(ReplEnvType) -> (),
-    repl_work: impl Fn(TCS, ReplEnvType, &str) -> Option<TCS>,
+    welcome_message: impl FnOnce(ReplEnvType) -> (),
+    work: impl Fn(TCS, ReplEnvType, &str) -> Option<TCS>,
 ) {
     let mut r = create_editor();
-    repl_welcome_message(ReplEnvType::Rich);
+    welcome_message(ReplEnvType::Rich);
+    // Load history?
     loop {
         match r.readline(prompt) {
             Ok(line) => {
                 let line = line.trim();
                 r.add_history_entry(line);
-                if let Some(ok) = repl_work(tcs, ReplEnvType::Rich, line) {
+                if let Some(ok) = work(tcs, ReplEnvType::Rich, line) {
                     tcs = ok;
                 } else {
                     break;
@@ -126,4 +127,20 @@ pub fn repl_rich<TCS>(
             }
         };
     }
+    // Write history?
+}
+
+pub fn repl<TCS>(
+    tcs: TCS,
+    prompt: &str,
+    repl_kind: ReplEnvType,
+    create_editor: impl FnOnce() -> Editor<MiniHelper>,
+    welcome_message: impl FnOnce(ReplEnvType) -> (),
+    work: impl Fn(TCS, ReplEnvType, &str) -> Option<TCS>,
+) {
+    use ReplEnvType::*;
+    match repl_kind {
+        Plain => repl_plain(tcs, prompt, welcome_message, work),
+        Rich => repl_rich(tcs, prompt, create_editor, welcome_message, work),
+    };
 }

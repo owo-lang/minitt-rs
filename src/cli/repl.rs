@@ -6,7 +6,7 @@ use minitt::check::read_back::ReadBack;
 use minitt::check::tcm::{TCE, TCS};
 use minitt::check::{check_contextual, check_infer_contextual};
 use minitt::parser::{parse_str_err_printed, parse_str_to_json};
-use minitt_util::repl::{MiniHelper, ReplEnvType};
+use minitt_util::repl::{repl as repl_impl, MiniHelper, ReplEnvType};
 
 use crate::util::parse_file;
 
@@ -38,7 +38,7 @@ const NORMALIZE_PFX: &'static str = ":normalize ";
 const LEVEL_PFX: &'static str = ":level ";
 const LEXICAL_PFX: &'static str = ":lexical ";
 
-fn repl_work<'a>(tcs: TCS<'a>, current_mode: ReplEnvType, line: &str) -> Option<TCS<'a>> {
+fn work<'a>(tcs: TCS<'a>, current_mode: ReplEnvType, line: &str) -> Option<TCS<'a>> {
     if line == QUIT_CMD {
         None
     } else if line.is_empty() {
@@ -111,7 +111,7 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: ReplEnvType, line: &str) -> Option<
     }
 }
 
-pub fn repl(tcs: TCS) {
+fn create_editor() -> Editor<MiniHelper> {
     let all_cmd: Vec<_> = vec![
         QUIT_CMD,
         GAMMA_CMD,
@@ -141,13 +141,13 @@ pub fn repl(tcs: TCS) {
         all_cmd,
         file_completer: FilenameCompleter::new(),
     }));
-    // Load history?
-    minitt_util::repl::repl_rich(tcs, PROMPT, || r, repl_welcome_message, repl_work);
-    // Write history?
+    r
 }
 
-pub fn repl_plain(tcs: TCS) {
-    minitt_util::repl::repl_plain(tcs, PROMPT, repl_welcome_message, repl_work);
+pub fn repl(tcs: TCS, repl_kind: Option<ReplEnvType>) {
+    if let Some(kind) = repl_kind {
+        repl_impl(tcs, PROMPT, kind, create_editor, welcome_message, work);
+    }
 }
 
 fn infer_normalize(tcs: TCS, line: &str) {
@@ -211,7 +211,7 @@ fn debug_infer(tcs: TCS, line: &str) {
     infer_impl(tcs, line, |value| println!("{:?}", value));
 }
 
-fn repl_welcome_message(current_mode: ReplEnvType) {
+fn welcome_message(current_mode: ReplEnvType) {
     println!(
         "Interactive minittc {}\n\
          Source code: https://github.com/owo-lang/minitt-rs\n\
@@ -229,7 +229,7 @@ fn repl_welcome_message(current_mode: ReplEnvType) {
 }
 
 fn help(current_mode: ReplEnvType) {
-    repl_welcome_message(current_mode);
+    welcome_message(current_mode);
     println!(
         "\
          Commands:\n\
