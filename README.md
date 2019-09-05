@@ -28,7 +28,7 @@ Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
 This implementation includes a type-checker (extended the origin), an AST
 pretty-printer and a command line tool which can be used as a file checker and
 an interactive REPL with completion and type inference.
-Built with stable Rust (version 1.34.1), 2018 edition.
+Built with stable Rust (version 1.37.0), 2018 edition.
 It can be used as a core language for complicated dependently-typed programming
 languages, or used for testing the correctness of translation algorithms.
 
@@ -75,7 +75,7 @@ Want to use minitt as a library? Add this to your `Cargo.toml`
 (if you don't even need a parser, you can remove the features completely):
 
 ```toml
-minitt = { version = "0.3.9", features = ["parser"] }
+minitt = { version = "0.3.12", features = ["parser"] }
 ```
 
 ## Resources
@@ -90,6 +90,7 @@ minitt = { version = "0.3.9", features = ["parser"] }
 + Windows binary download by [AppVeyor][av-url]
 + [IntelliJ Plugin][plugin], as a part of project Dependently-Typed Lambda
   Calculus
++ [Mini-TT Utilities](minitt-util) helper library for making a CLI REPL
 
 ## Features
 
