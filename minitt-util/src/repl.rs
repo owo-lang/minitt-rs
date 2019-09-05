@@ -95,9 +95,12 @@ pub fn repl_plain<TCS>(
 pub fn repl_rich<TCS>(
     mut tcs: TCS,
     prompt: &str,
-    r: &mut Editor<MiniHelper>,
+    create_editor: impl FnOnce() -> Editor<MiniHelper>,
+    repl_welcome_message: impl FnOnce(ReplEnvType) -> (),
     repl_work: impl Fn(TCS, ReplEnvType, &str) -> Option<TCS>,
 ) {
+    let mut r = create_editor();
+    repl_welcome_message(ReplEnvType::Rich);
     loop {
         match r.readline(prompt) {
             Ok(line) => {

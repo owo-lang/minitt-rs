@@ -1,5 +1,4 @@
 use rustyline::completion::FilenameCompleter;
-use rustyline::error::ReadlineError;
 use rustyline::{CompletionType, Config, Editor};
 
 use minitt::ast::{Expression, GenericTelescope, Telescope, Value};
@@ -113,7 +112,6 @@ fn repl_work<'a>(tcs: TCS<'a>, current_mode: ReplEnvType, line: &str) -> Option<
 }
 
 pub fn repl(tcs: TCS) {
-    repl_welcome_message(ReplEnvType::Rich);
     let all_cmd: Vec<_> = vec![
         QUIT_CMD,
         GAMMA_CMD,
@@ -144,7 +142,7 @@ pub fn repl(tcs: TCS) {
         file_completer: FilenameCompleter::new(),
     }));
     // Load history?
-    minitt_util::repl::repl_rich(tcs, PROMPT, &mut r, repl_work);
+    minitt_util::repl::repl_rich(tcs, PROMPT, || r, repl_welcome_message, repl_work);
     // Write history?
 }
 
