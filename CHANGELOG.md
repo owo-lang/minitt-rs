@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.3.12
+
++ Some updates coming along with `minitt-util` 0.1.1
+
 # 0.3.11
 
 + Create `minitt-util` for cli-relevant helpers (#24)
