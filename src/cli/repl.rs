@@ -1,64 +1,17 @@
-use crate::util::parse_file;
+use std::io::{stdin, stdout, Write};
+
+use rustyline::completion::FilenameCompleter;
+use rustyline::error::ReadlineError;
+use rustyline::{CompletionType, Config, Editor};
+
 use minitt::ast::{Expression, GenericTelescope, Telescope, Value};
 use minitt::check::read_back::ReadBack;
 use minitt::check::tcm::{TCE, TCS};
 use minitt::check::{check_contextual, check_infer_contextual};
 use minitt::parser::{parse_str_err_printed, parse_str_to_json};
-use rustyline::completion::{Completer, FilenameCompleter, Pair};
-use rustyline::error::ReadlineError;
-use rustyline::highlight::Highlighter;
-use rustyline::hint::Hinter;
-use rustyline::{CompletionType, Config, Context, Editor, Helper};
-use std::io::{stdin, stdout, Write};
+use minitt_util::repl::MiniHelper;
 
-struct MiniHelper {
-    all_cmd: Vec<String>,
-    file_completer: FilenameCompleter,
-}
-
-impl Completer for MiniHelper {
-    type Candidate = Pair;
-
-    fn complete(
-        &self,
-        line: &str,
-        pos: usize,
-        ctx: &Context<'_>,
-    ) -> Result<(usize, Vec<Self::Candidate>), ReadlineError> {
-        if line.starts_with(LOAD_PFX) {
-            return self.file_completer.complete(line, pos, ctx);
-        }
-        Ok((
-            0,
-            self.all_cmd
-                .iter()
-                .filter(|cmd| cmd.starts_with(line))
-                .map(|str| Pair {
-                    display: str.clone(),
-                    replacement: str.clone(),
-                })
-                .collect(),
-        ))
-    }
-}
-
-impl Hinter for MiniHelper {
-    fn hint(&self, line: &str, pos: usize, _ctx: &Context<'_>) -> Option<String> {
-        if line.len() < 2 {
-            return None;
-        }
-        self.all_cmd
-            .iter()
-            .filter(|cmd| cmd.starts_with(line))
-            .cloned()
-            .map(|cmd| cmd[pos..].to_string())
-            .next()
-    }
-}
-
-impl Highlighter for MiniHelper {}
-
-impl Helper for MiniHelper {}
+use crate::util::parse_file;
 
 const PROMPT: &'static str = "=> ";
 const QUIT_CMD: &'static str = ":quit";

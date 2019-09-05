@@ -16,8 +16,13 @@ circle-ci = { repository = "owo-lang/minitt-rs", branch = "master" }
 maintenance = { status = "passively-maintained" }
 
 [dependencies]
-clap = "2.33.0"
-structopt = "0.3"
+structopt = { version = "0.3", optional = true }
+rustyline = { version = "5.0.0", optional = true }
+clap = { version = "2.33.0", optional = true }
+
+[features]
+cli = ["clap", "structopt"]
+repl = ["rustyline"]
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--document-private-items"]
