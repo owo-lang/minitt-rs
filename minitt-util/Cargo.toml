@@ -1,0 +1,22 @@
+[package]
+name = "minitt-util"
+version = "0.1.0"
+authors = ["ice1000 <ice1000kotlin@foxmail.com>"]
+edition = "2018"
+license = "Apache-2.0"
+description = "CLI Utilities extracted from Mini-TT language's type-checker"
+readme = "README.md"
+categories = ["development-tools"]
+documentation = "https://docs.rs/minitt-util"
+repository = "https://github.com/owo-lang/minitt-rs"
+
+[badges]
+appveyor = { repository = "owo-lang/minitt-rs", service = "github" }
+circle-ci = { repository = "owo-lang/minitt-rs", branch = "master" }
+maintenance = { status = "passively-maintained" }
+
+[dependencies]
+clap = "2.33.0"
+
+[package.metadata.docs.rs]
+rustdoc-args = ["--document-private-items"]

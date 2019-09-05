@@ -21,10 +21,14 @@ maintenance = { status = "as-is" }
 is-it-maintained-issue-resolution = { repository = "owo-lang/minitt-rs" }
 is-it-maintained-open-issues = { repository = "owo-lang/minitt-rs" }
 
+[workspace]
+members = ["minitt-util"]
+
 [dependencies]
 pest = { version = "2.1.2", features = ["pretty-print"], optional = true }
 pest_derive = { version = "2.1.0", optional = true }
 clap = { version = "2.33.0", optional = true }
+minitt-util = { path = "minitt-util" }
 structopt = { version = "0.3", optional = true }
 rustyline = { version = "5.0.0", optional = true }
 either = "1.5"

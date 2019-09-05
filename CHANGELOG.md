@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.3.11
+
++ Create `minitt-util` for cli-relevant helpers
+
 # 0.3.10
 
 + Remove winapi 0.2.8 dependency caused by `wrap_help`
