@@ -1,11 +1,11 @@
-use clap::{App, Shell};
+use clap::{App, AppSettings, Shell};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
 #[structopt(
+    about,
     name = "minittc",
-    rename_all = "kebab-case",
-    raw(setting = "structopt::clap::AppSettings::ColoredHelp")
+    global_settings(&[AppSettings::ColoredHelp]),
 )]
 pub struct CliOptions {
     /// Parses but do not type-check the input file
@@ -34,7 +34,6 @@ pub struct CliOptions {
 }
 
 #[derive(StructOpt)]
-#[structopt(rename_all = "kebab-case")]
 enum GenShellSubCommand {
     /// Prints completion scripts for your shell
     Completion {
@@ -42,7 +41,8 @@ enum GenShellSubCommand {
         #[structopt(
             name = "generate-completion-script-for",
             alias = "gcf",
-            raw(possible_values = "&Shell::variants()", case_insensitive = "true")
+            possible_values(&Shell::variants()),
+            case_insensitive(true)
         )]
         shell: Shell,
     },
@@ -54,9 +54,6 @@ fn app<'a, 'b>() -> App<'a, 'b> {
     // Introduced a variable because stupid CLion :(
     let app: App = CliOptions::clap();
     app.after_help(extra_help)
-        .version(env!("CARGO_PKG_VERSION"))
-        .author(env!("CARGO_PKG_AUTHORS"))
-        .about(env!("CARGO_PKG_DESCRIPTION"))
 }
 
 pub fn pre() -> CliOptions {

@@ -1,9 +1,10 @@
 # Change Log
 
-# unreleased
+# 0.3.10
 
 + Remove winapi 0.2.8 dependency caused by `wrap_help`
   feature of `clap`
++ Bump dependencies
 
 # 0.3.9
 
