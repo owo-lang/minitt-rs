@@ -5,7 +5,8 @@ This is a crate extracted from the codebase of the [Mini-TT] type checker
 to help the development of other dependently-typed lambda calculus type checkers'
 command line interface.
 
-It contains helper functions for the [Clap] ([structopt]) command line processor.
+It contains helper functions for the [Clap] ([structopt]) command line processor,
+file IO, and REPL helpers.
 
 As I don't want to break the self-containing property of the [Mini-TT]
 codebase, I only extracted things from the CLI helpers, not the type-checker.
@@ -15,5 +16,8 @@ codebase, I only extracted things from the CLI helpers, not the type-checker.
  [structopt]: https://docs.rs/structopt
 */
 
-/// For Command-line processing, file IO, etc.
+/// For Command-line processing, etc.
 pub mod cli;
+
+/// File IO.
+pub mod io;
