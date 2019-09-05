@@ -1,5 +1,4 @@
-use rustyline::completion::FilenameCompleter;
-use rustyline::{CompletionType, Config, Editor};
+use rustyline::Editor;
 
 use minitt::ast::{Expression, GenericTelescope, Telescope, Value};
 use minitt::check::read_back::ReadBack;
@@ -112,7 +111,7 @@ fn work<'a>(tcs: TCS<'a>, current_mode: ReplEnvType, line: &str) -> Option<TCS<'
 }
 
 fn create_editor() -> Editor<MiniHelper> {
-    let all_cmd: Vec<_> = vec![
+    minitt_util::repl::create_editor(&[
         QUIT_CMD,
         GAMMA_CMD,
         DEBUG_CMD,
@@ -127,21 +126,7 @@ fn create_editor() -> Editor<MiniHelper> {
         EVAL_DBG_CMD,
         LEVEL_CMD,
         LEXICAL_CMD,
-    ]
-    .iter()
-    .map(|s| s.to_string())
-    .collect();
-    let mut r = Editor::with_config(
-        Config::builder()
-            .history_ignore_space(true)
-            .completion_type(CompletionType::Circular)
-            .build(),
-    );
-    r.set_helper(Some(MiniHelper {
-        all_cmd,
-        file_completer: FilenameCompleter::new(),
-    }));
-    r
+    ])
 }
 
 pub fn repl(tcs: TCS, repl_kind: Option<ReplEnvType>) {

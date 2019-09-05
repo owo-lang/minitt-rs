@@ -5,7 +5,7 @@ use rustyline::completion::{Completer, FilenameCompleter, Pair};
 use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
 use rustyline::hint::Hinter;
-use rustyline::{Context, Editor, Helper};
+use rustyline::{CompletionType, Config, Context, Editor, Helper};
 
 pub struct MiniHelper {
     pub all_cmd: Vec<String>,
@@ -69,6 +69,21 @@ impl Display for ReplEnvType {
             ReplEnvType::Rich => f.write_str("RICH"),
         }
     }
+}
+
+pub fn create_editor(all_cmd: &[&str]) -> Editor<MiniHelper> {
+    let all_cmd: Vec<_> = all_cmd.iter().map(|s| s.to_string()).collect();
+    let mut r = Editor::with_config(
+        Config::builder()
+            .history_ignore_space(true)
+            .completion_type(CompletionType::Circular)
+            .build(),
+    );
+    r.set_helper(Some(MiniHelper {
+        all_cmd,
+        file_completer: FilenameCompleter::new(),
+    }));
+    r
 }
 
 pub fn repl_plain<TCS>(
