@@ -1,4 +1,5 @@
-use clap::{App, AppSettings, Shell};
+use clap::{App, AppSettings};
+use minitt_util::cli::{cli_completion_generation, GenShellSubCommand};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -33,21 +34,6 @@ pub struct CliOptions {
     completion: Option<GenShellSubCommand>,
 }
 
-#[derive(StructOpt)]
-enum GenShellSubCommand {
-    /// Prints completion scripts for your shell
-    Completion {
-        /// Prints completion scripts for your shell
-        #[structopt(
-            name = "generate-completion-script-for",
-            alias = "gcf",
-            possible_values(&Shell::variants()),
-            case_insensitive(true)
-        )]
-        shell: Shell,
-    },
-}
-
 fn app<'a, 'b>() -> App<'a, 'b> {
     let extra_help = "For extra help please head to \
                       https://github.com/owo-lang/minitt-rs/issues/new";
@@ -58,8 +44,6 @@ fn app<'a, 'b>() -> App<'a, 'b> {
 
 pub fn pre() -> CliOptions {
     let args: CliOptions = CliOptions::from_clap(&app().get_matches());
-    if let Some(GenShellSubCommand::Completion { shell }) = args.completion {
-        app().gen_completions_to("minittc", shell, &mut std::io::stdout());
-    }
+    cli_completion_generation(&args.completion, app);
     args
 }

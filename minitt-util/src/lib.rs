@@ -14,3 +14,6 @@ codebase, I only extracted things from the CLI helpers, not the type-checker.
  [Clap]: https://clap.rs
  [structopt]: https://docs.rs/structopt
 */
+
+/// For Command-line processing, file IO, etc.
+pub mod cli;

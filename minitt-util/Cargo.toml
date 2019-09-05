@@ -17,6 +17,7 @@ maintenance = { status = "passively-maintained" }
 
 [dependencies]
 clap = "2.33.0"
+structopt = "0.3"
 
 [package.metadata.docs.rs]
 rustdoc-args = ["--document-private-items"]
