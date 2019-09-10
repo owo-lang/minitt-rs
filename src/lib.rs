@@ -2,6 +2,8 @@
     html_logo_url = "https://raw.githubusercontent.com/owo-lang/minitt-rs/master/rustdoc/icon.svg?sanitize=true"
 )]
 /*!
+Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
+
 Reading the [README](https://github.com/owo-lang/minitt-rs/blob/master/README.md) is recommended
 before reading the documentation.
 

@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.4.0
+
++ Documentation update
+
 # 0.3.12
 
 + Some updates coming along with `minitt-util` 0.1.1
