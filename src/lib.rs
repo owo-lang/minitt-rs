@@ -16,10 +16,9 @@ Here's a "feature list" (only language features that affect type-checking are li
 
 First, Mini-TT supports:
 
-+ Pi/Sigma types
++ Pi (dependent function type)/Sigma (dependent tuple type) types
 + First-class sum types and case-split
-+ Recursion
-+ Mutual recursion
++ (Mutual) Recursion
 
 Mini-TT does not support (while you may expect it to support):
 
@@ -28,11 +27,10 @@ Mini-TT does not support (while you may expect it to support):
 
 Mini-TT does not, but minitt does support:
 
-+ Infer types of expressions that appears deeply inside an expression
 + Constant expressions with type signature completely inferred
 + Universe levels and its subtyping
   + Notice: `1` is of level 0, `Type0` is of level 1
-+ First-class sum types, its merging operation (so you can merge two sums) and its subtyping
++ Sum types' merging operation and subtyping
   (like `Sum { A }` is a subtype of `Sum { A | B }`)
 
 [Version 0.1.8](https://docs.rs/crate/minitt/0.1.8) of minitt is basically a vanilla Mini-TT,
@@ -42,37 +40,37 @@ For those who want to have a try on minitt:
 Please do notice that function application in minitt is right-associative, which is very-very
 (very-very-very-very) anti-intuitive. This is because the parser is implemented primarily for
 debugging the type-checker, it's not for general-purpose programming.
-If you want to write some real code, I recommend [Voile](https://github.com/owo-lang/voile-rs).
+If you want to write some real code, I recommend [Voile](https://github.com/owo-lang/voile-rs),
+which has nicer syntax, meta variables and implicit parameter syntax,
+and a non-dependent version of row-polymorphism.
 
 ## Syntax Trees
 
 Mini-TT has three syntax trees:
 
 + [Surface syntax tree](ast/enum.Expression.html), aka concrete syntax tree, representing
-  expressions that cannot be type-checked alone (and this is because of the presence of free
-  variables) or simply not type-checked yet
+  open expressions that may have free variables
 + [Abstract syntax tree](ast/enum.Value.html), aka values or terms, representing expressions
-  that are already type-checked. This implies "no free variables"
+  that are already type-checked. This implies well-typedness and contextual well-scopedness
   + Values might be [neutral values](ast/enum.GenericNeutral.html): these values represents
     variable bindings that are not free but not reducible, like a parameter, or an expression
-    that cannot be reduced due to the presence of this parameter
+    that cannot be reduced due to another neutral subexpression
   + Values might be [closures](ast/enum.Closure.html): surface syntax term + context +
     parameter bindings
 + [Normal form syntax tree](check/read_back/enum.NormalExpression.html), aka normal forms.
-  This is the output of the "read back" functions
-  + Details are introduced later. Personally, I consider this not necessary and ugly.
+  This is the output of the "read back" (aka "reify") functions
+  + Details are introduced later
 
 Mini-TT has two "environments":
 
-+ One typing context (called [`Gamma`](check/tcm/type.Gamma.html) in minitt), this is passed around
++ One typing context (called [`Gamma`](check/tcm/type.Gamma.html) in minitt), which is passed around
   only during type-checking
-+ One evaluation context (called [`Telescope`](ast/enum.GenericTelescope.html) in minitt), this is
-  stored in closures (as captured environment)
++ One evaluation context (called [`Telescope`](ast/enum.GenericTelescope.html) in minitt), which is
+  passed along with the typing context but is also accessible during evaluation.
+  It's also stored in closures (as captured environment)
 
-However, since type-checking produces new closures and need a evaluation context to reduce terms,
-these two environments are passed together during type-checking.<br/>
-They're stored together in [`TCS`](check/tcm/struct.TCS.html), which is short for "Type-Checking
-State".
+When they're together, they are stored in [`TCS`](check/tcm/struct.TCS.html),
+which is short for "Type-Checking State".
 
 ## Type-Checking
 
