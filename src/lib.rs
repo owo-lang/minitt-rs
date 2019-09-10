@@ -40,7 +40,7 @@ For those who want to have a try on minitt:
 Please do notice that function application in minitt is right-associative, which is very-very
 (very-very-very-very) anti-intuitive. This is because the parser is implemented primarily for
 debugging the type-checker, it's not for general-purpose programming.
-If you want to write some real code, I recommend [Voile](https://github.com/owo-lang/voile-rs),
+If you want to write some real code, I recommend [Voile],
 which has nicer syntax, meta variables and implicit parameter syntax,
 and a non-dependent version of row-polymorphism.
 
@@ -117,8 +117,8 @@ If all these hard-coded rules are not applicable, infer the expression type and 
 [subtyping check](check/subtype/fn.check_subtype.html). This rule is an extension.
 The subtyping check is basically doing some hard-coded comparisons as well.
 
-If it still fails, [read back](check/read_back/) to
-normal form and do a syntactic comparison with the `read-back`ed expected type signature.
+If it still fails, [read back](check/read_back/) the types into their
+normal forms and do a syntactic comparison.
 
 ### `checkI`
 
@@ -128,8 +128,7 @@ $$
 
 Try to infer the type of a given expression.
 
-Mini-TT cannot infer types of lambdas or other complicated expressions like nested function calls,
-but in minitt this situation has changed with the help of prefix parameters.
+Mini-TT/minitt cannot infer types of lambdas due to it's undecidable in general.
 
 ### `checkT`
 
@@ -150,26 +149,29 @@ Several extensions can be made apart from the improvements that have nothing to 
 core type theory.
 I'm listing all the possible extension, disregarding how hard can the implementation be.
 
+ [Voile]: https://docs.rs/voile
+
 + Indexed inductive families
   + Dependent (co)pattern matching
   + Overlapping pattern matching
   + Props
   + Without-K
-+ Quantitative Type Theory
-  + Linear Type System
++ Quantitative type theory
+  + Linear type system
     + [Symmetric-Interaction-Calculus](https://github.com/MaiaVictor/Symmetric-Interaction-Calculus)
-  + Affine Type System
-+ First-class cases and sums
+  + Affine type system
++ First-class cases and sums (already implemented in [Voile]!)
   + Record polymorphism
   + Extensible sums
-+ Cubical Type Theory
++ Cubical type theory
   + Already implemented in another Mini-TT dialect:
     [cubicaltt](https://github.com/mortberg/cubicaltt)
-  + Cartesian Cubical Type Theory
-  + De Morgan Cubical Type Theory
-  + Higher-Inductive Families
-    + First-class?
-+ Coinduction and Guarded Recursion
+  + Cartesian model?
+  + De Morgan model?
+  + Higher-inductive types
+    + First-classify them?
++ Termination check
++ Guarded recursion (productivity)
 + Sized types (implicit?)
 */
 
