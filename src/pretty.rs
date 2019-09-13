@@ -47,25 +47,9 @@ impl Display for Expression {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Expression::Var(name) => name.fmt(f),
-            Expression::First(pair) => {
-                f.write_char('(')?;
-                pair.fmt(f)?;
-                f.write_str(".1")?;
-                f.write_char(')')
-            }
-            Expression::Second(pair) => {
-                f.write_char('(')?;
-                pair.fmt(f)?;
-                f.write_str(".2")?;
-                f.write_char(')')
-            }
-            Expression::Application(function, argument) => {
-                f.write_char('(')?;
-                function.fmt(f)?;
-                f.write_char(' ')?;
-                argument.fmt(f)?;
-                f.write_char(')')
-            }
+            Expression::First(pair) => write!(f, "({}.1)", pair),
+            Expression::Second(pair) => write!(f, "({}.2)", pair),
+            Expression::Application(function, argument) => write!(f, "({} {})", function, argument),
             Expression::Lambda(pattern, parameter_type, body) => {
                 f.write_str("\u{03BB} ")?;
                 pattern.fmt(f)?;
@@ -76,38 +60,19 @@ impl Display for Expression {
                 f.write_str(". ")?;
                 body.fmt(f)
             }
-            Expression::Pair(first, second) => {
-                f.write_char('(')?;
-                first.fmt(f)?;
-                f.write_str(", ")?;
-                second.fmt(f)?;
-                f.write_char(')')
-            }
+            Expression::Pair(first, second) => write!(f, "({}, {})", first, second),
             Expression::Unit => f.write_str("0"),
             Expression::One => f.write_str("1"),
             Expression::Pi(input, output) => {
                 f.write_str("\u{03A0}")?;
-                f.write_str(" ")?;
-                input.fmt(f)?;
-                f.write_str(". ")?;
-                output.fmt(f)
+                write!(f, " {}. {}", input, output)
             }
-            Expression::Type(level) => {
-                f.write_str("Type")?;
-                level.fmt(f)
-            }
+            Expression::Type(level) => write!(f, "Type{}", level),
             Expression::Sigma(first, second) => {
                 f.write_str("\u{03A3}")?;
-                f.write_str(" ")?;
-                first.fmt(f)?;
-                f.write_str(". ")?;
-                second.fmt(f)
+                write!(f, " {}. {}", first, second)
             }
-            Expression::Constructor(name, arguments) => {
-                name.fmt(f)?;
-                f.write_str(" ")?;
-                arguments.fmt(f)
-            }
+            Expression::Constructor(name, arguments) => write!(f, "{} {}", name, arguments),
             Expression::Split(clauses) => {
                 f.write_str("split {")?;
                 let mut started = false;
@@ -242,9 +207,7 @@ impl<Value: Display + Clone> Display for GenericNeutral<Value> {
             GenericNeutral::First(pair) => write!(f, "({}.1)", pair),
             GenericNeutral::Second(pair) => write!(f, "({}.2)", pair),
             GenericNeutral::Split(clauses, argument) => {
-                f.write_str("app ")?;
-                argument.fmt(f)?;
-                f.write_str(" {")?;
+                write!(f, "app {} {{", argument)?;
                 fmt_branch(clauses, f)?;
                 f.write_char('}')
             }
@@ -258,9 +221,7 @@ impl Display for NormalExpression {
         match self {
             Expression::Lambda(index, expression) => {
                 f.write_str("\u{03BB} <")?;
-                index.fmt(f)?;
-                f.write_str("> ")?;
-                expression.fmt(f)
+                write!(f, "{}> {}", index, expression)
             }
             Expression::Pair(first, second) => write!(f, "({}, {})", first, second),
             Expression::Unit => f.write_str("0"),

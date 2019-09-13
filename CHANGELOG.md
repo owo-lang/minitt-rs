@@ -1,5 +1,11 @@
 # Change Log
 
+# 0.4.1
+
++ Improve `pretty.rs` by using the `write!` macro
++ Generate `Unit` when the type is `One` (#25)
++ Sync katex-header.html changes from Voile
+
 # 0.4.0
 
 + Documentation update
