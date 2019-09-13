@@ -17,3 +17,15 @@ let and: bool -> bool -> bool = split
  | False => \lambda _. False
  };
 -- Nested functions
+
+let elimBool
+  : \Pi c : bool → Type
+  . \Pi _ : c False
+  . \Pi _ : c True
+  . \Pi b : bool
+  . c b
+
+  = λ c . λ h0 . λ h1 . split
+  { True => h1
+  | False => h0
+  };

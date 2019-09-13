@@ -100,7 +100,7 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
             let (left_level, new) = check_type(index, tcs, *input.expression.clone())?;
             tcs = new;
             let input_type = input.expression.eval(tcs.context());
-            let generated = generate_value(index);
+            let generated = generate_for(index, &input_type);
             let gamma = update_gamma(tcs.gamma, &input.pattern, input_type, generated)?;
             let (right_level, _) = check_type(index + 1, TCS::new(gamma, tcs.context), *output)?;
             // Does this need to depend on the level of the return type?
@@ -110,7 +110,7 @@ pub fn check_infer(index: u32, mut tcs: TCS, expression: Expression) -> TCM<Valu
             Lambda(pattern, Some(parameter_type), return_value) => {
                 let parameter_type = *parameter_type.internal;
                 tcs = check(index, tcs, *argument, parameter_type.clone())?;
-                let generated = generate_value(index + 1);
+                let generated = generate_for(index + 1, &parameter_type);
                 let tcs = tcs.update(pattern, parameter_type, generated)?;
                 check_infer(index + 1, tcs, *return_value)
             }
@@ -244,7 +244,7 @@ pub fn check(index: u32, mut tcs: TCS, expression: Expression, value: Value) -> 
         (E::Void, _) => Ok(tcs),
         (E::Lambda(pattern, _, body), V::Pi(signature, closure)) => {
             let fake_tcs: TCS = tcs_borrow!(tcs);
-            let generated = generate_value(index);
+            let generated = generate_for(index, &*signature);
             let fake_tcs = fake_tcs.update(pattern, *signature, generated.clone())?;
             check(index + 1, fake_tcs, *body, closure.instantiate(generated))?;
             Ok(tcs)
@@ -378,12 +378,16 @@ pub fn check_telescoped(
 ) -> TCM<(Level, TCS)> {
     let (_, new) = check_type(index, tcs, *first.expression.clone())?;
     tcs = new;
-    let generated = generate_value(index);
-    let internal_tcs = tcs_borrow!(tcs).update(
-        first.pattern,
-        first.expression.eval(tcs.context()),
-        generated,
-    )?;
+    let ty = first.expression.eval(tcs.context());
+    let generated = generate_for(index, &ty);
+    let internal_tcs = tcs_borrow!(tcs).update(first.pattern, ty, generated)?;
     let (level, _) = check_type(index + 1, internal_tcs, second)?;
     Ok((level, tcs))
+}
+
+fn generate_for(index: u32, ty: &Value) -> Value {
+    match &ty {
+        Value::One => Value::Unit,
+        _ => generate_value(index),
+    }
 }
