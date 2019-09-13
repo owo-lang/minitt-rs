@@ -11,13 +11,7 @@ impl Display for Value {
                 f.write_str("\u{03BB} ")?;
                 closure.fmt_with_type(f, None)
             }
-            Value::Pair(first, second) => {
-                f.write_char('(')?;
-                first.fmt(f)?;
-                f.write_str(", ")?;
-                second.fmt(f)?;
-                f.write_char(')')
-            }
+            Value::Pair(first, second) => write!(f, "({}, {})", first, second),
             Value::Unit => f.write_str("0"),
             Value::One => f.write_str("1"),
             Value::Pi(input, output) => {
@@ -25,20 +19,13 @@ impl Display for Value {
                 f.write_str(" ")?;
                 output.fmt_with_type(f, Some(&**input))
             }
-            Value::Type(level) => {
-                f.write_str("Type")?;
-                level.fmt(f)
-            }
+            Value::Type(level) => write!(f, "Type{}", level),
             Value::Sigma(first, second) => {
                 f.write_str("\u{03A3}")?;
                 f.write_str(" ")?;
                 second.fmt_with_type(f, Some(&**first))
             }
-            Value::Constructor(name, arguments) => {
-                name.fmt(f)?;
-                f.write_str(" ")?;
-                arguments.fmt(f)
-            }
+            Value::Constructor(name, arguments) => write!(f, "{} {}", name, arguments),
             // Don't print context
             Value::Split(branches) => {
                 f.write_str("split {")?;
@@ -47,16 +34,11 @@ impl Display for Value {
             }
             // Don't print the context
             Value::Sum(constructors) => {
-                f.write_str("Sum")?;
-                f.write_str(" {")?;
+                f.write_str("Sum {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
             }
-            Value::Neutral(neutral) => {
-                f.write_str("[")?;
-                neutral.fmt(f)?;
-                f.write_char(']')
-            }
+            Value::Neutral(neutral) => write!(f, "[{}]", neutral),
         }
     }
 }
@@ -155,18 +137,9 @@ impl Display for Expression {
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
             }
-            Expression::Declaration(declaration, rest) => {
-                declaration.fmt(f)?;
-                f.write_str(";\n")?;
-                rest.fmt(f)
-            }
+            Expression::Declaration(declaration, rest) => writeln!(f, "{};\n{}", declaration, rest),
             Expression::Constant(pattern, body, rest) => {
-                f.write_str("const ")?;
-                pattern.fmt(f)?;
-                f.write_str(" = ")?;
-                body.fmt(f)?;
-                f.write_str(";\n")?;
-                rest.fmt(f)
+                write!(f, "const {} = {};\n{}", pattern, body, rest)
             }
             Expression::Void => Ok(()),
             Expression::Merge(lhs, rhs) => {
@@ -186,9 +159,7 @@ impl<Expr: Display, Value: Clone + Display> Display for GenericCase<Expr, Value>
 
 impl Display for Typed {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.pattern.fmt(f)?;
-        f.write_str(": ")?;
-        self.expression.fmt(f)
+        write!(f, "{}: {}", self.pattern, self.expression)
     }
 }
 
@@ -210,13 +181,7 @@ fn fmt_branch<E: Display>(branch: &GenericBranch<E>, f: &mut Formatter) -> Resul
 impl Display for Pattern {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Pattern::Pair(first, second) => {
-                f.write_char('(')?;
-                first.fmt(f)?;
-                f.write_str(", ")?;
-                second.fmt(f)?;
-                f.write_char(')')
-            }
+            Pattern::Pair(first, second) => write!(f, "({}, {})", first, second),
             Pattern::Unit => f.write_char('_'),
             Pattern::Var(name) => f.write_str(name.as_str()),
         }
@@ -229,9 +194,7 @@ impl Display for Declaration {
         f.write_char(' ')?;
         self.pattern.fmt(f)?;
         for typed in self.prefix_parameters.iter() {
-            f.write_str(" (")?;
-            typed.fmt(f)?;
-            f.write_char(')')?;
+            write!(f, "({})", typed)?;
         }
         f.write_str(": ")?;
         self.signature.fmt(f)?;
@@ -264,11 +227,7 @@ impl Closure {
                 body.fmt(f)
             }
             Closure::Value(value) => value.fmt(f),
-            Closure::Choice(rest, name) => {
-                f.write_str(name.as_str())?;
-                f.write_str(". ")?;
-                rest.fmt(f)
-            }
+            Closure::Choice(rest, name) => write!(f, "{}. {}", name, rest),
         }
     }
 }
@@ -276,30 +235,12 @@ impl Closure {
 impl<Value: Display + Clone> Display for GenericNeutral<Value> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            GenericNeutral::Generated(index) => {
-                f.write_char('<')?;
-                index.fmt(f)?;
-                f.write_char('>')
-            }
+            GenericNeutral::Generated(index) => write!(f, "<{}>", index),
             GenericNeutral::Application(function, argument) => {
-                f.write_char('(')?;
-                function.fmt(f)?;
-                f.write_char(' ')?;
-                argument.fmt(f)?;
-                f.write_char(')')
+                write!(f, "({} {})", function, argument)
             }
-            GenericNeutral::First(pair) => {
-                f.write_char('(')?;
-                pair.fmt(f)?;
-                f.write_str(".1")?;
-                f.write_char(')')
-            }
-            GenericNeutral::Second(pair) => {
-                f.write_char('(')?;
-                pair.fmt(f)?;
-                f.write_str(".2")?;
-                f.write_char(')')
-            }
+            GenericNeutral::First(pair) => write!(f, "({}.1)", pair),
+            GenericNeutral::Second(pair) => write!(f, "({}.2)", pair),
             GenericNeutral::Split(clauses, argument) => {
                 f.write_str("app ")?;
                 argument.fmt(f)?;
@@ -321,42 +262,19 @@ impl Display for NormalExpression {
                 f.write_str("> ")?;
                 expression.fmt(f)
             }
-            Expression::Pair(first, second) => {
-                f.write_char('(')?;
-                first.fmt(f)?;
-                f.write_str(", ")?;
-                second.fmt(f)?;
-                f.write_char(')')
-            }
+            Expression::Pair(first, second) => write!(f, "({}, {})", first, second),
             Expression::Unit => f.write_str("0"),
             Expression::One => f.write_str("1"),
             Expression::Pi(input, index, output) => {
                 f.write_str("\u{03A0}")?;
-                f.write_str(" <")?;
-                index.fmt(f)?;
-                f.write_str("> ")?;
-                input.fmt(f)?;
-                f.write_str(". ")?;
-                output.fmt(f)
+                write!(f, " <{}> {}. {}", index, input, output)
             }
-            Expression::Type(level) => {
-                f.write_str("Type")?;
-                level.fmt(f)
-            }
+            Expression::Type(level) => write!(f, "Type{}", level),
             Expression::Sigma(first, index, second) => {
                 f.write_str("\u{03A3}")?;
-                f.write_str(" <")?;
-                index.fmt(f)?;
-                f.write_str("> ")?;
-                first.fmt(f)?;
-                f.write_str(". ")?;
-                second.fmt(f)
+                write!(f, " <{}> {}. {}", index, first, second)
             }
-            Expression::Constructor(name, arguments) => {
-                name.fmt(f)?;
-                f.write_str(" ")?;
-                arguments.fmt(f)
-            }
+            Expression::Constructor(name, arguments) => write!(f, "{} {}", name, arguments),
             Expression::Split(clauses) => {
                 f.write_str("split {")?;
                 fmt_branch(clauses, f)?;
@@ -364,16 +282,11 @@ impl Display for NormalExpression {
             }
             // Don't print the context
             Expression::Sum(constructors) => {
-                f.write_str("Sum")?;
-                f.write_str(" {")?;
+                f.write_str("Sum {")?;
                 fmt_branch(constructors, f)?;
                 f.write_char('}')
             }
-            Expression::Neutral(neutral) => {
-                f.write_str("[")?;
-                neutral.fmt(f)?;
-                f.write_char(']')
-            }
+            Expression::Neutral(neutral) => write!(f, "[{}]", neutral),
         }
     }
 }
@@ -384,17 +297,10 @@ impl<Value: Clone + Display> Display for GenericTelescope<Value> {
         match self {
             GenericTelescope::Nil => Ok(()),
             GenericTelescope::UpDec(previous, declaration) => {
-                declaration.fmt(f)?;
-                f.write_str(";\n")?;
-                previous.fmt(f)
+                write!(f, "{};\n{}", declaration, previous)
             }
             GenericTelescope::UpVar(previous, pattern, value) => {
-                f.write_str("var ")?;
-                pattern.fmt(f)?;
-                f.write_str(": ")?;
-                value.fmt(f)?;
-                f.write_str(";\n")?;
-                previous.fmt(f)
+                write!(f, "var {}: {};\n{}", pattern, value, previous)
             }
         }
     }
