@@ -1,0 +1,12 @@
+--
+-- Created by Dependently-Typed Lambda Calculus on 2019-09-14
+-- higher-level
+-- Author: ice10
+--
+
+let higher_level: Type = 1;
+
+let id (x : Type) (a : x) : x = a;
+
+let id_on_id: \Pi a: Type. a -> a =
+  (id (\Pi a: Type. a -> a)) id;

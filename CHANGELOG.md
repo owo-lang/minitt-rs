@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.4.2
+
++ Add `id_on_id` example (#26)
+
 # 0.4.1
 
 + Improve `pretty.rs` by using the `write!` macro
