@@ -1,6 +1,6 @@
 use std::fmt::{Display, Error, Formatter};
 use std::io::{stdin, stdout, Write};
-use std::path::Path;
+use std::path::PathBuf;
 
 use rustyline::completion::{Completer, FilenameCompleter, Pair};
 use rustyline::error::ReadlineError;
@@ -88,7 +88,7 @@ pub fn create_editor(all_cmd: &[&str]) -> Editor<MiniHelper> {
     let mut r = Editor::with_config(
         Config::builder()
             .history_ignore_space(true)
-            .completion_type(CompletionType::Circular)
+            .completion_type(CompletionType::List)
             .build(),
     );
     r.set_helper(Some(MiniHelper {
@@ -123,12 +123,12 @@ pub fn repl_rich<TCS>(
     mut tcs: TCS,
     prompt: &str,
     create_editor: impl FnOnce() -> Editor<MiniHelper>,
-    history: Option<&Path>,
+    history: Option<PathBuf>,
     welcome_message: impl FnOnce(ReplEnvType) -> (),
     work: impl Fn(TCS, ReplEnvType, &str) -> Option<TCS>,
 ) {
     let mut r = create_editor();
-    if let Some(history) = history {
+    if let Some(history) = &history {
         if let Err(err) = r.load_history(history) {
             eprintln!("Failed to load REPL history: {}", err)
         }
@@ -156,7 +156,7 @@ pub fn repl_rich<TCS>(
             }
         };
     }
-    if let Some(history) = history {
+    if let Some(history) = &history {
         if let Err(err) = r.save_history(history) {
             eprintln!("Failed to save REPL history: {}", err)
         }
@@ -168,7 +168,7 @@ pub fn repl<TCS>(
     prompt: &str,
     repl_kind: ReplEnvType,
     create_editor: impl FnOnce() -> Editor<MiniHelper>,
-    history: impl FnOnce() -> Option<&Path>,
+    history: impl FnOnce() -> Option<PathBuf>,
     welcome_message: impl FnOnce(ReplEnvType) -> (),
     work: impl Fn(TCS, ReplEnvType, &str) -> Option<TCS>,
 ) {
