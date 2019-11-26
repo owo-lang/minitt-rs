@@ -1,3 +1,5 @@
+use minitt_util::io::history_file;
+use minitt_util::repl::{repl as repl_impl, MiniHelper, ReplEnvType};
 use rustyline::Editor;
 
 use minitt::ast::{Expression, GenericTelescope, Telescope, Value};
@@ -5,7 +7,6 @@ use minitt::check::read_back::ReadBack;
 use minitt::check::tcm::{TCE, TCS};
 use minitt::check::{check_contextual, check_infer_contextual};
 use minitt::parser::{parse_str_err_printed, parse_str_to_json};
-use minitt_util::repl::{repl as repl_impl, MiniHelper, ReplEnvType};
 
 use crate::util::parse_file;
 
@@ -131,7 +132,16 @@ fn create_editor() -> Editor<MiniHelper> {
 
 pub fn repl(tcs: TCS, repl_kind: Option<ReplEnvType>) {
     if let Some(kind) = repl_kind {
-        repl_impl(tcs, PROMPT, kind, create_editor, welcome_message, work);
+        let history = || history_file("minitt").ok();
+        repl_impl(
+            tcs,
+            PROMPT,
+            kind,
+            create_editor,
+            history,
+            welcome_message,
+            work,
+        );
     }
 }
 
