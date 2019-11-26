@@ -78,7 +78,7 @@ Want to use minitt as a library? Add this to your `Cargo.toml`
 (if you don't even need a parser, you can remove the features completely):
 
 ```toml
-minitt = { version = "0.4.1", features = ["parser"] }
+minitt = { version = "0.4.2", features = ["parser"] }
 ```
 
 ## Resources
