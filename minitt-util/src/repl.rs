@@ -40,7 +40,7 @@ impl Completer for MiniHelper {
             .all_cmd
             .iter()
             .filter(|s| s.starts_with(subs))
-            .map(|&s| s.to_owned())
+            .map(|s| s.clone())
             .map(|str| Pair {
                 display: str.clone(),
                 replacement: str,
