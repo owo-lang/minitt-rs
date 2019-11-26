@@ -4,16 +4,11 @@
 [![Crates.io](https://img.shields.io/crates/v/minitt.svg)][lib-rs]
 [![Crates.io](https://img.shields.io/crates/l/minitt.svg)][crates]
 [![docs.rs](https://docs.rs/minitt/badge.svg)][doc-rs]
-[![Build status][av-svg]][av-url]
-[![CircleCI][cc-svg]][cc-url]
+[![Actions Status][ga-svg]][ga-url]
 [![dependency status][dep-svg]][dep-rs]
 
  [crates]: https://crates.io/crates/minitt/
  [lib-rs]: https://lib.rs/minitt/
- [av-svg]: https://ci.appveyor.com/api/projects/status/0pnq07tqo5skyjeo/branch/master?svg=true
- [av-url]: https://ci.appveyor.com/project/ice1000/minitt-rs/branch/master
- [cc-svg]: https://circleci.com/gh/owo-lang/minitt-rs/tree/master.svg?style=svg
- [cc-url]: https://circleci.com/gh/owo-lang/minitt-rs/tree/master
  [doc-rs]: https://docs.rs/minitt
  [dep-rs]: https://deps.rs/repo/github/owo-lang/minitt-rs
  [dep-svg]: https://deps.rs/repo/github/owo-lang/minitt-rs/status.svg
@@ -23,12 +18,14 @@
  [icon]: https://raw.githubusercontent.com/owo-lang/minitt-rs/master/rustdoc/icon.svg?sanitize=true
  [plugin]: https://github.com/owo-lang/intellij-dtlc/
  [voile]: https://github.com/owo-lang/voile-rs
+ [ga-svg]: https://github.com/owo-lang/minitt-rs/workflows/build/badge.svg
+ [ga-url]: https://github.com/owo-lang/minitt-rs/actions
 
 Rust implementation of Mini-TT, a simple dependently-typed lambda calculus.
 This implementation includes a type-checker (extended the origin), an AST
 pretty-printer and a command line tool which can be used as a file checker and
 an interactive REPL with completion and type inference.
-Built with stable Rust (version 1.37.0), 2018 edition.
+Built with stable Rust (version 1.39.0), 2018 edition.
 It can be used as a core language for complicated dependently-typed programming
 languages, or used for testing the correctness of translation algorithms.
 
@@ -67,6 +64,12 @@ statically-typed. Very flexible.
 
 ## Install
 
+The most recommended way of installation is to download the prebuilt binaries
+from [GitHub Actions page][ga-url].
+Here's [how to find them](https://github.com/actions/upload-artifact).
+
+You may also install from source:
+
 ```bash
 $ cargo install minitt --bin minittc --all-features --force
 ```
@@ -75,7 +78,7 @@ Want to use minitt as a library? Add this to your `Cargo.toml`
 (if you don't even need a parser, you can remove the features completely):
 
 ```toml
-minitt = { version = "0.3.12", features = ["parser"] }
+minitt = { version = "0.4.1", features = ["parser"] }
 ```
 
 ## Resources
@@ -87,7 +90,8 @@ minitt = { version = "0.3.12", features = ["parser"] }
 + [Doc.rs][doc-rs] documentation (a tutorial is included)
 + [Change Log](../CHANGELOG.md)
 + [REPL Example](../samples/REPL.md)
-+ Windows binary download by [AppVeyor][av-url]
++ [**Binary Download**][ga-url] on GitHub Actions page for
+  Windows, Ubuntu and macOS
 + [IntelliJ Plugin][plugin], as a part of project Dependently-Typed Lambda
   Calculus
 + [Mini-TT Utilities](../minitt-util) helper library for making a CLI REPL
