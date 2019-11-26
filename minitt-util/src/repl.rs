@@ -98,7 +98,7 @@ pub fn repl_plain<TCS>(
         print!("{}", prompt);
         stdout().flush().expect("Cannot flush stdout!");
         let mut line = String::new();
-        stdin.read_line(&mut line).expect("Cannot flush stdout!");
+        stdin.read_line(&mut line).expect("Cannot read from stdin!");
         if let Some(ok) = work(tcs, ReplEnvType::Plain, line.trim()) {
             tcs = ok;
         } else {
@@ -128,12 +128,9 @@ pub fn repl_rich<TCS>(
                     break;
                 };
             }
-            Err(ReadlineError::Interrupted) => {
-                println!("Interrupted by Ctrl-c.");
-                break;
-            }
+            Err(ReadlineError::Interrupted) => {}
             Err(ReadlineError::Eof) => {
-                println!("Interrupted by Ctrl-d");
+                println!("Interrupted");
                 break;
             }
             Err(err) => {

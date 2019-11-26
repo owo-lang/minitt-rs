@@ -1,6 +1,6 @@
 [package]
 name = "minitt-util"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["ice1000 <ice1000kotlin@foxmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -17,8 +17,8 @@ maintenance = { status = "passively-maintained" }
 
 [dependencies]
 structopt = { version = "0.3", optional = true }
-rustyline = { version = "5.0.0", optional = true }
-clap = { version = "2.33.0", optional = true }
+rustyline = { version = "5.0", optional = true }
+clap = { version = "2.33", optional = true }
 
 [features]
 cli = ["clap", "structopt"]
