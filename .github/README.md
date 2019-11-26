@@ -42,7 +42,7 @@ redesigned programming language, [Voile][voile]. We have a new type theory,
 better surface syntax, better error messages, richer type-checker. Everything
 is (or will become) better in Voile.*
 
-A dependently-typed program in [samples](./samples/dependent/function.minitt):
+A dependently-typed program in [samples](../samples/dependent/function.minitt):
 
 ```haskell
 -- A 2 type and a 1 type
@@ -83,14 +83,14 @@ minitt = { version = "0.3.12", features = ["parser"] }
 ![][icon]
 
 + [Mini-TT Paper](http://www.cse.chalmers.se/~bengt/papers/GKminiTT.pdf)
-+ [Code Samples](./samples), tested on CI
++ [Code Samples](../samples), tested on CI
 + [Doc.rs][doc-rs] documentation (a tutorial is included)
-+ [Change Log](CHANGELOG.md)
-+ [REPL Example](./samples/REPL.md)
++ [Change Log](../CHANGELOG.md)
++ [REPL Example](../samples/REPL.md)
 + Windows binary download by [AppVeyor][av-url]
 + [IntelliJ Plugin][plugin], as a part of project Dependently-Typed Lambda
   Calculus
-+ [Mini-TT Utilities](minitt-util) helper library for making a CLI REPL
++ [Mini-TT Utilities](../minitt-util) helper library for making a CLI REPL
 
 ## Features
 

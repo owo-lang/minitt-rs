@@ -5,7 +5,7 @@ authors = ["ice1000 <ice1000kotlin@foxmail.com>"]
 edition = "2018"
 license = "Apache-2.0"
 description = "Mini-TT, a dependently-typed lambda calculus, extended and (re)implemented in Rust"
-readme = "README.md"
+readme = ".github/README.md"
 categories = ["development-tools"]
 documentation = "https://docs.rs/minitt"
 repository = "https://github.com/owo-lang/minitt-rs"
@@ -15,8 +15,8 @@ features = ["parser"]
 rustdoc-args = ["--html-in-header", "rustdoc/katex-header.html", "--document-private-items"]
 
 [badges]
-appveyor = { repository = "owo-lang/minitt-rs", service = "github" }
-circle-ci = { repository = "owo-lang/minitt-rs", branch = "master" }
+# appveyor = { repository = "owo-lang/minitt-rs", service = "github" }
+# circle-ci = { repository = "owo-lang/minitt-rs", branch = "master" }
 maintenance = { status = "as-is" }
 
 [workspace]

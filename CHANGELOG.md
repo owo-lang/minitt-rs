@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.4.3
+
++ Replace AppVeyor + CircleCI with GitHub Actions
+
 # 0.4.2
 
 + Add `id_on_id` example (#26)
