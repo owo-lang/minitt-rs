@@ -6,6 +6,7 @@ use rustyline::completion::{Completer, FilenameCompleter, Pair};
 use rustyline::error::ReadlineError;
 use rustyline::highlight::Highlighter;
 use rustyline::hint::Hinter;
+use rustyline::validate::Validator;
 use rustyline::{CompletionType, Config, Context, Editor, Helper};
 
 pub struct MiniHelper {
@@ -67,6 +68,8 @@ impl Hinter for MiniHelper {
 impl Highlighter for MiniHelper {}
 
 impl Helper for MiniHelper {}
+
+impl Validator for MiniHelper {}
 
 #[derive(Copy, Clone, Debug, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub enum ReplEnvType {
