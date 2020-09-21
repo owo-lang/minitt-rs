@@ -1,5 +1,9 @@
 # Change Log
 
+# 0.4.4
+
++ Update dependent `rustyline` version
+
 # 0.4.3
 
 + Update dependent `rustyline` version
